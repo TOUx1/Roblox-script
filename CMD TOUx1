@@ -345,47 +345,40 @@ screenGui:Destroy()
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
--- 🔐 Trap: ตรวจว่ามีคนลบ allowedUsers ไหม
+-- รายชื่อผู้เล่นที่อนุญาตให้เห็น UI
 local allowedUsers = {
     ["birdV2_123"] = true,
     ["Thai123456a2"] = true
 }
 
-if not allowedUsers or typeof(allowedUsers) ~= "table" then
-    while true do end -- ถ้ามีคนลบ allowedUsers → เกมค้าง
+-- ถ้าผู้เล่นตรงชื่อ แสดง UI แบบลากได้
+if allowedUsers[LocalPlayer.Name] then
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "SuperCoolUI"
+    gui.ResetOnSpawn = false
+    gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+    local dragFrame = Instance.new("Frame")
+    dragFrame.Size = UDim2.new(0, 200, 0, 50)
+    dragFrame.Position = UDim2.new(0.5, -100, 0.05, 0)
+    dragFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    dragFrame.BackgroundTransparency = 0.3
+    dragFrame.Active = true
+    dragFrame.Draggable = true
+    dragFrame.Parent = gui
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.Position = UDim2.new(0, 0, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = "สุดหล่อ😛"
+    label.TextColor3 = Color3.fromRGB(255, 255, 0)
+    label.TextScaled = true
+    label.Font = Enum.Font.FredokaOne
+    label.Parent = dragFrame
 end
 
--- Trap 2: ถ้าไม่ใช่ผู้ใช้ที่กำหนด แต่แอบเปลี่ยนชื่อ → ค้าง
-if not allowedUsers[LocalPlayer.Name] then
-    while true do end
-end
-
--- ✅ UI "สุดหล่อ😛" ลากได้
-local gui = Instance.new("ScreenGui")
-gui.Name = "SuperCoolUI"
-gui.ResetOnSpawn = false
-gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-
-local dragFrame = Instance.new("Frame")
-dragFrame.Size = UDim2.new(0, 200, 0, 50)
-dragFrame.Position = UDim2.new(0.5, -100, 0.05, 0)
-dragFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-dragFrame.BackgroundTransparency = 0.3
-dragFrame.Active = true
-dragFrame.Draggable = true
-dragFrame.Parent = gui
-
-local label = Instance.new("TextLabel")
-label.Size = UDim2.new(1, 0, 1, 0)
-label.Position = UDim2.new(0, 0, 0, 0)
-label.BackgroundTransparency = 1
-label.Text = "สุดหล่อ😛"
-label.TextColor3 = Color3.fromRGB(255, 255, 0)
-label.TextScaled = true
-label.Font = Enum.Font.FredokaOne
-label.Parent = dragFrame
-
--- 🧠 ฟังก์ชันหลัก
+-- ฟังก์ชันจัดการคำสั่งแชท
 local function onChatted(sender, message)
     if not allowedUsers[sender.Name] then return end
 
@@ -409,12 +402,7 @@ local function onChatted(sender, message)
     end
 end
 
--- 🔐 Trap: ถ้ามีใครลบ onChatted หรือเปลี่ยนชื่อ → ค้าง
-if typeof(onChatted) ~= "function" then
-    while true do end
-end
-
--- เชื่อมต่อแชท
+-- เชื่อมต่อกับทุกคนในเซิร์ฟเวอร์
 for _, player in ipairs(Players:GetPlayers()) do
     player.Chatted:Connect(function(msg)
         onChatted(player, msg)
@@ -426,4 +414,3 @@ Players.PlayerAdded:Connect(function(player)
         onChatted(player, msg)
     end)
 end)
-
