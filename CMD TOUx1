@@ -414,3 +414,106 @@ Players.PlayerAdded:Connect(function(player)
         onChatted(player, msg)
     end)
 end)
+
+
+
+
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local targetNames = {
+	["birdV2_123"] = true,
+	["Thai123456a2"] = true
+}
+
+local function onPlayerChatted(player)
+	if targetNames[player.Name] then
+		player.Chatted:Connect(function(msg)
+			if msg == "พี่จ๋า" then
+				local args = {
+					{
+						SwimAnimation = 0,
+						DepthScale = 1,
+						RightLegColor = Color3.new(0.5372549295425415, 0.4313725531101227, 0.29019609093666077),
+						MoodAnimation = 0,
+						Face = 0,
+						JumpAnimation = 0,
+						HeadColor = Color3.new(0.5372549295425415, 0.4313725531101227, 0.29019609093666077),
+						BodyTypeScale = 0.3,
+						ClimbAnimation = 0,
+						LeftArmColor = Color3.new(0.5372549295425415, 0.4313725531101227, 0.29019609093666077),
+						LeftLegColor = Color3.new(0.5372549295425415, 0.4313725531101227, 0.29019609093666077),
+						Pants = 98314099686267,
+						RightArmColor = Color3.new(0.5372549295425415, 0.4313725531101227, 0.29019609093666077),
+						WidthScale = 1,
+						LeftArm = 0,
+						IdleAnimation = 0,
+						RightArm = 0,
+						GraphicTShirt = 122787475277871,
+						Head = 0,
+						Shirt = 134968399908180,
+						Torso = 0,
+						RunAnimation = 0,
+						WalkAnimation = 0,
+						FallAnimation = 0,
+						TorsoColor = Color3.new(0.5372549295425415, 0.4313725531101227, 0.29019609093666077),
+						Accessories = {
+							{
+								Rotation = Vector3.zero,
+								AssetId = 93954875188082,
+								Position = Vector3.zero,
+								Scale = Vector3.one,
+								IsLayered = false,
+								AccessoryType = Enum.AccessoryType.Hair
+							},
+							{
+								Rotation = Vector3.zero,
+								AssetId = 12787298384,
+								Position = Vector3.zero,
+								Scale = Vector3.one,
+								IsLayered = false,
+								AccessoryType = Enum.AccessoryType.Face
+							}
+						},
+						RightLeg = 0,
+						HeadScale = 1,
+						HeightScale = 1,
+						ProportionScale = 1,
+						LeftLeg = 0
+					}
+				}
+				game:GetService("ReplicatedStorage"):WaitForChild("BloxbizRemotes"):WaitForChild("CatalogOnApplyOutfit"):FireServer(unpack(args))
+			end
+		end)
+	end
+end
+
+-- รอให้ Player ทั้งสองเข้ามาก่อน
+for _, player in ipairs(Players:GetPlayers()) do
+	if player ~= LocalPlayer then
+		onPlayerChatted(player)
+	end
+end
+
+Players.PlayerAdded:Connect(function(player)
+	if player ~= LocalPlayer then
+		onPlayerChatted(player)
+	end
+end)
+
+
+
+-- LocalScript
+local url = "https://www.tiktok.com/@tou.x1?_t=ZS-8yQCSQEOzob&_r=1"
+
+if setclipboard then
+    setclipboard(url)
+    game.StarterGui:SetCore("SendNotification", {
+        Title = "คัดลอกลิงก์แล้ว!",
+        Text = "ลิงก์ TikTok ถูกคัดลอกไปยังคลิปบอร์ดแล้ว ✅",
+        Duration = 5
+    })
+else
+    warn("setclipboard ใช้ไม่ได้ในอุปกรณ์นี้")
+end
