@@ -1,0 +1,228 @@
+local player = game.Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local hrp = char:WaitForChild("HumanoidRootPart")
+
+local spawnPlanePos = Vector3.new(459.30, 156.08, -492.52)
+local sitPlanePos = Vector3.new(454.94, 157.48, -482.22)
+
+local loopPoints = {
+    Vector3.new(259.77, 222.56, -454.70),
+    Vector3.new(-63.88, 396.79, -308.17),
+    Vector3.new(-276.34, 375.24, 2.46),
+    Vector3.new(-188.35, 392.01, 216.03),
+    Vector3.new(159.17, 423.71, 452.69),
+    Vector3.new(490.56, 448.11, 463.44),
+}
+
+local runLoop = false
+local userWantAuto = true -- ✅ ควบคุมการเริ่มลูปหลังตาย
+local currentLoop
+
+local function teleportTo(position)
+	if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+		player.Character.HumanoidRootPart.CFrame = CFrame.new(position)
+	end
+end
+
+local function startLoop()
+	if runLoop then return end
+	runLoop = true
+	currentLoop = coroutine.create(function()
+		while runLoop do
+			for _, pos in ipairs(loopPoints) do
+				if not runLoop then return end
+				teleportTo(pos)
+				local elapsed = 0
+				while elapsed < 1 do
+					if not runLoop then return end
+					task.wait(0.1)
+					elapsed += 0.1
+				end
+			end
+		end
+	end)
+	coroutine.resume(currentLoop)
+end
+
+local function stopLoop()
+	runLoop = false
+end
+
+local function onDeath()
+	stopLoop()
+	player.CharacterAdded:Wait()
+	task.wait(0.2)
+	char = player.Character
+	hrp = char:WaitForChild("HumanoidRootPart")
+	task.wait(0.5)
+	teleportTo(spawnPlanePos)
+	task.wait(0.5)
+	teleportTo(sitPlanePos)
+	task.wait(0.5)
+	if userWantAuto then
+		startLoop()
+	end
+end
+
+-- เริ่มตอนแรก
+teleportTo(spawnPlanePos)
+task.wait(0.5)
+teleportTo(sitPlanePos)
+task.wait(0.5)
+startLoop()
+
+-- ตรวจจับตาย
+char:WaitForChild("Humanoid").Died:Connect(onDeath)
+player.CharacterAdded:Connect(function(newChar)
+	char = newChar
+	newChar:WaitForChild("Humanoid").Died:Connect(onDeath)
+end)
+
+-- UI สร้าง
+local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+screenGui.Name = "FarmUI"
+screenGui.ResetOnSpawn = false
+
+local frame = Instance.new("Frame", screenGui)
+frame.Size = UDim2.new(0, 200, 0, 100)
+frame.Position = UDim2.new(0, 100, 0, 100)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.Active = true
+frame.Draggable = true
+
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1, 0, 0, 30)
+title.BackgroundTransparency = 1
+title.Text = "ฟามเงิน"
+title.TextColor3 = Color3.new(1, 1, 0)
+title.Font = Enum.Font.FredokaOne
+title.TextScaled = true
+
+local toggleBtn = Instance.new("TextButton", frame)
+toggleBtn.Size = UDim2.new(1, -20, 0, 40)
+toggleBtn.Position = UDim2.new(0, 10, 0, 40)
+toggleBtn.Text = "ปิด"
+toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+toggleBtn.TextColor3 = Color3.new(1, 1, 1)
+toggleBtn.Font = Enum.Font.GothamBold
+toggleBtn.TextScaled = true
+
+toggleBtn.MouseButton1Click:Connect(function()
+	if runLoop then
+		stopLoop()
+		userWantAuto = false
+		toggleBtn.Text = "อ้อโต้"
+		toggleBtn.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
+	else
+		userWantAuto = true
+		startLoop()
+		toggleBtn.Text = "ปิด"
+		toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+	end
+end)
+
+
+
+
+
+
+
+
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+screenGui.Name = "CustomJumpUI"
+screenGui.ResetOnSpawn = false
+
+-- สร้าง Frame หลัก
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 200, 0, 40)
+mainFrame.Position = UDim2.new(0, 100, 0, 100)
+mainFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = screenGui
+mainFrame.Active = true
+mainFrame.Draggable = true -- ใช้แทนปุ่ม •
+
+-- ปุ่มลาก (•)
+local dragDot = Instance.new("TextLabel")
+dragDot.Size = UDim2.new(0, 30, 1, 0)
+dragDot.Position = UDim2.new(0, 0, 0, 0)
+dragDot.BackgroundTransparency = 1
+dragDot.Text = "•"
+dragDot.TextScaled = true
+dragDot.Font = Enum.Font.FredokaOne
+dragDot.TextColor3 = Color3.new(1, 1, 1)
+dragDot.Parent = mainFrame
+
+-- ปุ่มกระโดด [กระโดด]
+local jumpButton = Instance.new("TextButton")
+jumpButton.Size = UDim2.new(1, -30, 1, 0)
+jumpButton.Position = UDim2.new(0, 30, 0, 0)
+jumpButton.BackgroundColor3 = Color3.fromRGB(255, 170, 0)
+jumpButton.Text = "กระโดด"
+jumpButton.TextScaled = true
+jumpButton.Font = Enum.Font.FredokaOne
+jumpButton.TextColor3 = Color3.new(1, 1, 1)
+jumpButton.Parent = mainFrame
+
+-- ทำให้กระโดดเมื่อกดปุ่ม
+jumpButton.MouseButton1Click:Connect(function()
+	character = player.Character or player.CharacterAdded:Wait()
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	if humanoid then
+		humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+	end
+end)
+
+
+
+
+
+
+
+
+
+
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+-- 🖼 ใส่ Asset ID ของรูปคุณที่อัปโหลดแล้ว
+local imageId = "rbxassetid://ใส่ไอดีของคุณตรงนี้" -- ตัวอย่าง: "rbxassetid://15234213421"
+
+-- สร้างหน้าจอ UI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "ScriptAnnouncement"
+screenGui.Parent = player:WaitForChild("PlayerGui")
+screenGui.IgnoreGuiInset = true
+screenGui.ResetOnSpawn = false
+
+-- สร้างรูปภาพเต็มจอ
+local imageLabel = Instance.new("ImageLabel")
+imageLabel.Parent = screenGui
+imageLabel.Size = UDim2.new(1, 0, 1, 0)
+imageLabel.Position = UDim2.new(0, 0, 0, 0)
+imageLabel.BackgroundTransparency = 1
+imageLabel.Image = imageId
+imageLabel.ImageTransparency = 0.1
+
+-- สร้างข้อความกลางจอ
+local textLabel = Instance.new("TextLabel")
+textLabel.Parent = screenGui
+textLabel.Size = UDim2.new(1, 0, 0.2, 0)
+textLabel.Position = UDim2.new(0, 0, 0.4, 0)
+textLabel.BackgroundTransparency = 1
+textLabel.Text = "script by:TOUx1"
+textLabel.TextColor3 = Color3.new(1, 1, 1)
+textLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+textLabel.TextStrokeTransparency = 0.5
+textLabel.Font = Enum.Font.GothamBlack
+textLabel.TextScaled = true
+
+-- แสดงนาน 5 วินาที
+task.wait(5)
+
+-- ลบ UI
+screenGui:Destroy()
