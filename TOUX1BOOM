@@ -1,0 +1,74 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local player = Players.LocalPlayer
+local function getCharacter()
+	return player.Character or player.CharacterAdded:Wait()
+end
+
+local lastHealth = getCharacter():WaitForChild("Humanoid").Health
+local running = false
+
+-- ฟังก์ชันถือ Tool
+local function equipPoisonBat()
+	local backpack = player:WaitForChild("Backpack")
+	local tool = backpack:FindFirstChild("Poison Bat")
+	if tool then
+		tool.Parent = getCharacter()
+	end
+end
+
+-- ฟังก์ชันเก็บ Tool
+local function unequipTools()
+	local humanoid = getCharacter():FindFirstChildOfClass("Humanoid")
+	if humanoid then
+		humanoid:UnequipTools()
+	end
+end
+
+-- ฟังก์ชันยิง Remote แบบ loop
+local function runPoisonBatLoop()
+	if running then return end
+	running = true
+
+	task.spawn(function()
+		equipPoisonBat() -- ถือ Tool ก่อน
+
+		local startTime = tick()
+		while tick() - startTime < 1 do -- รันแค่ 1 วินาที
+			local character = getCharacter()
+			local args = {
+				character:WaitForChild("Poison Bat")
+			}
+			local remote = ReplicatedStorage:WaitForChild("BatRemotes"):WaitForChild("Poison Bat"):WaitForChild("Poison Cloud")
+			remote:FireServer(unpack(args))
+			task.wait(0.01)
+		end
+
+		unequipTools() -- เก็บ Tool หลังจบ
+		running = false
+	end)
+end
+
+-- ตรวจจับการลดของเลือด
+local function connectHealth()
+	local character = getCharacter()
+	local humanoid = character:WaitForChild("Humanoid")
+	lastHealth = humanoid.Health
+
+	humanoid.HealthChanged:Connect(function(newHealth)
+		if newHealth < lastHealth then
+			runPoisonBatLoop()
+		end
+		lastHealth = newHealth
+	end)
+end
+
+-- ทำให้รองรับเวลาตัวละครตาย/รีเซ็ต
+player.CharacterAdded:Connect(function()
+	task.wait(1)
+	connectHealth()
+end)
+
+-- เริ่มต้นเช็คทันที
+connectHealth()
