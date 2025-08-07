@@ -1,0 +1,56 @@
+-- LocalScript
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+-- UI
+local gui = Instance.new("ScreenGui")
+gui.Name = "เสกเงิน🤑"
+gui.ResetOnSpawn = false
+gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 220, 0, 80)
+frame.Position = UDim2.new(0.5, -110, 0.5, -40)
+frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+frame.BorderSizePixel = 0
+frame.Draggable = true
+frame.Active = true
+frame.Parent = gui
+
+local toggleButton = Instance.new("TextButton")
+toggleButton.Size = UDim2.new(1, -20, 0, 40)
+toggleButton.Position = UDim2.new(0, 10, 0, 20)
+toggleButton.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+toggleButton.Text = "เริ่มเสกเงิน🤑"
+toggleButton.TextColor3 = Color3.new(1, 1, 1)
+toggleButton.Font = Enum.Font.SourceSansBold
+toggleButton.TextSize = 20
+toggleButton.Parent = frame
+
+-- Logic
+local isRunning = false
+local connection
+
+toggleButton.MouseButton1Click:Connect(function()
+	isRunning = not isRunning
+	toggleButton.Text = isRunning and "หยุดเสกเงิน🛑" or "เริ่มเสกเงิน🤑"
+	toggleButton.BackgroundColor3 = isRunning and Color3.fromRGB(255, 85, 85) or Color3.fromRGB(0, 200, 0)
+
+	if isRunning then
+		connection = RunService.Heartbeat:Connect(function()
+			local args = {
+				"Day1",
+				1
+			}
+			ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("DailyRewardsEvent"):FireServer(unpack(args))
+			task.wait(0.05)
+		end)
+	else
+		if connection then
+			connection:Disconnect()
+			connection = nil
+		end
+	end
+end)
