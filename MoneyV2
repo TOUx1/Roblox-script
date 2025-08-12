@@ -1,0 +1,218 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local backpack = player:WaitForChild("Backpack")
+
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+local warpPosition = Vector3.new(377.80, 165.52, 21.96)
+local originalCFrame = nil
+
+local autoEnabled = false
+local autoTapEnabled = false
+
+local lockConnection = nil
+local autoPressThread = nil
+local autoTapThread = nil
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "WarpAutoTapGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 180, 0, 100)
+mainFrame.Position = UDim2.new(0, 20, 0, 20)
+mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = screenGui
+mainFrame.Active = true
+mainFrame.Draggable = true
+
+local toggleButton = Instance.new("TextButton")
+toggleButton.Size = UDim2.new(1, -20, 0, 50)
+toggleButton.Position = UDim2.new(0, 10, 0, 10)
+toggleButton.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
+toggleButton.TextColor3 = Color3.new(1, 1, 1)
+toggleButton.Font = Enum.Font.SourceSansBold
+toggleButton.TextSize = 22
+toggleButton.Text = "เปิด ระบบออโต้"
+toggleButton.Parent = mainFrame
+local function warpToPosition()
+    if humanoidRootPart then
+        humanoidRootPart.CFrame = CFrame.new(warpPosition)
+    end
+end
+
+local function warpBack()
+    if originalCFrame and humanoidRootPart then
+        humanoidRootPart.CFrame = originalCFrame
+    end
+end
+local function startLockPosition()
+    if lockConnection then return end
+    lockConnection = RunService.Heartbeat:Connect(function()
+        if autoEnabled and humanoidRootPart then
+            humanoidRootPart.CFrame = CFrame.new(warpPosition)
+        end
+    end)
+end
+
+local function stopLockPosition()
+    if lockConnection then
+        lockConnection:Disconnect()
+        lockConnection = nil
+    end
+end
+local atmPrompt = nil
+do
+    local children = workspace:GetChildren()
+    if #children >= 108 then
+        local atmModel = children[107]:FindFirstChild("ATMModel")
+        if atmModel then
+            local model = atmModel:FindFirstChild("Model")
+            if model then
+                local part = model:FindFirstChild("Part")
+                if part then
+                    atmPrompt = part:FindFirstChildOfClass("ProximityPrompt")
+                end
+            end
+        end
+    end
+end
+
+if not atmPrompt then
+    warn("ไม่พบ ProximityPrompt ที่ workspace:GetChildren()[107].ATMModel.Model.Part")
+end
+local tapInterval = 0.01
+
+local function autoPressE()
+    if not atmPrompt then return end
+    while autoEnabled do
+        if atmPrompt.Enabled == false then
+            atmPrompt.Enabled = true
+        end
+        atmPrompt:InputHoldBegin()
+        wait(0.1)
+        atmPrompt:InputHoldEnd()
+        wait(0.2)
+    end
+end
+
+local function equipMoneyBag()
+    local tool = backpack:FindFirstChild("Money Bag")
+    if tool then
+        tool.Parent = character
+        wait(0.1)
+        return tool
+    end
+    return nil
+end
+
+local function tapMoneyBag(tool)
+    if not tool then return end
+    local handle = tool:FindFirstChild("Handle")
+    if not handle then return end
+
+    local prompt = handle:FindFirstChildOfClass("ProximityPrompt")
+    if prompt then
+        prompt:InputHoldBegin()
+        wait(tapInterval)
+        prompt:InputHoldEnd()
+    else
+        if handle:FindFirstChild("TouchTap") and handle.TouchTap:IsA("RemoteEvent") then
+            handle.TouchTap:FireServer()
+        else
+            local clickDet = handle:FindFirstChildOfClass("ClickDetector")
+            if clickDet then
+                clickDet:Click()
+            else
+                tool:Activate()
+            end
+        end
+    end
+end
+
+local function autoTapLoop()
+    while autoTapEnabled do
+        local tool = equipMoneyBag()
+        tapMoneyBag(tool)
+        wait(tapInterval)
+    end
+end
+local function startAuto()
+    if autoEnabled then return end
+    originalCFrame = humanoidRootPart.CFrame
+    warpToPosition()
+    startLockPosition()
+
+    autoEnabled = true
+    autoTapEnabled = true
+
+    autoPressThread = coroutine.create(autoPressE)
+    coroutine.resume(autoPressThread)
+
+    autoTapThread = coroutine.create(autoTapLoop)
+    coroutine.resume(autoTapThread)
+end
+
+local function stopAuto()
+    autoEnabled = false
+    autoTapEnabled = false
+    stopLockPosition()
+    warpBack()
+
+    autoPressThread = nil
+    autoTapThread = nil
+end
+
+toggleButton.MouseButton1Click:Connect(function()
+    if not autoEnabled then
+        toggleButton.Text = "ปิด ระบบออโต้"
+        toggleButton.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+        startAuto()
+    else
+        toggleButton.Text = "เปิด ระบบออโต้"
+        toggleButton.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
+        stopAuto()
+    end
+end)
+player.CharacterAdded:Connect(function(char)
+    character = char
+    humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+    backpack = player:WaitForChild("Backpack") -- รีเฟรช backpack ด้วยเผื่อมันเปลี่ยน
+
+    if autoEnabled then
+        originalCFrame = humanoidRootPart.CFrame
+        warpToPosition()
+        startLockPosition()
+
+        -- รีสตาร์ท autoPressE coroutine ถ้าไม่ทำงาน
+        if not autoPressThread or coroutine.status(autoPressThread) == "dead" then
+            autoPressThread = coroutine.create(autoPressE)
+            coroutine.resume(autoPressThread)
+        end
+
+        -- รีสตาร์ท autoTapLoop coroutine ถ้าไม่ทำงาน (แก้ปัญหา autoTap หยุดตอนตาย)
+        if not autoTapThread or coroutine.status(autoTapThread) == "dead" then
+            autoTapThread = coroutine.create(autoTapLoop)
+            coroutine.resume(autoTapThread)
+        end
+    end
+end)
+
+
+
+
+for i,v in pairs(game:GetService("Workspace"):GetDescendants()) do
+	if v:IsA("ProximityPrompt") then
+		v["HoldDuration"] = 0
+	end
+end
+
+
+game:GetService("ProximityPromptService").PromptButtonHoldBegan:Connect(function(v)
+    v["HoldDuration"] = 0
+end)
