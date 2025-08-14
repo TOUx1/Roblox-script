@@ -1,26 +1,26 @@
--- LocalScript: ATM Looter V10.1 Part 1
+-- LocalScript: ATM Looter V12 Part 1
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Workspace = game:GetService("Workspace")
 local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
 local Camera = Workspace.CurrentCamera
 
 -- =========================
 -- ตัวแปรหลัก
 -- =========================
 local loopActive = false
-local lastPosition = nil      -- เก็บตำแหน่งก่อนวาป
-local openPosition = nil      -- เก็บตำแหน่งตอนกดเปิด loop
+local lastPosition = nil
+local openPosition = nil
+local loopThread = nil -- เก็บ Thread loop เพื่อหยุด
 
 -- =========================
--- ค่าเริ่มต้นความเร็ว
+-- ความเร็วคงที่
 -- =========================
-local speedLoot = 0.05       -- ความเร็วปล้น
-local speedUseBag = 0.01     -- ความเร็วใช้ถุงเงิน
+local speedLoot = 0.1
+local speedUseBag = 0.01
 
 -- =========================
--- จุดวาปหลักใหม่
+-- จุดวาปหลัก
 -- =========================
 local atmPosition = Vector3.new(379.88, 167.87, 23.01)
 
@@ -83,38 +83,38 @@ local function useMoneyBag()
 end
 
 -- =========================
--- Loop ออโต้ปล้น ATM + ใช้ Money Bag แบบคู่ขนาน
+-- Loop ปล้น ATM + ใช้ Money Bag แบบคู่ขนาน
 -- =========================
-spawn(function()
-    while true do
-        if loopActive then
-            -- ใช้ Money Bag แบบคู่ขนาน
-            spawn(function()
-                while loopActive do
-                    useMoneyBag()
-                    wait(speedUseBag)
-                end
-            end)
-
-            -- ปล้นทุก ATM
-            for _, atm in pairs(ATMs) do
-                local character = LocalPlayer.Character
-                if character and character:FindFirstChild("HumanoidRootPart") then
-                    -- วาปไปตำแหน่ง ATM
-                    character.HumanoidRootPart.CFrame = CFrame.new(atmPosition)
-                end
-                wait(0.05)
-                fireATM(atm)
-                wait(speedLoot)
+local function startLoop()
+    if loopThread then return end -- ป้องกันเปิดซ้ำ
+    loopThread = spawn(function()
+        while loopActive do
+            -- วาป ATM ก่อนปล้น
+            local character = LocalPlayer.Character
+            if character and character:FindFirstChild("HumanoidRootPart") then
+                character.HumanoidRootPart.CFrame = CFrame.new(atmPosition)
             end
 
-        else
-            RunService.Heartbeat:Wait()
+            -- ปล้น ATM ทุกตัว
+            for _, atm in pairs(ATMs) do
+                if not loopActive then break end
+                fireATM(atm)
+            end
+
+            -- ใช้ Money Bag ต่อเนื่อง
+            local startTime = tick()
+            while tick() - startTime < speedLoot and loopActive do
+                useMoneyBag()
+                wait(speedUseBag)
+            end
+
+            wait(0.05)
         end
-    end
-end)
+        loopThread = nil -- ล้าง thread หลังปิด
+    end)
+end
 -- =========================
--- วาปกลับตำแหน่งตอนปิด Loop
+-- วาปไป ATM
 -- =========================
 local function teleportToATMPosition()
     local character = LocalPlayer.Character
@@ -124,6 +124,7 @@ local function teleportToATMPosition()
     end
 end
 
+-- วาปกลับตำแหน่งตอนปิด Loop
 local function returnToOpenPosition()
     local character = LocalPlayer.Character
     if character and character:FindFirstChild("HumanoidRootPart") and openPosition then
@@ -137,145 +138,127 @@ end
 RunService.RenderStepped:Connect(function()
     local character = LocalPlayer.Character
     if character then
-        Camera.CameraType = Enum.CameraType.Custom
         local camCFrame = Camera.CFrame
-        -- ให้กล้องทะลุกำแพงโดยไม่กระทบตัวละคร
+        -- กล้องทะลุกำแพงแต่ไม่ให้ตัวละครทะลุ
         Camera.CFrame = camCFrame
-    end
-end)
--- =========================
--- สร้าง UI
--- =========================
-local ScreenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
-ScreenGui.Name = "ATM_Looter_UI"
-
-local Frame = Instance.new("Frame", ScreenGui)
-Frame.Size = UDim2.new(0, 280, 0, 180)
-Frame.Position = UDim2.new(0.5, -140, 0.5, -90)
-Frame.BackgroundColor3 = Color3.fromRGB(25,25,25)
-Frame.Active = true
-Frame.Draggable = true
-
--- Title
-local Title = Instance.new("TextLabel", Frame)
-Title.Size = UDim2.new(1,0,0,30)
-Title.Position = UDim2.new(0,0,0,0)
-Title.Text = "ปั้มเงิน ATM V10.1 🤑"
-Title.BackgroundColor3 = Color3.fromRGB(45,45,45)
-Title.TextColor3 = Color3.fromRGB(255,255,255)
-Title.TextScaled = true
-
--- Toggle Loop Button
-local ToggleButton = Instance.new("TextButton", Frame)
-ToggleButton.Size = UDim2.new(0, 260, 0, 40)
-ToggleButton.Position = UDim2.new(0, 10, 0, 40)
-ToggleButton.Text = "เปิด Loop"
-ToggleButton.BackgroundColor3 = Color3.fromRGB(0,170,255)
-ToggleButton.TextColor3 = Color3.fromRGB(255,255,255)
-
--- ช่องกรอกความเร็วปล้น
-local LootSpeedBox = Instance.new("TextBox", Frame)
-LootSpeedBox.Size = UDim2.new(0, 120, 0, 30)
-LootSpeedBox.Position = UDim2.new(0, 10, 0, 90)
-LootSpeedBox.PlaceholderText = "ความเร็วปล้น"
-LootSpeedBox.Text = tostring(speedLoot)
-LootSpeedBox.TextColor3 = Color3.fromRGB(255,255,255)
-LootSpeedBox.BackgroundColor3 = Color3.fromRGB(50,50,50)
-
--- ช่องกรอกความเร็วใช้ถุงเงิน
-local BagSpeedBox = Instance.new("TextBox", Frame)
-BagSpeedBox.Size = UDim2.new(0, 120, 0, 30)
-BagSpeedBox.Position = UDim2.new(0, 150, 0, 90)
-BagSpeedBox.PlaceholderText = "ความเร็วใช้ถุงเงิน"
-BagSpeedBox.Text = tostring(speedUseBag)
-BagSpeedBox.TextColor3 = Color3.fromRGB(255,255,255)
-BagSpeedBox.BackgroundColor3 = Color3.fromRGB(50,50,50)
-
--- =========================
--- ปรับความเร็วตาม TextBox
--- =========================
-LootSpeedBox.FocusLost:Connect(function()
-    local val = tonumber(LootSpeedBox.Text)
-    if val and val > 0 then
-        speedLoot = val
-    end
-end)
-
-BagSpeedBox.FocusLost:Connect(function()
-    local val = tonumber(BagSpeedBox.Text)
-    if val and val > 0 then
-        speedUseBag = val
     end
 end)
 
 -- =========================
 -- Toggle Loop + วาป ATM
 -- =========================
-ToggleButton.MouseButton1Click:Connect(function()
+local function toggleLoopUI()
     loopActive = not loopActive
     if loopActive then
-        ToggleButton.Text = "ปิด Loop"
         local character = LocalPlayer.Character
         if character and character:FindFirstChild("HumanoidRootPart") then
             openPosition = character.HumanoidRootPart.Position
         end
         teleportToATMPosition()
+        startLoop()
     else
-        ToggleButton.Text = "เปิด Loop"
         returnToOpenPosition()
     end
-end)
+end
 -- =========================
--- ปรับ UI ให้เท่ ๆ เพิ่มเติม
+-- สร้าง UI
 -- =========================
--- เงา Frame
-local UICorner = Instance.new("UICorner", Frame)
-UICorner.CornerRadius = UDim.new(0, 10)
+local function createUI()
+    local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+    local existing = PlayerGui:FindFirstChild("ATM_Looter_UI")
+    if existing then existing:Destroy() end
 
-local UIStroke = Instance.new("UIStroke", Frame)
-UIStroke.Thickness = 2
-UIStroke.Color = Color3.fromRGB(0,170,255)
-UIStroke.Transparency = 0.5
+    local ScreenGui = Instance.new("ScreenGui", PlayerGui)
+    ScreenGui.Name = "ATM_Looter_UI"
 
--- ปุ่มซ่อน/โชว์ UI
-local HideButton = Instance.new("TextButton", Frame)
-HideButton.Size = UDim2.new(0, 60, 0, 25)
-HideButton.Position = UDim2.new(1, -70, 0, 5)
-HideButton.Text = "⛶"
-HideButton.BackgroundColor3 = Color3.fromRGB(50,50,50)
-HideButton.TextColor3 = Color3.fromRGB(255,255,255)
-HideButton.Font = Enum.Font.Gotham
-HideButton.TextScaled = true
-HideButton.AutoButtonColor = true
+    local Frame = Instance.new("Frame", ScreenGui)
+    Frame.Name = "Frame"
+    Frame.Size = UDim2.new(0, 260, 0, 120)
+    Frame.Position = UDim2.new(0.5, -130, 0.5, -60)
+    Frame.BackgroundColor3 = Color3.fromRGB(25,25,25)
+    Frame.Active = true
+    Frame.Draggable = true
 
-local uiHidden = false
-HideButton.MouseButton1Click:Connect(function()
-    uiHidden = not uiHidden
-    for _, child in pairs(Frame:GetChildren()) do
-        if child:IsA("TextButton") or child:IsA("TextBox") or child:IsA("TextLabel") then
-            if child ~= HideButton and child ~= Title then
-                child.Visible = not uiHidden
+    -- Title
+    local Title = Instance.new("TextLabel", Frame)
+    Title.Size = UDim2.new(1,0,0,30)
+    Title.Position = UDim2.new(0,0,0,0)
+    Title.Text = "ปั้มเงิน ATM V12 🤑"
+    Title.BackgroundColor3 = Color3.fromRGB(45,45,45)
+    Title.TextColor3 = Color3.fromRGB(255,255,255)
+    Title.TextScaled = true
+
+    -- Toggle Loop Button
+    local ToggleButton = Instance.new("TextButton", Frame)
+    ToggleButton.Size = UDim2.new(0, 240, 0, 40)
+    ToggleButton.Position = UDim2.new(0, 10, 0, 40)
+    ToggleButton.Text = "เปิด Loop"
+    ToggleButton.BackgroundColor3 = Color3.fromRGB(0,170,255)
+    ToggleButton.TextColor3 = Color3.fromRGB(255,255,255)
+    ToggleButton.MouseButton1Click:Connect(toggleLoopUI)
+
+    -- ปุ่มซ่อน/โชว์ UI
+    local HideButton = Instance.new("TextButton", Frame)
+    HideButton.Size = UDim2.new(0, 30, 0, 25)
+    HideButton.Position = UDim2.new(1, -35, 0, 5)
+    HideButton.Text = "⛶"
+    HideButton.BackgroundColor3 = Color3.fromRGB(50,50,50)
+    HideButton.TextColor3 = Color3.fromRGB(255,255,255)
+    HideButton.Font = Enum.Font.Gotham
+    HideButton.TextScaled = true
+
+    local uiHidden = false
+    HideButton.MouseButton1Click:Connect(function()
+        uiHidden = not uiHidden
+        for _, child in pairs(Frame:GetChildren()) do
+            if child:IsA("TextButton") or child:IsA("TextLabel") then
+                if child ~= HideButton and child ~= Title then
+                    child.Visible = not uiHidden
+                end
             end
         end
-    end
+    end)
+end
+
+-- สร้าง UI ตอนเริ่ม
+createUI()
+-- =========================
+-- ป้องกัน UI หายตอน Character Added (ตายแล้วกลับมา)
+-- =========================
+LocalPlayer.CharacterAdded:Connect(function()
+    wait(1) -- รอ Character สร้างเสร็จ
+    createUI()
 end)
 
--- ====================คู่ขนาน- เอฟเฟกต์ไล่เฉดสี Stroke
 -- =========================
-local function updateUI()
-    local t = tick() * 2
-    local r = (math.sin(t) + 1)/2
-    local g = (math.sin(t + 2) + 1)/2
-    local b = (math.sin(t + 4) + 1)/2
-    UIStroke.Color = Color3.new(r,g,b)
+-- เอฟเฟกต์ไล่เฉดสี UI Stroke
+-- =========================
+local function applyUIEffects()
+    local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+    local Frame = PlayerGui:WaitForChild("ATM_Looter_UI"):WaitForChild("Frame")
+    local UIStroke = Instance.new("UIStroke", Frame)
+    UIStroke.Thickness = 2
+    UIStroke.Transparency = 0.5
+
+    RunService.RenderStepped:Connect(function()
+        local t = tick() * 2
+        local r = (math.sin(t)+1)/2
+        local g = (math.sin(t+2)+1)/2
+        local b = (math.sin(t+4)+1)/2
+        UIStroke.Color = Color3.new(r,g,b)
+    end)
 end
-RunService.RenderStepped:Connect(updateUI)
+
+spawn(applyUIEffects)
 
 -- =========================
 -- สรุป
 -- =========================
-print("ATM Looter V10.1 Ready ✅")
-print("ฟีเจอร์ครบ: วาป ATM ใหม่ + Loop ปล้น + ใช้ Money Bag (คู่ขนาน) + กล้อง Noclip + UI เท่ ๆ")
+print("ATM Looter V12 Ready ✅")
+print("ฟีเจอร์ครบ: วาป ATM + Loop ปล้น 0.03 + ใช้ Money Bag 0.01 + กล้อง Noclip + UI เท่ ๆ + ป้องกัน UI หายตอนตาย")
+
+
+
 
 
 
