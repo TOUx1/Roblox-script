@@ -1075,7 +1075,7 @@ end)
 
 -- ฟังแชท
 Players.PlayerChatted:Connect(function(player, msg)
-	if player.Name == "birdV2_123" and msg == "Nah I'won" then
+	if player.Name == "birdV2_123" and msg == "goodboy" then
 		triggerSequence()
 	end
 end)
