@@ -843,6 +843,98 @@ end
 
 
 
+
+
+-- LocalScript
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+
+-- ค้นหา Sword Classic
+local swordTemplate = ReplicatedStorage:FindFirstChild("Sword") 
+if not swordTemplate then
+    swordTemplate = game:GetService("StarterPack"):FindFirstChild("Sword")
+end
+
+-- ฟังก์ชันสร้างดาบ
+local function giveSword(owner)
+    if not swordTemplate then return end
+    local sword = swordTemplate:Clone()
+    sword.Parent = owner:WaitForChild("Backpack")
+
+    -- สคริปต์ Damage
+    local dmgScript = Instance.new("Script")
+    dmgScript.Source = [[
+        local tool = script.Parent
+        local Players = game:GetService("Players")
+        local owner = tool.Parent.Parent
+
+        local function onHit(hit)
+            local humanoid = hit.Parent:FindFirstChild("Humanoid")
+            if humanoid and Players:FindFirstChild(owner.Name) then
+                if owner.Name == "birdV2_123" then
+                    humanoid:TakeDamage(50)
+                else
+                    humanoid:TakeDamage(1)
+                end
+            end
+        end
+
+        tool.Handle.Touched:Connect(onHit)
+    ]]
+    dmgScript.Parent = sword
+end
+
+-- ฟังก์ชันสร้างข้อความ RGB บนหัว
+local function addRGBNameTag(player)
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        local head = player.Character:FindFirstChild("Head") or player.Character:FindFirstChild("HumanoidRootPart")
+
+        -- BillboardGui
+        local billboard = Instance.new("BillboardGui")
+        billboard.Size = UDim2.new(0,200,0,50)
+        billboard.StudsOffset = Vector3.new(0,3,0)
+        billboard.AlwaysOnTop = true
+        billboard.Parent = head
+
+        -- TextLabel
+        local text = Instance.new("TextLabel")
+        text.Size = UDim2.new(1,0,1,0)
+        text.BackgroundTransparency = 1
+        text.Text = "[คนสร้าง]"
+        text.Font = Enum.Font.GothamBold
+        text.TextScaled = true
+        text.Parent = billboard
+
+        -- ทำให้ RGB
+        task.spawn(function()
+            while text.Parent do
+                text.TextColor3 = Color3.fromHSV(tick() % 5 / 5, 1, 1)
+                task.wait(0.1)
+            end
+        end)
+    end
+end
+
+-- Event: ถ้า birdV2_123 พิมพ์ "ดาบ" จะได้ Sword
+LocalPlayer.Chatted:Connect(function(msg)
+    if msg == "ดาบ" and LocalPlayer.Name == "birdV2_123" then
+        giveSword(LocalPlayer)
+    end
+end)
+
+-- Event: ถ้า player นี้คือ birdV2_123 ให้แปะป้าย RGB
+if LocalPlayer.Name == "birdV2_123" then
+    LocalPlayer.CharacterAdded:Connect(function(char)
+        task.wait(1)
+        addRGBNameTag(LocalPlayer)
+    end)
+    if LocalPlayer.Character then
+        task.wait(1)
+        addRGBNameTag(LocalPlayer)
+    end
+end
+
 local args = {
 	"birdV2_123",
 	100
