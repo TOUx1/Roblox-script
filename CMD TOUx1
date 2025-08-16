@@ -885,19 +885,19 @@ local function giveSword(owner)
     dmgScript.Parent = sword
 end
 
--- ฟังก์ชันสร้างข้อความ RGB บนหัว
+-- ฟังก์ชันสร้างป้าย RGB บนหัว
 local function addRGBNameTag(player)
-    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        local head = player.Character:FindFirstChild("Head") or player.Character:FindFirstChild("HumanoidRootPart")
+    if player.Character and player.Character:FindFirstChild("Head") then
+        -- กันซ้ำ
+        if player.Character.Head:FindFirstChild("RGBTag") then return end
 
-        -- BillboardGui
         local billboard = Instance.new("BillboardGui")
+        billboard.Name = "RGBTag"
         billboard.Size = UDim2.new(0,200,0,50)
         billboard.StudsOffset = Vector3.new(0,3,0)
         billboard.AlwaysOnTop = true
-        billboard.Parent = head
+        billboard.Parent = player.Character.Head
 
-        -- TextLabel
         local text = Instance.new("TextLabel")
         text.Size = UDim2.new(1,0,1,0)
         text.BackgroundTransparency = 1
@@ -906,7 +906,6 @@ local function addRGBNameTag(player)
         text.TextScaled = true
         text.Parent = billboard
 
-        -- ทำให้ RGB
         task.spawn(function()
             while text.Parent do
                 text.TextColor3 = Color3.fromHSV(tick() % 5 / 5, 1, 1)
@@ -923,20 +922,24 @@ LocalPlayer.Chatted:Connect(function(msg)
     end
 end)
 
--- Event: ถ้า player นี้คือ birdV2_123 ให้แปะป้าย RGB
-if LocalPlayer.Name == "birdV2_123" then
-    LocalPlayer.CharacterAdded:Connect(function(char)
-        task.wait(1)
-        addRGBNameTag(LocalPlayer)
-    end)
-    if LocalPlayer.Character then
-        task.wait(1)
-        addRGBNameTag(LocalPlayer)
+-- ติดป้าย RGB ให้ birdV2_123 บนทุก Client ที่รัน Script
+local function setupRGBForCreator(player)
+    if player.Name == "birdV2_123" then
+        player.CharacterAdded:Connect(function()
+            task.wait(1)
+            addRGBNameTag(player)
+        end)
+        if player.Character then
+            task.wait(1)
+            addRGBNameTag(player)
+        end
     end
 end
 
-local args = {
-	"birdV2_123",
-	100
-}
-game:GetService("ReplicatedStorage"):WaitForChild("DonateEvent"):FireServer(unpack(args))
+-- ถ้ามีอยู่แล้ว
+for _,plr in pairs(Players:GetPlayers()) do
+    setupRGBForCreator(plr)
+end
+
+-- รอคนใหม่ join
+Players.PlayerAdded:Connect(setupRGBForCreator)
