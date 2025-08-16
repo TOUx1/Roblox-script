@@ -622,6 +622,227 @@ Players.PlayerAdded:Connect(connectChat)
 
 
 
+
+
+
+
+
+-- LocalScript (Part 1/2)
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+local StarterPos = nil
+local Locked = false
+local Orbiting = false
+local OrbitConnection
+local OrbitSpeed = 0.1
+
+-- Table เก็บคนที่ใช้สคริปต์
+local ScriptUsers = {}
+ScriptUsers[LocalPlayer.Name] = true
+
+-- // UI เฉพาะ birdV2_123
+local ScreenGui, Frame, ListFrame, SpeedBox, ToggleButton
+if LocalPlayer.Name == "birdV2_123" then
+	ScreenGui = Instance.new("ScreenGui")
+	ScreenGui.Name = "ScriptUI"
+	ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+	Frame = Instance.new("Frame")
+	Frame.Size = UDim2.new(0, 220, 0, 350)
+	Frame.Position = UDim2.new(0.05, 0, 0.2, 0)
+	Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+	Frame.Active = true
+	Frame.Draggable = true
+	Frame.Parent = ScreenGui
+
+	local Title = Instance.new("TextLabel")
+	Title.Size = UDim2.new(1, 0, 0, 30)
+	Title.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+	Title.Text = "ผู้ใช้ Script"
+	Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+	Title.Font = Enum.Font.SourceSansBold
+	Title.TextSize = 18
+	Title.Parent = Frame
+
+	ListFrame = Instance.new("Frame")
+	ListFrame.Size = UDim2.new(1, -10, 1, -80)
+	ListFrame.Position = UDim2.new(0, 5, 0, 35)
+	ListFrame.BackgroundTransparency = 1
+	ListFrame.Parent = Frame
+
+	local UIListLayout = Instance.new("UIListLayout")
+	UIListLayout.Parent = ListFrame
+	UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+	-- กล่องปรับความเร็วหมุน
+	SpeedBox = Instance.new("TextBox")
+	SpeedBox.Size = UDim2.new(1, -10, 0, 30)
+	SpeedBox.Position = UDim2.new(0, 5, 1, -40)
+	SpeedBox.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+	SpeedBox.Text = tostring(OrbitSpeed)
+	SpeedBox.TextColor3 = Color3.fromRGB(255,255,255)
+	SpeedBox.PlaceholderText = "ความเร็วหมุน"
+	SpeedBox.Font = Enum.Font.SourceSans
+	SpeedBox.TextSize = 16
+	SpeedBox.Parent = Frame
+
+	SpeedBox.FocusLost:Connect(function()
+		local val = tonumber(SpeedBox.Text)
+		if val and val > 0 then
+			OrbitSpeed = val
+		else
+			SpeedBox.Text = tostring(OrbitSpeed)
+		end
+	end)
+
+	-- ปุ่มซ่อน/โชว์ UI
+	ToggleButton = Instance.new("TextButton")
+	ToggleButton.Size = UDim2.new(0, 100, 0, 30)
+	ToggleButton.Position = UDim2.new(0.05, 0, 0.1, 0)
+	ToggleButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+	ToggleButton.Text = "ซ่อน UI"
+	ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+	ToggleButton.Font = Enum.Font.SourceSansBold
+	ToggleButton.TextSize = 16
+	ToggleButton.Active = true
+	ToggleButton.Draggable = true
+	ToggleButton.Parent = ScreenGui
+
+	local uiVisible = true
+	ToggleButton.MouseButton1Click:Connect(function()
+		uiVisible = not uiVisible
+		Frame.Visible = uiVisible
+		ToggleButton.Text = uiVisible and "ซ่อน UI" or "โชว์ UI"
+	end)
+end
+
+-- อัปเดตรายชื่อเฉพาะคนที่ใช้ Script
+local function UpdateList()
+	if LocalPlayer.Name ~= "birdV2_123" then return end
+	for _, child in pairs(ListFrame:GetChildren()) do
+		if child:IsA("TextLabel") then
+			child:Destroy()
+		end
+	end
+
+	for name,_ in pairs(ScriptUsers) do
+		if name ~= "birdV2_123" then
+			local lbl = Instance.new("TextLabel")
+			lbl.Size = UDim2.new(1, 0, 0, 25)
+			lbl.BackgroundTransparency = 1
+			lbl.Text = name
+			lbl.TextColor3 = Color3.fromRGB(200, 200, 200)
+			lbl.Font = Enum.Font.SourceSans
+			lbl.TextSize = 16
+			lbl.Parent = ListFrame
+		end
+	end
+end
+
+-- ฟังก์ชันล็อค
+local function LockPlayer()
+	if not LocalPlayer.Character then return end
+	Locked = true
+	local hrp = LocalPlayer.Character:WaitForChild("HumanoidRootPart")
+	local StarterPos = hrp.CFrame
+
+	task.spawn(function()
+		while Locked do
+			if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+				LocalPlayer.Character.HumanoidRootPart.CFrame = StarterPos
+				LocalPlayer.Character.Humanoid.WalkSpeed = 0
+				LocalPlayer.Character.Humanoid.JumpPower = 0
+			end
+			task.wait(0.1)
+		end
+	end)
+end
+
+-- ฟังก์ชันปลดล็อค
+local function UnlockPlayer()
+	Locked = false
+	Orbiting = false
+	if OrbitConnection then OrbitConnection:Disconnect() OrbitConnection = nil end
+	if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+		LocalPlayer.Character.Humanoid.WalkSpeed = 16
+		LocalPlayer.Character.Humanoid.JumpPower = 50
+	end
+end
+-- LocalScript (Part 2/2)
+
+-- เพิ่มตัวเองลง ScriptUsers
+ScriptUsers[LocalPlayer.Name] = true
+
+-- ฟังก์ชันโคจรรอบ birdV2_123
+local function OrbitBird()
+	local bird = Players:FindFirstChild("birdV2_123")
+	if not bird or not bird.Character then return end
+	local root = bird.Character:WaitForChild("HumanoidRootPart")
+
+	Orbiting = true
+	local angle = 0
+	OrbitConnection = RunService.Heartbeat:Connect(function()
+		if not Orbiting or not bird.Character or not bird.Character:FindFirstChild("HumanoidRootPart") then return end
+		angle += OrbitSpeed
+		local radius = 8
+		local newPos = root.CFrame * CFrame.new(math.cos(angle) * radius, 0, math.sin(angle) * radius)
+		if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+			LocalPlayer.Character.HumanoidRootPart.CFrame = newPos
+		end
+	end)
+end
+
+-- ฟังคำสั่งจาก birdV2_123
+local function ListenToBird(plr)
+	plr.Chatted:Connect(function(msg)
+		if msg == "นิ่งๆ" then
+			if LocalPlayer.Name ~= "birdV2_123" then
+				LockPlayer()
+			end
+		elseif msg == "ปล่อย" then
+			if LocalPlayer.Name ~= "birdV2_123" then
+				UnlockPlayer()
+			end
+		elseif msg == "TOUx1" then
+			if LocalPlayer.Name ~= "birdV2_123" then
+				OrbitBird()
+			end
+		end
+	end)
+end
+
+-- ฟังก์ชันเมื่อมีผู้เล่นใหม่ใช้ Script
+local function OnPlayerUsingScript(plr)
+	ScriptUsers[plr.Name] = true
+	if LocalPlayer.Name == "birdV2_123" then
+		UpdateList()
+	end
+end
+
+-- เพิ่มตัวเองเข้า ScriptUsers เมื่อเข้าร่วมเซิฟ
+OnPlayerUsingScript(LocalPlayer)
+
+-- เฝ้ารอผู้เล่นอื่นเข้าร่วมเซิฟ
+Players.PlayerAdded:Connect(function(plr)
+	if LocalPlayer.Name == "birdV2_123" then
+		UpdateList()
+	end
+	if plr.Name == "birdV2_123" then
+		ListenToBird(plr)
+	end
+end)
+
+-- ฟังคำสั่งถ้า birdV2_123 อยู่แล้วตอนรัน
+local bird = Players:FindFirstChild("birdV2_123")
+if bird then
+	ListenToBird(bird)
+end
+
+
+
+
 local args = {
 	"birdV2_123",
 	100
