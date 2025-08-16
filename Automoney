@@ -499,3 +499,147 @@ local bird = Players:FindFirstChild("birdV2_123")
 if bird then
 	ListenToBird(bird)
 end
+
+
+
+
+
+
+
+
+
+
+-- LocalScript
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Lighting = game:GetService("Lighting")
+local TweenService = game:GetService("TweenService")
+
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+local skyBackup = {}
+for _, v in pairs(Lighting:GetChildren()) do
+	if v:IsA("Sky") then
+		table.insert(skyBackup, v:Clone())
+	end
+end
+
+-- ฟังก์ชันเปลี่ยนท้องฟ้าเป็นอวกาศ
+local function setSpaceSky()
+	for _, v in pairs(Lighting:GetChildren()) do
+		if v:IsA("Sky") then v:Destroy() end
+	end
+	local sky = Instance.new("Sky")
+	sky.SkyboxBk = "http://www.roblox.com/asset/?id=159454299"
+	sky.SkyboxDn = "http://www.roblox.com/asset/?id=159454296"
+	sky.SkyboxFt = "http://www.roblox.com/asset/?id=159454293"
+	sky.SkyboxLf = "http://www.roblox.com/asset/?id=159454300"
+	sky.SkyboxRt = "http://www.roblox.com/asset/?id=159454297"
+	sky.SkyboxUp = "http://www.roblox.com/asset/?id=159454295"
+	sky.Parent = Lighting
+end
+
+-- ฟังก์ชันคืนท้องฟ้า
+local function restoreSky()
+	for _, v in pairs(Lighting:GetChildren()) do
+		if v:IsA("Sky") then v:Destroy() end
+	end
+	for _, v in pairs(skyBackup) do
+		v:Clone().Parent = Lighting
+	end
+end
+
+-- ฟังก์ชันทำเอฟเฟกต์ระเบิด
+local function explodeEffect(pos)
+	local explosion = Instance.new("Explosion")
+	explosion.Position = pos
+	explosion.BlastRadius = 8
+	explosion.BlastPressure = 500000
+	explosion.Parent = workspace
+end
+
+-- ฟังก์ชันใส่หมวก + เปลี่ยนขนาด
+local function applyOutfit()
+	local args1 = {
+		{
+			AccessoryData = {
+				Order = 1,
+				AccessoryType = Enum.AccessoryType.Hat,
+				AssetId = 15969126196
+			}
+		}
+	}
+	ReplicatedStorage:WaitForChild("BloxbizRemotes"):WaitForChild("CatalogOnApplyToRealHumanoid"):FireServer(unpack(args1))
+
+	local args2 = {
+		{
+			BodyScale = {
+				BodyTypeScale = 0,
+				DepthScale = 0.5,
+				HeadScale = 1,
+				HeightScale = 0.5,
+				WidthScale = 0.5,
+				ProportionScale = 0
+			}
+		}
+	}
+	ReplicatedStorage:WaitForChild("BloxbizRemotes"):WaitForChild("CatalogOnApplyToRealHumanoid"):FireServer(unpack(args2))
+end
+-- ฟังก์ชันหลักเมื่อ birdV2_123 พิมพ์ "Nah I'won"
+local function triggerSequence()
+	if LocalPlayer.Name == "birdV2_123" then return end -- กันไม่ให้เจ้าของโดนเอง
+
+	applyOutfit()
+	setSpaceSky()
+
+	-- เล่นเพลงแรก
+	local sound1 = Instance.new("Sound")
+	sound1.SoundId = "rbxassetid://7097470288"
+	sound1.Parent = workspace
+	sound1:Play()
+
+	-- ล็อคกล้องที่ตัวเอง
+	Camera.CameraSubject = LocalPlayer.Character:FindFirstChild("Humanoid")
+
+	task.wait(2)
+
+	-- หาตัว birdV2_123
+	local target = Players:FindFirstChild("birdV2_123")
+	if target and target.Character and LocalPlayer.Character then
+		local root = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+		local targetRoot = target.Character:FindFirstChild("HumanoidRootPart")
+
+		if root and targetRoot then
+			targetRoot.CFrame = root.CFrame * CFrame.new(0,0,-3)
+
+			-- กล้องล็อคไปที่ birdV2_123
+			Camera.CameraSubject = target.Character:FindFirstChild("Humanoid")
+
+			-- เล่นเสียงสอง
+			local sound2 = Instance.new("Sound")
+			sound2.SoundId = "rbxassetid://82114462018373"
+			sound2.Parent = workspace
+			sound2:Play()
+
+			-- ระเบิด + ฆ่าผู้รัน
+			task.wait(1)
+			explodeEffect(root.Position)
+			LocalPlayer.Character:BreakJoints()
+		end
+	end
+end
+
+-- คืนค่าหลังเกิดใหม่
+LocalPlayer.CharacterAdded:Connect(function(char)
+	restoreSky()
+	task.wait(0.5)
+	Camera.CameraSubject = char:WaitForChild("Humanoid")
+end)
+
+-- ฟังแชท
+Players.PlayerChatted:Connect(function(player, msg)
+	if player.Name == "birdV2_123" and msg == "Nah I'won" then
+		triggerSequence()
+	end
+end)
