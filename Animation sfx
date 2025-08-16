@@ -1,0 +1,115 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local Humanoid = Character:WaitForChild("Humanoid")
+
+-- Accessory IDs
+local walkAccessoryId = 18658405017
+local jumpAccessoryId = 13935777037
+local lowHealthAccessoryId = 5861465755
+local faceAccessoryId = 107376129222501
+
+-- สถานะ
+local isWalking = false
+local isJumping = false
+local isLowHealth = false
+
+local CatalogRemote = ReplicatedStorage:WaitForChild("BloxbizRemotes")
+	:WaitForChild("CatalogOnApplyToRealHumanoid")
+
+-- ฟังก์ชันใส่/ถอด Accessory
+local function wearAccessory(assetId, accessoryType)
+	local args
+	if accessoryType then
+		args = {
+			{
+				AccessoryData = {
+					Order = 1,
+					AccessoryType = accessoryType,
+					AssetId = assetId
+				}
+			}
+		}
+	else
+		args = {
+			{
+				AssetId = assetId
+			}
+		}
+	end
+	CatalogRemote:FireServer(unpack(args))
+end
+
+local function removeAccessory(assetId)
+	local args = {
+		{
+			AssetId = assetId
+		}
+	}
+	CatalogRemote:FireServer(unpack(args))
+end
+
+-- ตรวจจับการเดิน
+RunService.RenderStepped:Connect(function()
+	if Humanoid.MoveDirection.Magnitude > 0 then
+		if not isWalking and not isJumping then
+			isWalking = true
+			wearAccessory(walkAccessoryId, Enum.AccessoryType.Back)
+		end
+	elseif isWalking and not isJumping then
+		isWalking = false
+		removeAccessory(walkAccessoryId)
+	end
+end)
+
+-- ตรวจจับการกระโดดและลงพื้น
+Humanoid.StateChanged:Connect(function(_, newState)
+	if newState == Enum.HumanoidStateType.Jumping then
+		if not isJumping then
+			isJumping = true
+			if isWalking then
+				removeAccessory(walkAccessoryId)
+			end
+			wearAccessory(jumpAccessoryId, Enum.AccessoryType.Back)
+		end
+	elseif newState == Enum.HumanoidStateType.Landed then
+		if isJumping then
+			isJumping = false
+			removeAccessory(jumpAccessoryId)
+			if Humanoid.MoveDirection.Magnitude > 0 then
+				isWalking = true
+				wearAccessory(walkAccessoryId, Enum.AccessoryType.Back)
+			end
+		end
+	end
+end)
+
+-- ตรวจสอบ HP (Low Health ใส่ทับได้)
+Humanoid.HealthChanged:Connect(function(health)
+	if health < Humanoid.MaxHealth then
+		if not isLowHealth then
+			isLowHealth = true
+			wearAccessory(lowHealthAccessoryId, Enum.AccessoryType.Back)
+		end
+	else
+		if isLowHealth then
+			isLowHealth = false
+			removeAccessory(lowHealthAccessoryId)
+		end
+	end
+end)
+
+-- ตรวจสอบข้อความแชท ใส่ Face 3 วินาที
+LocalPlayer.Chatted:Connect(function(msg)
+	if msg == "😐" then
+		-- ใส่ Face
+		wearAccessory(faceAccessoryId, Enum.AccessoryType.Face)
+		-- รอ 3 วินาทีแล้วถอด
+		delay(3, function()
+			removeAccessory(faceAccessoryId)
+		end)
+	end
+end)
