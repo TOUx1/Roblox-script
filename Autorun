@@ -1,0 +1,117 @@
+-- LocalScript (ส่วน 1/2)
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+
+-- UI
+local ScreenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
+ScreenGui.ResetOnSpawn = false
+
+local Frame = Instance.new("Frame", ScreenGui)
+Frame.Size = UDim2.new(0, 220, 0, 140)
+Frame.Position = UDim2.new(0.3, 0, 0.3, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+Frame.Active = true
+Frame.Draggable = true
+Frame.BorderSizePixel = 0
+Frame.BackgroundTransparency = 0.2
+
+local Title = Instance.new("TextLabel", Frame)
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.BackgroundTransparency = 1
+Title.Text = "🚨 ป้องกัน Handcuff 🚨"
+Title.TextColor3 = Color3.fromRGB(255, 50, 50)
+Title.Font = Enum.Font.FredokaOne
+Title.TextSize = 18
+
+-- ปุ่ม เปิด/ปิดระบบ
+local ToggleBtn = Instance.new("TextButton", Frame)
+ToggleBtn.Size = UDim2.new(0.8, 0, 0, 30)
+ToggleBtn.Position = UDim2.new(0.1, 0, 0.35, 0)
+ToggleBtn.Text = "ระบบ: เปิด ✅"
+ToggleBtn.TextColor3 = Color3.fromRGB(255,255,255)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
+ToggleBtn.Font = Enum.Font.GothamBold
+ToggleBtn.TextSize = 16
+ToggleBtn.AutoButtonColor = true
+Instance.new("UICorner", ToggleBtn)
+
+local systemOn = true
+ToggleBtn.MouseButton1Click:Connect(function()
+	systemOn = not systemOn
+	if systemOn then
+		ToggleBtn.Text = "ระบบ: เปิด ✅"
+		ToggleBtn.BackgroundColor3 = Color3.fromRGB(50,150,50)
+	else
+		ToggleBtn.Text = "ระบบ: ปิด ❌"
+		ToggleBtn.BackgroundColor3 = Color3.fromRGB(150,50,50)
+	end
+end)
+
+-- ปุ่ม ตัวเล็ก
+local SmallBtn = Instance.new("TextButton", Frame)
+SmallBtn.Size = UDim2.new(0.8, 0, 0, 30)
+SmallBtn.Position = UDim2.new(0.1, 0, 0.6, 0)
+SmallBtn.Text = "ตัวเล็ก 👶"
+SmallBtn.TextColor3 = Color3.fromRGB(255,255,255)
+SmallBtn.BackgroundColor3 = Color3.fromRGB(50, 100, 200)
+SmallBtn.Font = Enum.Font.GothamBold
+SmallBtn.TextSize = 16
+SmallBtn.AutoButtonColor = true
+Instance.new("UICorner", SmallBtn)
+
+SmallBtn.MouseButton1Click:Connect(function()
+	local args = {
+		{
+			BodyScale = {
+				BodyTypeScale = 0,
+				DepthScale = 0.5,
+				HeadScale = 0.5,
+				HeightScale = 0.5,
+				WidthScale = 0.5,
+				ProportionScale = 0
+			}
+		}
+	}
+	game:GetService("ReplicatedStorage"):WaitForChild("BloxbizRemotes"):WaitForChild("CatalogOnApplyToRealHumanoid"):FireServer(unpack(args))
+end)
+
+-- ฟังก์ชันตรวจ Handcuff
+local function hasHandcuff(plr)
+	if not plr.Character then return false end
+	local bp = plr:FindFirstChild("Backpack")
+	if bp and bp:FindFirstChild("Handcuff") then return true end
+	if plr.Character:FindFirstChild("Handcuff") then return true end
+	return false
+end
+-- LocalScript (ส่วน 2/2 ต่อจากส่วนแรก)
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+
+RunService.Heartbeat:Connect(function()
+	if not systemOn then return end
+	if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
+
+	local myRoot = LocalPlayer.Character.HumanoidRootPart
+	for _,plr in pairs(Players:GetPlayers()) do
+		if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+			if hasHandcuff(plr) and plr.Character:FindFirstChild("Humanoid") then
+				local dist = (plr.Character.HumanoidRootPart.Position - myRoot.Position).Magnitude
+				local detectRange = 20 -- ระยะปกติ
+				if plr.Character.Humanoid.WalkSpeed >= 35 then
+					detectRange = 35 -- เพิ่มระยะถ้าผู้เล่นวิ่งเร็ว
+				end
+
+				if dist < detectRange then
+					-- วาปไปข้างหลังผู้เล่นที่ถือ Handcuff พร้อมเว้นระยะ 25 studs
+					local backVector = -plr.Character.HumanoidRootPart.CFrame.LookVector
+					local safeDistance = 25
+					local targetPos = plr.Character.HumanoidRootPart.Position + backVector * safeDistance
+					-- ย้ายตัวไป targetPos โดยไม่ล็อคตัวหรือหมุนตัว
+					myRoot.CFrame = CFrame.new(targetPos)
+				end
+			end
+		end
+	end
+returnrn
