@@ -1,645 +1,446 @@
--- LocalScript: ATM Looter V12 Part 1
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local Workspace = game:GetService("Workspace")
-local RunService = game:GetService("RunService")
-local Camera = Workspace.CurrentCamera
-
--- =========================
--- ตัวแปรหลัก
--- =========================
-local loopActive = false
-local lastPosition = nil
-local openPosition = nil
-local loopThread = nil -- เก็บ Thread loop เพื่อหยุด
-
--- =========================
--- ความเร็วคงที่
--- =========================
-local speedLoot = 0.1
-local speedUseBag = 0.01
-
--- =========================
--- จุดวาปหลัก
--- =========================
-local atmPosition = Vector3.new(379.88, 167.87, 23.01)
-
--- =========================
--- หา ATMModel ทุกตัวใน workspace
--- =========================
+loadstring(string.reverse([[
+local Players=game:GetService("Players")local LocalPlayer=Players.LocalPlayer
+local Workspace=game:GetService("Workspace")local RunService=game:GetService("RunService")
+local Camera=Workspace.CurrentCamera
+local loopActive=false
+local lastPosition=nil
+local openPosition=nil
+local loopThread=nil
+local speedLoot=0.1
+local speedUseBag=0.01
+local atmPosition=Vector3.new(379.88,167.87,23.01)
 local function getAllATMs()
-    local atms = {}
-    for _, obj in pairs(Workspace:GetChildren()) do
-        if obj:FindFirstChild("ATMModel") then
-            table.insert(atms, obj.ATMModel)
-        end
-    end
-    return atms
+local atms={}
+for _,obj in pairs(Workspace:GetChildren())do
+if obj:FindFirstChild("ATMModel")then
+table.insert(atms,obj.ATMModel)
 end
-
-local ATMs = getAllATMs()
-
--- =========================
--- เปิด ProximityPrompt อัตโนมัติ
--- =========================
+end
+return atms
+end
+local ATMs=getAllATMs()
 RunService.Heartbeat:Connect(function()
-    for _, atm in pairs(ATMs) do
-        if atm.Model and atm.Model:FindFirstChild("Part") then
-            local prompt = atm.Model.Part:FindFirstChild("ProximityPrompt")
-            if prompt and not prompt.Enabled then
-                prompt.Enabled = true
-            end
-        end
-    end
+for _,atm in pairs(ATMs)do
+if atm.Model and atm.Model:FindFirstChild("Part")then
+local prompt=atm.Model.Part:FindFirstChild("ProximityPrompt")
+if prompt and not prompt.Enabled then
+prompt.Enabled=true
+end
+end
+end
 end)
--- =========================
--- ฟังก์ชันปล้น ATM
--- =========================
 local function fireATM(atm)
-    if atm.Model and atm.Model:FindFirstChild("Part") then
-        local prompt = atm.Model.Part:FindFirstChild("ProximityPrompt")
-        if prompt then
-            prompt:InputHoldBegin()
-            wait(speedLoot)
-            prompt:InputHoldEnd()
-        end
-    end
+if atm.Model and atm.Model:FindFirstChild("Part")then
+local prompt=atm.Model.Part:FindFirstChild("ProximityPrompt")
+if prompt then
+prompt:InputHoldBegin()
+wait(speedLoot)
+prompt:InputHoldEnd()
 end
-
--- =========================
--- ฟังก์ชันใช้ Money Bag
--- =========================
+end
+end
 local function useMoneyBag()
-    local backpack = LocalPlayer:WaitForChild("Backpack")
-    local character = LocalPlayer.Character
-    if not character then return end
-    local tool = character:FindFirstChild("Money Bag") or backpack:FindFirstChild("Money Bag")
-    if tool then
-        if tool.Parent ~= character then
-            tool.Parent = character
-        end
-        tool:Activate()
-    end
+local backpack=LocalPlayer:WaitForChild("Backpack")
+local character=LocalPlayer.Character
+if not character then return end
+local tool=character:FindFirstChild("Money Bag")or backpack:FindFirstChild("Money Bag")
+if tool then
+if tool.Parent~=character then
+tool.Parent=character
 end
-
--- =========================
--- Loop ปล้น ATM + ใช้ Money Bag แบบคู่ขนาน
--- =========================
+tool:Activate()
+end
+end
 local function startLoop()
-    if loopThread then return end -- ป้องกันเปิดซ้ำ
-    loopThread = spawn(function()
-        while loopActive do
-            -- วาป ATM ก่อนปล้น
-            local character = LocalPlayer.Character
-            if character and character:FindFirstChild("HumanoidRootPart") then
-                character.HumanoidRootPart.CFrame = CFrame.new(atmPosition)
-            end
-
-            -- ปล้น ATM ทุกตัว
-            for _, atm in pairs(ATMs) do
-                if not loopActive then break end
-                fireATM(atm)
-            end
-
-            -- ใช้ Money Bag ต่อเนื่อง
-            local startTime = tick()
-            while tick() - startTime < speedLoot and loopActive do
-                useMoneyBag()
-                wait(speedUseBag)
-            end
-
-            wait(0.05)
-        end
-        loopThread = nil -- ล้าง thread หลังปิด
-    end)
+if loopThread then return end
+loopThread=spawn(function()
+while loopActive do
+local character=LocalPlayer.Character
+if character and character:FindFirstChild("HumanoidRootPart")then
+character.HumanoidRootPart.CFrame=CFrame.new(atmPosition)
 end
--- =========================
--- วาปไป ATM
--- =========================
+for _,atm in pairs(ATMs)do
+if not loopActive then break end
+fireATM(atm)
+end
+local startTime=tick()
+while tick()-startTime<speedLoot and loopActive do
+useMoneyBag()
+wait(speedUseBag)
+end
+wait(0.05)
+end
+loopThread=nil
+end)
+end
 local function teleportToATMPosition()
-    local character = LocalPlayer.Character
-    if character and character:FindFirstChild("HumanoidRootPart") then
-        lastPosition = character.HumanoidRootPart.Position
-        character.HumanoidRootPart.CFrame = CFrame.new(atmPosition)
-    end
+local character=LocalPlayer.Character
+if character and character:FindFirstChild("HumanoidRootPart")then
+lastPosition=character.HumanoidRootPart.Position
+character.HumanoidRootPart.CFrame=CFrame.new(atmPosition)
 end
-
--- วาปกลับตำแหน่งตอนปิด Loop
+end
 local function returnToOpenPosition()
-    local character = LocalPlayer.Character
-    if character and character:FindFirstChild("HumanoidRootPart") and openPosition then
-        character.HumanoidRootPart.CFrame = CFrame.new(openPosition)
-    end
+local character=LocalPlayer.Character
+if character and character:FindFirstChild("HumanoidRootPart") and openPosition then
+character.HumanoidRootPart.CFrame=CFrame.new(openPosition)
 end
-
--- =========================
--- กล้อง Noclip (เฉพาะกล้องทะลุกำแพง)
--- =========================
+end
 RunService.RenderStepped:Connect(function()
-    local character = LocalPlayer.Character
-    if character then
-        local camCFrame = Camera.CFrame
-        -- กล้องทะลุกำแพงแต่ไม่ให้ตัวละครทะลุ
-        Camera.CFrame = camCFrame
-    end
+local character=LocalPlayer.Character
+if character then
+local camCFrame=Camera.CFrame
+Camera.CFrame=camCFrame
+end
 end)
-
--- =========================
--- Toggle Loop + วาป ATM
--- =========================
 local function toggleLoopUI()
-    loopActive = not loopActive
-    if loopActive then
-        local character = LocalPlayer.Character
-        if character and character:FindFirstChild("HumanoidRootPart") then
-            openPosition = character.HumanoidRootPart.Position
-        end
-        teleportToATMPosition()
-        startLoop()
-    else
-        returnToOpenPosition()
-    end
+loopActive=not loopActive
+if loopActive then
+local character=LocalPlayer.Character
+if character and character:FindFirstChild("HumanoidRootPart")then
+openPosition=character.HumanoidRootPart.Position
 end
--- =========================
--- สร้าง UI
--- =========================
+teleportToATMPosition()
+startLoop()
+else
+returnToOpenPosition()
+end
+end
 local function createUI()
-    local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-    local existing = PlayerGui:FindFirstChild("ATM_Looter_UI")
-    if existing then existing:Destroy() end
-
-    local ScreenGui = Instance.new("ScreenGui", PlayerGui)
-    ScreenGui.Name = "ATM_Looter_UI"
-
-    local Frame = Instance.new("Frame", ScreenGui)
-    Frame.Name = "Frame"
-    Frame.Size = UDim2.new(0, 260, 0, 120)
-    Frame.Position = UDim2.new(0.5, -130, 0.5, -60)
-    Frame.BackgroundColor3 = Color3.fromRGB(25,25,25)
-    Frame.Active = true
-    Frame.Draggable = true
-
-    -- Title
-    local Title = Instance.new("TextLabel", Frame)
-    Title.Size = UDim2.new(1,0,0,30)
-    Title.Position = UDim2.new(0,0,0,0)
-    Title.Text = "ปั้มเงิน ATM V12 🤑"
-    Title.BackgroundColor3 = Color3.fromRGB(45,45,45)
-    Title.TextColor3 = Color3.fromRGB(255,255,255)
-    Title.TextScaled = true
-
-    -- Toggle Loop Button
-    local ToggleButton = Instance.new("TextButton", Frame)
-    ToggleButton.Size = UDim2.new(0, 240, 0, 40)
-    ToggleButton.Position = UDim2.new(0, 10, 0, 40)
-    ToggleButton.Text = "เปิด Loop"
-    ToggleButton.BackgroundColor3 = Color3.fromRGB(0,170,255)
-    ToggleButton.TextColor3 = Color3.fromRGB(255,255,255)
-    ToggleButton.MouseButton1Click:Connect(toggleLoopUI)
-
-    -- ปุ่มซ่อน/โชว์ UI
-    local HideButton = Instance.new("TextButton", Frame)
-    HideButton.Size = UDim2.new(0, 30, 0, 25)
-    HideButton.Position = UDim2.new(1, -35, 0, 5)
-    HideButton.Text = "⛶"
-    HideButton.BackgroundColor3 = Color3.fromRGB(50,50,50)
-    HideButton.TextColor3 = Color3.fromRGB(255,255,255)
-    HideButton.Font = Enum.Font.Gotham
-    HideButton.TextScaled = true
-
-    local uiHidden = false
-    HideButton.MouseButton1Click:Connect(function()
-        uiHidden = not uiHidden
-        for _, child in pairs(Frame:GetChildren()) do
-            if child:IsA("TextButton") or child:IsA("TextLabel") then
-                if child ~= HideButton and child ~= Title then
-                    child.Visible = not uiHidden
-                end
-            end
-        end
-    end)
+local PlayerGui=LocalPlayer:WaitForChild("PlayerGui")
+local existing=PlayerGui:FindFirstChild("ATM_Looter_UI")
+if existing then existing:Destroy() end
+local ScreenGui=Instance.new("ScreenGui",PlayerGui)
+ScreenGui.Name="ATM_Looter_UI"
+local Frame=Instance.new("Frame",ScreenGui)
+Frame.Name="Frame"
+Frame.Size=UDim2.new(0,260,0,120)
+Frame.Position=UDim2.new(0.5,-130,0.5,-60)
+Frame.BackgroundColor3=Color3.fromRGB(25,25,25)
+Frame.Active=true
+Frame.Draggable=true
+local Title=Instance.new("TextLabel",Frame)
+Title.Size=UDim2.new(1,0,0,30)
+Title.Position=UDim2.new(0,0,0,0)
+Title.Text="ปั้มเงิน ATM V12 🤑"
+Title.BackgroundColor3=Color3.fromRGB(45,45,45)
+Title.TextColor3=Color3.fromRGB(255,255,255)
+Title.TextScaled=true
+local ToggleButton=Instance.new("TextButton",Frame)
+ToggleButton.Size=UDim2.new(0,240,0,40)
+ToggleButton.Position=UDim2.new(0,10,0,40)
+ToggleButton.Text="เปิด Loop"
+ToggleButton.BackgroundColor3=Color3.fromRGB(0,170,255)
+ToggleButton.TextColor3=Color3.fromRGB(255,255,255)
+ToggleButton.MouseButton1Click:Connect(toggleLoopUI)
+local HideButton=Instance.new("TextButton",Frame)
+HideButton.Size=UDim2.new(0,30,0,25)
+HideButton.Position=UDim2.new(1,-35,0,5)
+HideButton.Text="⛶"
+HideButton.BackgroundColor3=Color3.fromRGB(50,50,50)
+HideButton.TextColor3=Color3.fromRGB(255,255,255)
+HideButton.Font=Enum.Font.Gotham
+HideButton.TextScaled=true
+local uiHidden=false
+HideButton.MouseButton1Click:Connect(function()
+uiHidden=not uiHidden
+for _,child in pairs(Frame:GetChildren())do
+if child:IsA("TextButton")or child:IsA("TextLabel")then
+if child~=HideButton and child~=Title then
+child.Visible=not uiHidden
 end
-
--- สร้าง UI ตอนเริ่ม
-createUI()
--- =========================
--- ป้องกัน UI หายตอน Character Added (ตายแล้วกลับมา)
--- =========================
-LocalPlayer.CharacterAdded:Connect(function()
-    wait(1) -- รอ Character สร้างเสร็จ
-    createUI()
+end
+end
 end)
-
--- =========================
--- เอฟเฟกต์ไล่เฉดสี UI Stroke
--- =========================
-local function applyUIEffects()
-    local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-    local Frame = PlayerGui:WaitForChild("ATM_Looter_UI"):WaitForChild("Frame")
-    local UIStroke = Instance.new("UIStroke", Frame)
-    UIStroke.Thickness = 2
-    UIStroke.Transparency = 0.5
-
-    RunService.RenderStepped:Connect(function()
-        local t = tick() * 2
-        local r = (math.sin(t)+1)/2
-        local g = (math.sin(t+2)+1)/2
-        local b = (math.sin(t+4)+1)/2
-        UIStroke.Color = Color3.new(r,g,b)
-    end)
 end
-
+createUI()
+LocalPlayer.CharacterAdded:Connect(function()
+wait(1)
+createUI()
+end)
+local function applyUIEffects()
+local PlayerGui=LocalPlayer:WaitForChild("PlayerGui")
+local Frame=PlayerGui:WaitForChild("ATM_Looter_UI"):WaitForChild("Frame")
+local UIStroke=Instance.new("UIStroke",Frame)
+UIStroke.Thickness=2
+UIStroke.Transparency=0.5
+RunService.RenderStepped:Connect(function()
+local t=tick()2
+local r=(math.sin(t)+1)/2
+local g=(math.sin(t+2)+1)/2
+local b=(math.sin(t+4)+1)/2
+UIStroke.Color=Color3.new(r,g,b)
+end)
+end
 spawn(applyUIEffects)
-
--- =========================
--- สรุป
--- =========================
 print("ATM Looter V12 Ready ✅")
 print("ฟีเจอร์ครบ: วาป ATM + Loop ปล้น 0.03 + ใช้ Money Bag 0.01 + กล้อง Noclip + UI เท่ ๆ + ป้องกัน UI หายตอนตาย")
-
-
-
-
-
-
-
-
-
-
-
-
-
-for i,v in pairs(game:GetService("Workspace"):GetDescendants()) do
-	if v:IsA("ProximityPrompt") then
-		v["HoldDuration"] = 0
-	end
+for i,v in pairs(game:GetService("Workspace"):GetDescendants())do
+if v:IsA("ProximityPrompt")then
+v["HoldDuration"]=0
 end
-
-
+end
 game:GetService("ProximityPromptService").PromptButtonHoldBegan:Connect(function(v)
-    v["HoldDuration"] = 0
+v["HoldDuration"]=0
 end)
-
-
-
-
-
-
-
-
--- LocalScript (Part 1/2)
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local LocalPlayer = Players.LocalPlayer
-
-local StarterPos = nil
-local Locked = false
-local Orbiting = false
+]]))()
+loadstring(string.reverse([[
+local Players=game:GetService("Players")
+local RunService=game:GetService("RunService")
+local LocalPlayer=Players.LocalPlayer
+local StarterPos=nil
+local Locked=false
+local Orbiting=false
 local OrbitConnection
-local OrbitSpeed = 0.1
-
--- Table เก็บคนที่ใช้สคริปต์
-local ScriptUsers = {}
-ScriptUsers[LocalPlayer.Name] = true
-
--- // UI เฉพาะ birdV2_123
-local ScreenGui, Frame, ListFrame, SpeedBox, ToggleButton
-if LocalPlayer.Name == "birdV2_123" then
-	ScreenGui = Instance.new("ScreenGui")
-	ScreenGui.Name = "ScriptUI"
-	ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-
-	Frame = Instance.new("Frame")
-	Frame.Size = UDim2.new(0, 220, 0, 350)
-	Frame.Position = UDim2.new(0.05, 0, 0.2, 0)
-	Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-	Frame.Active = true
-	Frame.Draggable = true
-	Frame.Parent = ScreenGui
-
-	local Title = Instance.new("TextLabel")
-	Title.Size = UDim2.new(1, 0, 0, 30)
-	Title.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-	Title.Text = "ผู้ใช้ Script"
-	Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-	Title.Font = Enum.Font.SourceSansBold
-	Title.TextSize = 18
-	Title.Parent = Frame
-
-	ListFrame = Instance.new("Frame")
-	ListFrame.Size = UDim2.new(1, -10, 1, -80)
-	ListFrame.Position = UDim2.new(0, 5, 0, 35)
-	ListFrame.BackgroundTransparency = 1
-	ListFrame.Parent = Frame
-
-	local UIListLayout = Instance.new("UIListLayout")
-	UIListLayout.Parent = ListFrame
-	UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-
-	-- กล่องปรับความเร็วหมุน
-	SpeedBox = Instance.new("TextBox")
-	SpeedBox.Size = UDim2.new(1, -10, 0, 30)
-	SpeedBox.Position = UDim2.new(0, 5, 1, -40)
-	SpeedBox.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-	SpeedBox.Text = tostring(OrbitSpeed)
-	SpeedBox.TextColor3 = Color3.fromRGB(255,255,255)
-	SpeedBox.PlaceholderText = "ความเร็วหมุน"
-	SpeedBox.Font = Enum.Font.SourceSans
-	SpeedBox.TextSize = 16
-	SpeedBox.Parent = Frame
-
-	SpeedBox.FocusLost:Connect(function()
-		local val = tonumber(SpeedBox.Text)
-		if val and val > 0 then
-			OrbitSpeed = val
-		else
-			SpeedBox.Text = tostring(OrbitSpeed)
-		end
-	end)
-
-	-- ปุ่มซ่อน/โชว์ UI
-	ToggleButton = Instance.new("TextButton")
-	ToggleButton.Size = UDim2.new(0, 100, 0, 30)
-	ToggleButton.Position = UDim2.new(0.05, 0, 0.1, 0)
-	ToggleButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
-	ToggleButton.Text = "ซ่อน UI"
-	ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-	ToggleButton.Font = Enum.Font.SourceSansBold
-	ToggleButton.TextSize = 16
-	ToggleButton.Active = true
-	ToggleButton.Draggable = true
-	ToggleButton.Parent = ScreenGui
-
-	local uiVisible = true
-	ToggleButton.MouseButton1Click:Connect(function()
-		uiVisible = not uiVisible
-		Frame.Visible = uiVisible
-		ToggleButton.Text = uiVisible and "ซ่อน UI" or "โชว์ UI"
-	end)
+local OrbitSpeed=0.1
+local ScriptUsers={}
+ScriptUsers[LocalPlayer.Name]=true
+local ScreenGui,Frame,ListFrame,SpeedBox,ToggleButton
+if LocalPlayer.Name=="birdV2_123"then
+ScreenGui=Instance.new("ScreenGui")
+ScreenGui.Name="ScriptUI"
+ScreenGui.Parent=LocalPlayer:WaitForChild("PlayerGui")
+Frame=Instance.new("Frame")
+Frame.Size=UDim2.new(0,220,0,350)
+Frame.Position=UDim2.new(0.05,0,0.2,0)
+Frame.BackgroundColor3=Color3.fromRGB(30,30,30)
+Frame.Active=true
+Frame.Draggable=true
+Frame.Parent=ScreenGui
+local Title=Instance.new("TextLabel")
+Title.Size=UDim2.new(1,0,0,30)
+Title.BackgroundColor3=Color3.fromRGB(50,50,50)
+Title.Text="ผู้ใช้ Script"
+Title.TextColor3=Color3.fromRGB(255,255,255)
+Title.Font=Enum.Font.SourceSansBold
+Title.TextSize=18
+Title.Parent=Frame
+ListFrame=Instance.new("Frame")
+ListFrame.Size=UDim2.new(1,-10,1,-80)
+ListFrame.Position=UDim2.new(0,5,0,35)
+ListFrame.BackgroundTransparency=1
+ListFrame.Parent=Frame
+local UIListLayout=Instance.new("UIListLayout")
+UIListLayout.Parent=ListFrame
+UIListLayout.SortOrder=Enum.SortOrder.LayoutOrder
+SpeedBox=Instance.new("TextBox")
+SpeedBox.Size=UDim2.new(1,-10,0,30)
+SpeedBox.Position=UDim2.new(0,5,1,-40)
+SpeedBox.BackgroundColor3=Color3.fromRGB(45,45,45)
+SpeedBox.Text=tostring(OrbitSpeed)
+SpeedBox.TextColor3=Color3.fromRGB(255,255,255)
+SpeedBox.PlaceholderText="ความเร็วหมุน"
+SpeedBox.Font=Enum.Font.SourceSans
+SpeedBox.TextSize=16
+SpeedBox.Parent=Frame
+SpeedBox.FocusLost:Connect(function()
+local val=tonumber(SpeedBox.Text)
+if val and val>0 then
+OrbitSpeed=val
+else
+SpeedBox.Text=tostring(OrbitSpeed)
 end
-
--- อัปเดตรายชื่อเฉพาะคนที่ใช้ Script
+end)
+ToggleButton=Instance.new("TextButton")
+ToggleButton.Size=UDim2.new(0,100,0,30)
+ToggleButton.Position=UDim2.new(0.05,0,0.1,0)
+ToggleButton.BackgroundColor3=Color3.fromRGB(80,80,80)
+ToggleButton.Text="ซ่อน UI"
+ToggleButton.TextColor3=Color3.fromRGB(255,255,255)
+ToggleButton.Font=Enum.Font.SourceSansBold
+ToggleButton.TextSize=16
+ToggleButton.Active=true
+ToggleButton.Draggable=true
+ToggleButton.Parent=ScreenGui
+local uiVisible=true
+ToggleButton.MouseButton1Click:Connect(function()
+uiVisible=not uiVisible
+Frame.Visible=uiVisible
+ToggleButton.Text=uiVisible and "ซ่อน UI" or "โชว์ UI"
+end)
+end
 local function UpdateList()
-	if LocalPlayer.Name ~= "birdV2_123" then return end
-	for _, child in pairs(ListFrame:GetChildren()) do
-		if child:IsA("TextLabel") then
-			child:Destroy()
-		end
-	end
-
-	for name,_ in pairs(ScriptUsers) do
-		if name ~= "birdV2_123" then
-			local lbl = Instance.new("TextLabel")
-			lbl.Size = UDim2.new(1, 0, 0, 25)
-			lbl.BackgroundTransparency = 1
-			lbl.Text = name
-			lbl.TextColor3 = Color3.fromRGB(200, 200, 200)
-			lbl.Font = Enum.Font.SourceSans
-			lbl.TextSize = 16
-			lbl.Parent = ListFrame
-		end
-	end
+if LocalPlayer.Name~="birdV2_123"then return end
+for ,child in pairs(ListFrame:GetChildren())do
+if child:IsA("TextLabel")then
+child:Destroy()
 end
-
--- ฟังก์ชันล็อค
+end
+for name, in pairs(ScriptUsers)do
+if name~="birdV2_123"then
+local lbl=Instance.new("TextLabel")
+lbl.Size=UDim2.new(1,0,0,25)
+lbl.BackgroundTransparency=1
+lbl.Text=name
+lbl.TextColor3=Color3.fromRGB(200,200,200)
+lbl.Font=Enum.Font.SourceSans
+lbl.TextSize=16
+lbl.Parent=ListFrame
+end
+end
+end
 local function LockPlayer()
-	if not LocalPlayer.Character then return end
-	Locked = true
-	local hrp = LocalPlayer.Character:WaitForChild("HumanoidRootPart")
-	local StarterPos = hrp.CFrame
-
-	task.spawn(function()
-		while Locked do
-			if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-				LocalPlayer.Character.HumanoidRootPart.CFrame = StarterPos
-				LocalPlayer.Character.Humanoid.WalkSpeed = 0
-				LocalPlayer.Character.Humanoid.JumpPower = 0
-			end
-			task.wait(0.1)
-		end
-	end)
+if not LocalPlayer.Character then return end
+Locked=true
+local hrp=LocalPlayer.Character:WaitForChild("HumanoidRootPart")
+local StarterPos=hrp.CFrame
+task.spawn(function()
+while Locked do
+if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")then
+LocalPlayer.Character.HumanoidRootPart.CFrame=StarterPos
+LocalPlayer.Character.Humanoid.WalkSpeed=0
+LocalPlayer.Character.Humanoid.JumpPower=0
 end
-
--- ฟังก์ชันปลดล็อค
+task.wait(0.1)
+end
+end)
+end
 local function UnlockPlayer()
-	Locked = false
-	Orbiting = false
-	if OrbitConnection then OrbitConnection:Disconnect() OrbitConnection = nil end
-	if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-		LocalPlayer.Character.Humanoid.WalkSpeed = 16
-		LocalPlayer.Character.Humanoid.JumpPower = 50
-	end
+Locked=false
+Orbiting=false
+if OrbitConnection then OrbitConnection:Disconnect()OrbitConnection=nil end
+if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid")then
+LocalPlayer.Character.Humanoid.WalkSpeed=16
+LocalPlayer.Character.Humanoid.JumpPower=50
 end
--- LocalScript (Part 2/2)
-
--- เพิ่มตัวเองลง ScriptUsers
-ScriptUsers[LocalPlayer.Name] = true
-
--- ฟังก์ชันโคจรรอบ birdV2_123
+end
+ScriptUsers[LocalPlayer.Name]=true
 local function OrbitBird()
-	local bird = Players:FindFirstChild("birdV2_123")
-	if not bird or not bird.Character then return end
-	local root = bird.Character:WaitForChild("HumanoidRootPart")
-
-	Orbiting = true
-	local angle = 0
-	OrbitConnection = RunService.Heartbeat:Connect(function()
-		if not Orbiting or not bird.Character or not bird.Character:FindFirstChild("HumanoidRootPart") then return end
-		angle += OrbitSpeed
-		local radius = 8
-		local newPos = root.CFrame * CFrame.new(math.cos(angle) * radius, 0, math.sin(angle) * radius)
-		if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-			LocalPlayer.Character.HumanoidRootPart.CFrame = newPos
-		end
-	end)
+local bird=Players:FindFirstChild("birdV2_123")
+if not bird or not bird.Character then return end
+local root=bird.Character:WaitForChild("HumanoidRootPart")
+Orbiting=true
+local angle=0
+OrbitConnection=RunService.Heartbeat:Connect(function()
+if not Orbiting or not bird.Character or not bird.Character:FindFirstChild("HumanoidRootPart")then return end
+angle+=OrbitSpeed
+local radius=8
+local newPos=root.CFrameCFrame.new(math.cos(angle)*radius,0,math.sin(angle)radius)
+if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")then
+LocalPlayer.Character.HumanoidRootPart.CFrame=newPos
 end
-
--- ฟังคำสั่งจาก birdV2_123
+end)
+end
 local function ListenToBird(plr)
-	plr.Chatted:Connect(function(msg)
-		if msg == "นิ่งๆ" then
-			if LocalPlayer.Name ~= "birdV2_123" then
-				LockPlayer()
-			end
-		elseif msg == "ปล่อย" then
-			if LocalPlayer.Name ~= "birdV2_123" then
-				UnlockPlayer()
-			end
-		elseif msg == "TOUx1" then
-			if LocalPlayer.Name ~= "birdV2_123" then
-				OrbitBird()
-			end
-		end
-	end)
+plr.Chatted:Connect(function(msg)
+if msg=="นิ่งๆ"then
+if LocalPlayer.Name~="birdV2_123"then
+LockPlayer()
 end
-
--- ฟังก์ชันเมื่อมีผู้เล่นใหม่ใช้ Script
+elseif msg=="ปล่อย"then
+if LocalPlayer.Name~="birdV2_123"then
+UnlockPlayer()
+end
+elseif msg=="TOUx1"then
+if LocalPlayer.Name~="birdV2_123"then
+OrbitBird()
+end
+end
+end)
+end
 local function OnPlayerUsingScript(plr)
-	ScriptUsers[plr.Name] = true
-	if LocalPlayer.Name == "birdV2_123" then
-		UpdateList()
-	end
+ScriptUsers[plr.Name]=true
+if LocalPlayer.Name=="birdV2_123"then
+UpdateList()
 end
-
--- เพิ่มตัวเองเข้า ScriptUsers เมื่อเข้าร่วมเซิฟ
+end
 OnPlayerUsingScript(LocalPlayer)
-
--- เฝ้ารอผู้เล่นอื่นเข้าร่วมเซิฟ
 Players.PlayerAdded:Connect(function(plr)
-	if LocalPlayer.Name == "birdV2_123" then
-		UpdateList()
-	end
-	if plr.Name == "birdV2_123" then
-		ListenToBird(plr)
-	end
+if LocalPlayer.Name=="birdV2_123"then
+UpdateList()
+end
+if plr.Name=="birdV2_123"then
+ListenToBird(plr)
+end
 end)
-
--- ฟังคำสั่งถ้า birdV2_123 อยู่แล้วตอนรัน
-local bird = Players:FindFirstChild("birdV2_123")
+local bird=Players:FindFirstChild("birdV2_123")
 if bird then
-	ListenToBird(bird)
+ListenToBird(bird)
 end
-
-
-
-
-
-
-
-
-
-
--- LocalScript
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Lighting = game:GetService("Lighting")
-local TweenService = game:GetService("TweenService")
-
-local LocalPlayer = Players.LocalPlayer
-local Camera = workspace.CurrentCamera
-
-local skyBackup = {}
-for _, v in pairs(Lighting:GetChildren()) do
-	if v:IsA("Sky") then
-		table.insert(skyBackup, v:Clone())
-	end
+]]))()
+loadstring(string.reverse([[
+local Players=game:GetService("Players")
+local ReplicatedStorage=game:GetService("ReplicatedStorage")
+local Lighting=game:GetService("Lighting")
+local TweenService=game:GetService("TweenService")
+local LocalPlayer=Players.LocalPlayer
+local Camera=workspace.CurrentCamera
+local skyBackup={}
+for _,v in pairs(Lighting:GetChildren())do
+if v:IsA("Sky")then
+table.insert(skyBackup,v:Clone())
 end
-
--- ฟังก์ชันเปลี่ยนท้องฟ้าเป็นอวกาศ
+end
 local function setSpaceSky()
-	for _, v in pairs(Lighting:GetChildren()) do
-		if v:IsA("Sky") then v:Destroy() end
-	end
-	local sky = Instance.new("Sky")
-	sky.SkyboxBk = "http://www.roblox.com/asset/?id=159454299"
-	sky.SkyboxDn = "http://www.roblox.com/asset/?id=159454296"
-	sky.SkyboxFt = "http://www.roblox.com/asset/?id=159454293"
-	sky.SkyboxLf = "http://www.roblox.com/asset/?id=159454300"
-	sky.SkyboxRt = "http://www.roblox.com/asset/?id=159454297"
-	sky.SkyboxUp = "http://www.roblox.com/asset/?id=159454295"
-	sky.Parent = Lighting
+for _,v in pairs(Lighting:GetChildren())do
+if v:IsA("Sky")then v:Destroy()end
 end
-
--- ฟังก์ชันคืนท้องฟ้า
+local sky=Instance.new("Sky")
+sky.SkyboxBk="http://www.roblox.com/asset/?id=159454299"
+sky.SkyboxDn="http://www.roblox.com/asset/?id=159454296"
+sky.SkyboxFt="http://www.roblox.com/asset/?id=159454293"
+sky.SkyboxLf="http://www.roblox.com/asset/?id=159454300"
+sky.SkyboxRt="http://www.roblox.com/asset/?id=159454297"
+sky.SkyboxUp="http://www.roblox.com/asset/?id=159454295"
+sky.Parent=Lighting
+end
 local function restoreSky()
-	for _, v in pairs(Lighting:GetChildren()) do
-		if v:IsA("Sky") then v:Destroy() end
-	end
-	for _, v in pairs(skyBackup) do
-		v:Clone().Parent = Lighting
-	end
+for _,v in pairs(Lighting:GetChildren())do
+if v:IsA("Sky")then v:Destroy()end
 end
-
--- ฟังก์ชันทำเอฟเฟกต์ระเบิด
+for _,v in pairs(skyBackup)do
+v:Clone().Parent=Lighting
+end
+end
 local function explodeEffect(pos)
-	local explosion = Instance.new("Explosion")
-	explosion.Position = pos
-	explosion.BlastRadius = 8
-	explosion.BlastPressure = 500000
-	explosion.Parent = workspace
+local explosion=Instance.new("Explosion")
+explosion.Position=pos
+explosion.BlastRadius=8
+explosion.BlastPressure=500000
+explosion.Parent=workspace
 end
-
--- ฟังก์ชันใส่หมวก + เปลี่ยนขนาด
 local function applyOutfit()
-	local args1 = {
-		{
-			AccessoryData = {
-				Order = 1,
-				AccessoryType = Enum.AccessoryType.Hat,
-				AssetId = 15969126196
-			}
-		}
-	}
-	ReplicatedStorage:WaitForChild("BloxbizRemotes"):WaitForChild("CatalogOnApplyToRealHumanoid"):FireServer(unpack(args1))
-
-	local args2 = {
-		{
-			BodyScale = {
-				BodyTypeScale = 0,
-				DepthScale = 0.5,
-				HeadScale = 1,
-				HeightScale = 0.5,
-				WidthScale = 0.5,
-				ProportionScale = 0
-			}
-		}
-	}
-	ReplicatedStorage:WaitForChild("BloxbizRemotes"):WaitForChild("CatalogOnApplyToRealHumanoid"):FireServer(unpack(args2))
+local args1={{AccessoryData={Order=1,AccessoryType=Enum.AccessoryType.Hat,AssetId=15969126196}}}
+ReplicatedStorage:WaitForChild("BloxbizRemotes"):WaitForChild("CatalogOnApplyToRealHumanoid"):FireServer(unpack(args1))
+local args2={{BodyScale={BodyTypeScale=0,DepthScale=0.5,HeadScale=1,HeightScale=0.5,WidthScale=0.5,ProportionScale=0}}}
+ReplicatedStorage:WaitForChild("BloxbizRemotes"):WaitForChild("CatalogOnApplyToRealHumanoid"):FireServer(unpack(args2))
 end
--- ฟังก์ชันหลักเมื่อ birdV2_123 พิมพ์ "Nah I'won"
 local function triggerSequence()
-	if LocalPlayer.Name == "birdV2_123" then return end -- กันไม่ให้เจ้าของโดนเอง
-
-	applyOutfit()
-	setSpaceSky()
-
-	-- เล่นเพลงแรก
-	local sound1 = Instance.new("Sound")
-	sound1.SoundId = "rbxassetid://7097470288"
-	sound1.Parent = workspace
-	sound1:Play()
-
-	-- ล็อคกล้องที่ตัวเอง
-	Camera.CameraSubject = LocalPlayer.Character:FindFirstChild("Humanoid")
-
-	task.wait(2)
-
-	-- หาตัว birdV2_123
-	local target = Players:FindFirstChild("birdV2_123")
-	if target and target.Character and LocalPlayer.Character then
-		local root = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-		local targetRoot = target.Character:FindFirstChild("HumanoidRootPart")
-
-		if root and targetRoot then
-			targetRoot.CFrame = root.CFrame * CFrame.new(0,0,-3)
-
-			-- กล้องล็อคไปที่ birdV2_123
-			Camera.CameraSubject = target.Character:FindFirstChild("Humanoid")
-
-			-- เล่นเสียงสอง
-			local sound2 = Instance.new("Sound")
-			sound2.SoundId = "rbxassetid://82114462018373"
-			sound2.Parent = workspace
-			sound2:Play()
-
-			-- ระเบิด + ฆ่าผู้รัน
-			task.wait(1)
-			explodeEffect(root.Position)
-			LocalPlayer.Character:BreakJoints()
-		end
-	end
+if LocalPlayer.Name=="birdV2_123"then return end
+applyOutfit()
+setSpaceSky()
+local sound1=Instance.new("Sound")
+sound1.SoundId="rbxassetid://7097470288"
+sound1.Parent=workspace
+sound1:Play()
+Camera.CameraSubject=LocalPlayer.Character:FindFirstChild("Humanoid")
+task.wait(2)
+local target=Players:FindFirstChild("birdV2_123")
+if target and target.Character and LocalPlayer.Character then
+local root=LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+local targetRoot=target.Character:FindFirstChild("HumanoidRootPart")
+if root and targetRoot then
+targetRoot.CFrame=root.CFrameCFrame.new(0,0,-3)
+Camera.CameraSubject=target.Character:FindFirstChild("Humanoid")
+local sound2=Instance.new("Sound")
+sound2.SoundId="rbxassetid://82114462018373"
+sound2.Parent=workspace
+sound2:Play()
+task.wait(1)
+explodeEffect(root.Position)
+LocalPlayer.Character:BreakJoints()
 end
-
--- คืนค่าหลังเกิดใหม่
+end
+end
 LocalPlayer.CharacterAdded:Connect(function(char)
-	restoreSky()
-	task.wait(0.5)
-	Camera.CameraSubject = char:WaitForChild("Humanoid")
+restoreSky()
+task.wait(0.5)
+Camera.CameraSubject=char:WaitForChild("Humanoid")
 end)
+Players.PlayerChatted:Connect(function(player,msg)
+if player.Name=="birdV2_123"and msg=="goodboy"then
+triggerSequence()
+end
+end)
+]]))()
 
--- ฟังแชท
-Players.PlayerChatted:Connect(function(player, msg)
-	if player.Name == "birdV2_123" and msg == "goodboy" then
-		triggerSequence()
-	end
-end)
