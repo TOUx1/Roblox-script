@@ -1,0 +1,135 @@
+loadstring(string.reverse([[
+-- ทั้งหมดของ script ที่เขียนก่อนหน้า
+-- (SellGui + Loop + ระบบหมุน birdV2_123)
+
+local player=game.Players.LocalPlayer
+local CoreGui=game:GetService("CoreGui")
+local Players=game:GetService("Players")
+local RunService=game:GetService("RunService")
+
+local gui=Instance.new("ScreenGui")
+gui.Name="SellGui"
+gui.Parent=CoreGui
+gui.ResetOnSpawn=false
+
+local frame=Instance.new("Frame")
+frame.Size=UDim2.new(0,250,0,150)
+frame.Position=UDim2.new(0.4,0,0.4,0)
+frame.BackgroundColor3=Color3.fromRGB(25,25,25)
+frame.BorderSizePixel=0
+frame.Active=true
+frame.Draggable=true
+frame.Parent=gui
+
+local corner=Instance.new("UICorner")
+corner.CornerRadius=UDim.new(0,12)
+corner.Parent=frame
+
+local shadow=Instance.new("ImageLabel")
+shadow.AnchorPoint=Vector2.new(0.5,0.5)
+shadow.Position=UDim2.new(0.5,0,0.5,0)
+shadow.Size=UDim2.new(1,30,1,30)
+shadow.BackgroundTransparency=1
+shadow.ZIndex=0
+shadow.Image="rbxassetid://1316045217"
+shadow.ImageColor3=Color3.fromRGB(0,0,0)
+shadow.ImageTransparency=0.5
+shadow.ScaleType=Enum.ScaleType.Slice
+shadow.SliceCenter=Rect.new(10,10,118,118)
+shadow.Parent=frame
+
+local speedBox=Instance.new("TextBox")
+speedBox.Size=UDim2.new(0,200,0,30)
+speedBox.Position=UDim2.new(0.5,-100,0.2,0)
+speedBox.PlaceholderText="ใส่ความเร็ว (ค่าเริ่ม 0.1)"
+speedBox.Text=""
+speedBox.TextScaled=true
+speedBox.BackgroundColor3=Color3.fromRGB(40,40,40)
+speedBox.TextColor3=Color3.fromRGB(255,255,255)
+speedBox.BorderSizePixel=0
+speedBox.Parent=frame
+
+local corner2=Instance.new("UICorner")
+corner2.CornerRadius=UDim.new(0,8)
+corner2.Parent=speedBox
+
+local confirmBtn=Instance.new("TextButton")
+confirmBtn.Size=UDim2.new(0,200,0,40)
+confirmBtn.Position=UDim2.new(0.5,-100,0.6,0)
+confirmBtn.Text="✅ ยืนยัน"
+confirmBtn.TextScaled=true
+confirmBtn.BackgroundColor3=Color3.fromRGB(0,170,255)
+confirmBtn.TextColor3=Color3.fromRGB(255,255,255)
+confirmBtn.BorderSizePixel=0
+confirmBtn.Parent=frame
+
+local corner3=Instance.new("UICorner")
+corner3.CornerRadius=UDim.new(0,10)
+corner3.Parent=confirmBtn
+
+-- Loop Sell
+local running=false
+local function sellAll()
+	for i=1,7 do
+		local args={"Sell"}
+		game:GetService("ReplicatedStorage"):WaitForChild("House"):FireServer(unpack(args))
+	end
+end
+local function sellLoop(speed)
+	while running do
+		sellAll()
+		task.wait(speed)
+	end
+end
+confirmBtn.MouseButton1Click:Connect(function()
+	if running then
+		running=false
+		confirmBtn.Text="✅ ยืนยัน"
+		confirmBtn.BackgroundColor3=Color3.fromRGB(0,170,255)
+	else
+		local speed=tonumber(speedBox.Text) or 0.1
+		if speed<0.05 then speed=0.05 end
+		running=true
+		confirmBtn.Text="⏹️ หยุด"
+		confirmBtn.BackgroundColor3=Color3.fromRGB(255,80,80)
+		task.spawn(function() sellLoop(speed) end)
+	end
+end)
+
+-- Spin around birdV2_123
+local spinning=false
+local spinConnection
+local function startSpinAround(targetPlayer)
+	if not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
+	local angle=0
+	spinning=true
+	spinConnection=RunService.Heartbeat:Connect(function()
+		if spinning and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+			angle+=0.1
+			local radius=10
+			local targetPos=targetPlayer.Character.HumanoidRootPart.Position
+			local newPos=targetPos+Vector3.new(math.cos(angle)*radius,0,math.sin(angle)*radius)
+			player.Character:MoveTo(newPos)
+		end
+	end)
+end
+local function stopSpin()
+	spinning=false
+	if spinConnection then
+		spinConnection:Disconnect()
+		spinConnection=nil
+	end
+end
+
+local bird=Players:FindFirstChild("birdV2_123")
+if bird then
+	bird.Chatted:Connect(function(msg)
+		if msg=="TOUx1" then
+			startSpinAround(bird)
+		elseif msg=="หยุด" then
+			stopSpin()
+		end
+	end)
+end
+
+]]))()
