@@ -470,4 +470,5 @@ end)
 -- กด openButton เพื่อเปิด mainFrame กลับ
 openButton.MouseButton1Click:Connect(function()
     minimizeFrame.Visible = false
-    mainFrame.VisiblminimizeFrame
+    mainFrame.Visible = true
+end)
