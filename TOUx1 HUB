@@ -234,6 +234,7 @@ end
 
 local moneyLoop = false
 local loopSpeed = 0.1
+local autoEat = false
 
 local function showScript()
     clearContent()
@@ -338,6 +339,58 @@ local function showScript()
         -- เก็บ Handcuff
         _G.AutoCollectModule.CollectItemByName("Handcuff")
     end)
+
+    -- อ้อโต้กินข้าว
+    local autoEatLabel = Instance.new("TextLabel")
+    autoEatLabel.Size = UDim2.new(0,120,0,30)
+    autoEatLabel.Position = UDim2.new(0,10,0,170)
+    autoEatLabel.BackgroundTransparency = 1
+    autoEatLabel.Text = "อ้อโต้กินข้าว"
+    autoEatLabel.TextColor3 = Color3.fromRGB(255,255,255)
+    autoEatLabel.TextSize = 18
+    autoEatLabel.Font = Enum.Font.Gotham
+    autoEatLabel.TextXAlignment = Enum.TextXAlignment.Left
+    autoEatLabel.Parent = contentFrame
+
+    local autoEatButton = Instance.new("TextButton")
+    autoEatButton.Size = UDim2.new(0,100,0,30)
+    autoEatButton.Position = UDim2.new(0,140,0,170)
+    autoEatButton.BackgroundColor3 = Color3.fromRGB(60,60,60)
+    autoEatButton.Text = "อ้อโต้"
+    autoEatButton.TextColor3 = Color3.fromRGB(255,255,255)
+    autoEatButton.TextSize = 18
+    autoEatButton.Parent = contentFrame
+
+    autoEatButton.MouseButton1Click:Connect(function()
+        autoEat = not autoEat
+        autoEatButton.Text = autoEat and "ปิด" or "อ้อโต้"
+        if autoEat then
+            spawn(function()
+                local hungry = player:WaitForChild("Hungry") -- สมมติว่า Hungry เป็น Value ใน Player
+                while autoEat do
+                    if hungry.Value <= 50 then
+                        local CollectModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/wino444/win_test/main/test.lua"))()
+                        _G.AutoCollectModule.CollectItemByName("Tom Yum Kung")
+                        wait(0.5) -- รอให้ collect เสร็จ
+                        local tool = player.Backpack:FindFirstChild("tom yum kung")
+                        if tool then
+                            humanoid:EquipTool(tool)
+                            wait(0.1) -- รอ equip
+                            tool = character:FindFirstChild("tom yum kung")
+                            if tool then
+                                while autoEat and hungry.Value < 100 and tool.Parent == character do
+                                    local animation = humanoid:LoadAnimation(tool.Eat)
+                                    animation:Play()
+                                    wait(animation.Length + 0.1) -- รอ animation เสร็จ
+                                end
+                            end
+                        end
+                    end
+                    wait(1) -- เช็คทุกวินาทีถ้าไม่หิว
+                end
+            end)
+        end
+    end)
 end
 
 -- เชื่อมปุ่ม
@@ -361,7 +414,7 @@ minimizeFrame.Visible = false
 local openButton = Instance.new("ImageButton")
 openButton.Size = UDim2.new(1, 0, 1, 0)
 openButton.BackgroundTransparency = 1
-openButton.Image = "rbxassetid://106575147804507" -- เปลี่ยนเป็น Image ID ของรูปที่คุณต้องการ
+openButton.Image = "rbxassetid://123456789" -- เปลี่ยนเป็น Image ID ของรูปที่คุณต้องการ
 openButton.Parent = minimizeFrame
 
 -- Drag Manual สำหรับ minimizeFrame
