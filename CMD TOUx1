@@ -367,6 +367,7 @@ local function showScript()
         if autoEat then
             spawn(function()
                 local hungry = player:WaitForChild("Hungry") -- สมมติว่า Hungry เป็น Value ใน Player
+                local vim = game:GetService("VirtualInputManager")
                 while autoEat do
                     if hungry.Value <= 50 then
                         while hungry.Value < 100 and autoEat do
@@ -377,8 +378,15 @@ local function showScript()
                             if tool then
                                 humanoid:EquipTool(tool)
                                 wait(0.1) -- รอ equip
-                                tool:Activate()
-                                wait(1) -- รอ animation หรือ cooldown การกิน
+                                tool = character:FindFirstChild("tom yum kung")
+                                if tool then
+                                    while autoEat and hungry.Value < 100 and tool.Parent == character do
+                                        vim:SendMouseButtonEvent(0, 0, 0, true, game, 0) -- Button1Down
+                                        wait(0.05)
+                                        vim:SendMouseButtonEvent(0, 0, 0, false, game, 0) -- Button1Up
+                                        wait(1) -- รอเวลากินหรือ animation เสร็จ (ปรับตามความเหมาะสม)
+                                    end
+                                end
                             else
                                 wait(1) -- ถ้าไม่มี tool รอแล้วลองใหม่
                             end
@@ -462,5 +470,4 @@ end)
 -- กด openButton เพื่อเปิด mainFrame กลับ
 openButton.MouseButton1Click:Connect(function()
     minimizeFrame.Visible = false
-    mainFrame.Visible = true
-end)
+    mainFrame.VisiblminimizeFrame
