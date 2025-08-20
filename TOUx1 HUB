@@ -361,7 +361,7 @@ minimizeFrame.Visible = false
 local openButton = Instance.new("ImageButton")
 openButton.Size = UDim2.new(1, 0, 1, 0)
 openButton.BackgroundTransparency = 1
-openButton.Image = "rbxassetid://123456789" -- เปลี่ยนเป็น Image ID ของรูปที่คุณต้องการ
+openButton.Image = "rbxassetid://106575147804507" -- เปลี่ยนเป็น Image ID ของรูปที่คุณต้องการ
 openButton.Parent = minimizeFrame
 
 -- Drag Manual สำหรับ minimizeFrame
