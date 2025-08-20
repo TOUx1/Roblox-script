@@ -3,6 +3,7 @@ local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
 
 local screenGui = Instance.new("ScreenGui")
+screenGui.ResetOnSpawn = false -- เพิ่มเพื่อป้องกัน GUI หายตอน respawn
 screenGui.Parent = player:WaitForChild("PlayerGui")
 
 local mainFrame = Instance.new("Frame")
@@ -420,7 +421,7 @@ minimizeFrame.Visible = false
 local openButton = Instance.new("ImageButton")
 openButton.Size = UDim2.new(1, 0, 1, 0)
 openButton.BackgroundTransparency = 1
-openButton.Image = "rbxassetid://123456789" -- เปลี่ยนเป็น Image ID ของรูปที่คุณต้องการ
+openButton.Image = "rbxassetid://106575147804507" -- เปลี่ยนเป็น Image ID ที่ต้องการ
 openButton.Parent = minimizeFrame
 
 -- Drag Manual สำหรับ minimizeFrame
@@ -473,16 +474,12 @@ openButton.MouseButton1Click:Connect(function()
     mainFrame.Visible = true
 end)
 
--- แก้ปัญหา UI หายเมื่อตาย โดยอัปเดต character และ humanoid เมื่อ respawn
+-- อัปเดต character และ humanoid เมื่อ respawn
 player.CharacterAdded:Connect(function(newCharacter)
     character = newCharacter
     humanoid = newCharacter:WaitForChild("Humanoid")
-    -- ถ้า UI ถูกซ่อนหรือไม่ visible ให้แสดงใหม่
-    if not mainFrame.Visible and not minimizeFrame.Visible then
-        mainFrame.Visible = true
-    end
-    -- รีเฟรช content ถ้าจำเป็น เช่น ถ้ากำลังเปิดหน้า player
-    if contentFrame.Visible then -- สมมติว่ามีการเช็คว่าหน้าไหนเปิด
-        showPlayer() -- หรือ showHome() ตามที่ต้องการ
+    -- รีเฟรช content ถ้าจำเป็น
+    if contentFrame.Visible then
+        showHome() -- หรือหน้าเดิมที่เปิดอยู่
     end
 end)
