@@ -367,22 +367,28 @@ local function showScript()
         if autoEat then
             spawn(function()
                 local hungry = player:WaitForChild("Hungry") -- สมมติว่า Hungry เป็น Value ใน Player
+                local vim = game:GetService("VirtualInputManager")
                 while autoEat do
                     if hungry.Value <= 50 then
-                        local CollectModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/wino444/win_test/main/test.lua"))()
-                        _G.AutoCollectModule.CollectItemByName("Tom Yum Kung")
-                        wait(0.5) -- รอให้ collect เสร็จ
-                        local tool = player.Backpack:FindFirstChild("tom yum kung")
-                        if tool then
-                            humanoid:EquipTool(tool)
-                            wait(0.1) -- รอ equip
-                            tool = character:FindFirstChild("tom yum kung")
+                        while hungry.Value < 100 and autoEat do
+                            local CollectModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/wino444/win_test/main/test.lua"))()
+                            _G.AutoCollectModule.CollectItemByName("Tom Yum Kung")
+                            wait(0.5) -- รอให้ collect เสร็จ
+                            local tool = player.Backpack:FindFirstChild("tom yum kung")
                             if tool then
-                                while autoEat and hungry.Value < 100 and tool.Parent == character do
-                                    local animation = humanoid:LoadAnimation(tool.Eat)
-                                    animation:Play()
-                                    wait(animation.Length + 0.1) -- รอ animation เสร็จ
+                                humanoid:EquipTool(tool)
+                                wait(0.1) -- รอ equip
+                                tool = character:FindFirstChild("tom yum kung")
+                                if tool then
+                                    while autoEat and hungry.Value < 100 and tool.Parent == character do
+                                        vim:SendMouseButtonEvent(0, 0, 0, true, game, 0) -- Button1Down
+                                        wait(0.05)
+                                        vim:SendMouseButtonEvent(0, 0, 0, false, game, 0) -- Button1Up
+                                        wait(1) -- รอเวลากินหรือ animation เสร็จ (ปรับตามความเหมาะสม)
+                                    end
                                 end
+                            else
+                                wait(1) -- ถ้าไม่มี tool รอแล้วลองใหม่
                             end
                         end
                     end
@@ -414,7 +420,7 @@ minimizeFrame.Visible = false
 local openButton = Instance.new("ImageButton")
 openButton.Size = UDim2.new(1, 0, 1, 0)
 openButton.BackgroundTransparency = 1
-openButton.Image = "rbxassetid://106575147804507" -- เปลี่ยนเป็น Image ID ของรูปที่คุณต้องการ
+openButton.Image = "rbxassetid://123456789" -- เปลี่ยนเป็น Image ID ของรูปที่คุณต้องการ
 openButton.Parent = minimizeFrame
 
 -- Drag Manual สำหรับ minimizeFrame
@@ -465,4 +471,18 @@ end)
 openButton.MouseButton1Click:Connect(function()
     minimizeFrame.Visible = false
     mainFrame.Visible = true
+end)
+
+-- แก้ปัญหา UI หายเมื่อตาย โดยอัปเดต character และ humanoid เมื่อ respawn
+player.CharacterAdded:Connect(function(newCharacter)
+    character = newCharacter
+    humanoid = newCharacter:WaitForChild("Humanoid")
+    -- ถ้า UI ถูกซ่อนหรือไม่ visible ให้แสดงใหม่
+    if not mainFrame.Visible and not minimizeFrame.Visible then
+        mainFrame.Visible = true
+    end
+    -- รีเฟรช content ถ้าจำเป็น เช่น ถ้ากำลังเปิดหน้า player
+    if contentFrame.Visible then -- สมมติว่ามีการเช็คว่าหน้าไหนเปิด
+        showPlayer() -- หรือ showHome() ตามที่ต้องการ
+    end
 end)
