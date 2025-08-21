@@ -3,7 +3,7 @@ local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
 
 local screenGui = Instance.new("ScreenGui")
-screenGui.ResetOnSpawn = false -- เพิ่มเพื่อป้องกัน GUI หายตอน respawn
+screenGui.ResetOnSpawn = false
 screenGui.Parent = player:WaitForChild("PlayerGui")
 
 local mainFrame = Instance.new("Frame")
@@ -15,7 +15,6 @@ mainFrame.Active = true
 mainFrame.Draggable = true
 mainFrame.Parent = screenGui
 
--- Drag Manual (รองรับ PC และมือถือ)
 local UserInputService = game:GetService("UserInputService")
 local dragging, dragInput, dragStart, startPos
 
@@ -69,7 +68,6 @@ byText.TextSize = 20
 byText.Font = Enum.Font.GothamBold
 byText.Parent = sideBar
 
--- ปุ่ม Sidebar
 local homeButton = Instance.new("TextButton")
 homeButton.Size = UDim2.new(0,110,0,40)
 homeButton.Position = UDim2.new(0,5,0,50)
@@ -129,13 +127,11 @@ closeButton.TextColor3 = Color3.fromRGB(255,255,255)
 closeButton.TextSize = 20
 closeButton.Parent = mainFrame
 
--- Content frame
 local contentFrame = Instance.new("Frame")
 contentFrame.Size = UDim2.new(1,-120,1,-40)
 contentFrame.Position = UDim2.new(0,120,0,40)
 contentFrame.BackgroundTransparency = 1
 contentFrame.Parent = mainFrame
-
 local function clearContent()
     for _, child in pairs(contentFrame:GetChildren()) do
         child:Destroy()
@@ -176,7 +172,6 @@ end
 
 local function showPlayer()
     clearContent()
-    -- Speed
     local speedLabel = Instance.new("TextLabel")
     speedLabel.Size = UDim2.new(0,150,0,30)
     speedLabel.Position = UDim2.new(0,10,0,20)
@@ -209,7 +204,6 @@ local function showPlayer()
         end
     end)
 
-    -- Jump
     local jumpLabel = Instance.new("TextLabel")
     jumpLabel.Size = UDim2.new(0,150,0,30)
     jumpLabel.Position = UDim2.new(0,10,0,60)
@@ -249,8 +243,6 @@ local autoEat = false
 
 local function showScript()
     clearContent()
-
-    -- ปั้มเงิน
     local pumpLabel = Instance.new("TextLabel")
     pumpLabel.Size = UDim2.new(0,100,0,30)
     pumpLabel.Position = UDim2.new(0,10,0,20)
@@ -299,7 +291,6 @@ local function showScript()
         end)
     end)
 
-    -- อนิเมชั่น SFX
     local animLabel = Instance.new("TextLabel")
     animLabel.Size = UDim2.new(0,120,0,30)
     animLabel.Position = UDim2.new(0,10,0,70)
@@ -324,7 +315,6 @@ local function showScript()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/TOUx1/Roblox-script/refs/heads/main/Animation%20sfx?update="..tick()))()
     end)
 
-    -- หยิบกุญแจมือ
     local handcuffLabel = Instance.new("TextLabel")
     handcuffLabel.Size = UDim2.new(0,120,0,30)
     handcuffLabel.Position = UDim2.new(0,10,0,120)
@@ -346,12 +336,10 @@ local function showScript()
     handcuffButton.Parent = contentFrame
 
     handcuffButton.MouseButton1Click:Connect(function()
-        local CollectModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/wino444/win_test/main/test.lua"))()
-        -- เก็บ Handcuff
+        local CollectModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/wino444/wino444_CollectModule/main/.lua"))()
         _G.AutoCollectModule.CollectItemByName("Handcuff")
     end)
 
-    -- อ้อโต้กินข้าว
     local autoEatLabel = Instance.new("TextLabel")
     autoEatLabel.Size = UDim2.new(0,120,0,30)
     autoEatLabel.Position = UDim2.new(0,10,0,170)
@@ -376,40 +364,41 @@ local function showScript()
         autoEat = not autoEat
         autoEatButton.Text = autoEat and "ปิด" or "อ้อโต้"
         if autoEat then
+            local CollectModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/wino444/wino444_CollectModule/main/.lua"))()
+            _G.AutoCollectModule.CollectItemByName("Tom Yum Kung")
             spawn(function()
-                local hungry = player:WaitForChild("Hungry") -- สมมติว่า Hungry เป็น Value ใน Player
+                local hungry = player:WaitForChild("Hungry")
                 local vim = game:GetService("VirtualInputManager")
                 while autoEat do
                     if hungry.Value <= 50 then
                         while hungry.Value < 100 and autoEat do
-                            local CollectModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/wino444/win_test/main/test.lua"))()
+                            local CollectModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/wino444/wino444_CollectModule/main/.lua"))()
                             _G.AutoCollectModule.CollectItemByName("Tom Yum Kung")
-                            wait(0.5) -- รอให้ collect เสร็จ
+                            wait(0.5)
                             local tool = player.Backpack:FindFirstChild("tom yum kung")
                             if tool then
                                 humanoid:EquipTool(tool)
-                                wait(0.1) -- รอ equip
+                                wait(0.1)
                                 tool = character:FindFirstChild("tom yum kung")
                                 if tool then
                                     while autoEat and hungry.Value < 100 and tool.Parent == character do
-                                        vim:SendMouseButtonEvent(0, 0, 0, true, game, 0) -- Button1Down
+                                        vim:SendMouseButtonEvent(0, 0, 0, true, game, 0)
                                         wait(0.05)
-                                        vim:SendMouseButtonEvent(0, 0, 0, false, game, 0) -- Button1Up
-                                        wait(1) -- รอเวลากินหรือ animation เสร็จ (ปรับตามความเหมาะสม)
+                                        vim:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+                                        wait(1)
                                     end
                                 end
                             else
-                                wait(1) -- ถ้าไม่มี tool รอแล้วลองใหม่
+                                wait(1)
                             end
                         end
                     end
-                    wait(1) -- เช็คทุกวินาทีถ้าไม่หิว
+                    wait(1)
                 end
             end)
         end
     end)
 
-    -- ซื้อปืน
     local buyGunLabel = Instance.new("TextLabel")
     buyGunLabel.Size = UDim2.new(0,100,0,30)
     buyGunLabel.Position = UDim2.new(0,10,0,220)
@@ -431,28 +420,199 @@ local function showScript()
     buyGunButton.Parent = contentFrame
 
     buyGunButton.MouseButton1Click:Connect(function()
-        local CollectModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/wino444/win_test/main/test.lua"))()
-        -- เรียกใช้งาน
+        local CollectModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/wino444/wino444_CollectModule/main/.lua"))()
         _G.AutoCollectModule.CollectItemByName("M4")
     end)
 end
+local copyOutfitCode = [[
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "CopyOutfitUI"
+ScreenGui.Parent = game.CoreGui
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 270, 0, 210)
+Frame.Position = UDim2.new(0.5, -135, 0.5, -105)
+Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Frame.BorderSizePixel = 0
+Frame.Active = true
+Frame.Draggable = true
+Frame.Parent = ScreenGui
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+Title.Text = "Copy Outfit Tool"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 16
+Title.Parent = Frame
+local NameBox = Instance.new("TextBox")
+NameBox.Size = UDim2.new(1, -20, 0, 30)
+NameBox.Position = UDim2.new(0, 10, 0, 50)
+NameBox.PlaceholderText = "ใส่ชื่อผู้เล่น (ไม่ต้องเต็ม)"
+NameBox.Text = ""
+NameBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+NameBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+NameBox.ClearTextOnFocus = false
+NameBox.Font = Enum.Font.Gotham
+NameBox.TextSize = 14
+NameBox.Parent = Frame
+local CopyButton = Instance.new("TextButton")
+CopyButton.Size = UDim2.new(1, -20, 0, 40)
+CopyButton.Position = UDim2.new(0, 10, 0, 100)
+CopyButton.Text = "Copy Outfit"
+CopyButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+CopyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CopyButton.Font = Enum.Font.GothamBold
+CopyButton.TextSize = 16
+CopyButton.Parent = Frame
+local CopyClosestButton = Instance.new("TextButton")
+CopyClosestButton.Size = UDim2.new(1, -20, 0, 40)
+CopyClosestButton.Position = UDim2.new(0, 10, 0, 150)
+CopyClosestButton.Text = "Copy คนที่อยู่ใกล้สุด"
+CopyClosestButton.BackgroundColor3 = Color3.fromRGB(255, 140, 0)
+CopyClosestButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CopyClosestButton.Font = Enum.Font.GothamBold
+CopyClosestButton.TextSize = 16
+CopyClosestButton.Parent = Frame
+local function FindPlayerByPartialName(partName)
+    partName = string.lower(partName)
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if string.find(string.lower(plr.Name), partName) then
+            return plr
+        end
+    end
+    return nil
+end
+local function ExtractId(id)
+    if type(id) == "string" then
+        return tonumber(id:match("%d+")) or 0
+    end
+    return tonumber(id) or 0
+end
+local function GetPlayerOutfitData(targetName)
+    local targetPlayer = FindPlayerByPartialName(targetName)
+    if not targetPlayer then
+        warn("ไม่พบผู้เล่น: " .. targetName)
+        return nil
+    end
+    local character = targetPlayer.Character
+    if not character then
+        warn("ไม่พบตัวละครผู้เล่น")
+        return nil
+    end
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if not humanoid then
+        warn("ไม่พบ Humanoid")
+        return nil
+    end
+    local desc = humanoid:GetAppliedDescription()
+    local accessories = {}
+    for _, acc in ipairs(desc:GetAccessories(true)) do
+        table.insert(accessories, {
+            Rotation = Vector3.new(0, 0, 0),
+            AssetId = ExtractId(acc.AssetId),
+            Position = Vector3.new(0, 0, 0),
+            Scale = Vector3.new(1, 1, 1),
+            IsLayered = acc.IsLayered or false,
+            AccessoryType = acc.AccessoryType
+        })
+    end
+    local faceId = ExtractId(desc.Face)
+    return {{
+        Shirt = ExtractId(desc.Shirt),
+        Pants = ExtractId(desc.Pants),
+        GraphicTShirt = ExtractId(desc.GraphicTShirt),
+        Face = faceId,
+        LeftArm = ExtractId(desc.LeftArm),
+        RightArm = ExtractId(desc.RightArm),
+        Torso = ExtractId(desc.Torso),
+        LeftLeg = ExtractId(desc.LeftLeg),
+        RightLeg = ExtractId(desc.RightLeg),
+        Head = ExtractId(desc.Head),
+        Accessories = accessories,
+        HeadColor = desc.HeadColor,
+        LeftArmColor = desc.LeftArmColor,
+        RightArmColor = desc.RightArmColor,
+        TorsoColor = desc.TorsoColor,
+        LeftLegColor = desc.LeftLegColor,
+        RightLegColor = desc.RightLegColor,
+        BodyTypeScale = desc.BodyTypeScale,
+        DepthScale = desc.DepthScale,
+        HeadScale = desc.HeadScale,
+        HeightScale = desc.HeightScale,
+        ProportionScale = desc.ProportionScale,
+        WidthScale = desc.WidthScale,
+        RunAnimation = ExtractId(desc.RunAnimation),
+        WalkAnimation = ExtractId(desc.WalkAnimation),
+        JumpAnimation = ExtractId(desc.JumpAnimation),
+        IdleAnimation = ExtractId(desc.IdleAnimation),
+        FallAnimation = ExtractId(desc.FallAnimation),
+        ClimbAnimation = ExtractId(desc.ClimbAnimation),
+        SwimAnimation = ExtractId(desc.SwimAnimation),
+        MoodAnimation = ExtractId(desc.MoodAnimation)
+    }}
+end
+CopyButton.MouseButton1Click:Connect(function()
+    local name = NameBox.Text
+    if name ~= "" then
+        local outfitData = GetPlayerOutfitData(name)
+        if outfitData then
+            local remote = ReplicatedStorage:WaitForChild("BloxbizRemotes"):WaitForChild("CatalogOnApplyOutfit")
+            remote:FireServer(unpack(outfitData))
+            print("✅ Copy Outfit สำเร็จ: " .. name)
+        else
+            warn("❌ ไม่สามารถ Copy Outfit ได้")
+        end
+    end
+end)
+local function FindClosestPlayer()
+    local closestPlayer = nil
+    local shortestDistance = math.huge
+    local myCharacter = LocalPlayer.Character
+    if not myCharacter or not myCharacter:FindFirstChild("HumanoidRootPart") then
+        return nil
+    end
+    local myPos = myCharacter.HumanoidRootPart.Position
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            local dist = (plr.Character.HumanoidRootPart.Position - myPos).Magnitude
+            if dist < shortestDistance then
+                shortestDistance = dist
+                closestPlayer = plr
+            end
+        end
+    end
+    return closestPlayer
+end
+CopyClosestButton.MouseButton1Click:Connect(function()
+    local closest = FindClosestPlayer()
+    if closest then
+        local outfitData = GetPlayerOutfitData(closest.Name)
+        if outfitData then
+            local remote = ReplicatedStorage:WaitForChild("BloxbizRemotes"):WaitForChild("CatalogOnApplyOutfit")
+            remote:FireServer(unpack(outfitData))
+            print("✅ Copy Outfit จาก " .. closest.Name)
+        else
+            warn("❌ ไม่สามารถ Copy Outfit ได้")
+        end
+    else
+        warn("❌ ไม่พบผู้เล่นที่อยู่ใกล้ที่สุด")
+    end
+end)
+]]
 
 local aimbotCode = [[
--- 📌 ส่วนที่ 1 : ตัวแปร + ฟังก์ชันค้นหาเป้าหมาย
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
-
--- เปิด/ปิด aimbot
 local aimbotEnabled = false
-
--- ฟังก์ชันหา Player ที่ใกล้ที่สุด
 local function findNearestPlayer()
     local closestPlayer = nil
     local shortestDistance = math.huge
     local character = LocalPlayer.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") then return nil end
-    
     for _, player in pairs(Players:GetPlayers()) do
         if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             local distance = (character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
@@ -464,26 +624,20 @@ local function findNearestPlayer()
     end
     return closestPlayer
 end
-
--- ฟังก์ชันยิงปืน
 local function fireGun(targetPosition)
     local character = LocalPlayer.Character
     local gun = character and character:FindFirstChild("Gun")
     if not gun then return end
-    
     local shotRemote = gun:FindFirstChild("shot")
     if shotRemote and shotRemote:IsA("RemoteEvent") then
         shotRemote:FireServer(targetPosition)
     end
 end
--- 📌 ส่วนที่ 2 : GUI เท่ ๆ
 local playerGui = LocalPlayer:WaitForChild("PlayerGui")
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "AimbotUI"
 screenGui.Parent = playerGui
 screenGui.ResetOnSpawn = false
-
--- กรอบหลัก
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 240, 0, 120)
 mainFrame.Position = UDim2.new(0.05, 0, 0.7, 0)
@@ -491,18 +645,13 @@ mainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 30)
 mainFrame.Active = true
 mainFrame.Draggable = true
 mainFrame.Parent = screenGui
-
 local frameCorner = Instance.new("UICorner")
 frameCorner.CornerRadius = UDim.new(0, 15)
 frameCorner.Parent = mainFrame
-
--- เงา
 local shadow = Instance.new("UIStroke")
 shadow.Color = Color3.fromRGB(0, 255, 255)
 shadow.Thickness = 2
 shadow.Parent = mainFrame
-
--- ปุ่ม Aimbot
 local aimbotButton = Instance.new("TextButton")
 aimbotButton.Size = UDim2.new(0, 200, 0, 60)
 aimbotButton.Position = UDim2.new(0.5, -100, 0.5, -30)
@@ -512,11 +661,9 @@ aimbotButton.Text = "Aimbot: OFF"
 aimbotButton.TextSize = 22
 aimbotButton.Font = Enum.Font.FredokaOne
 aimbotButton.Parent = mainFrame
-
 local buttonCorner = Instance.new("UICorner")
 buttonCorner.CornerRadius = UDim.new(0, 12)
 buttonCorner.Parent = aimbotButton
--- 📌 ส่วนที่ 3 : Toggle + Loop ทำงาน
 aimbotButton.MouseButton1Click:Connect(function()
     aimbotEnabled = not aimbotEnabled
     if aimbotEnabled then
@@ -529,8 +676,6 @@ aimbotButton.MouseButton1Click:Connect(function()
         aimbotButton.BackgroundColor3 = Color3.fromRGB(25, 25, 60)
     end
 end)
-
--- วนลูป Aimbot
 RunService.RenderStepped:Connect(function()
     if aimbotEnabled then
         local targetPlayer = findNearestPlayer()
@@ -567,34 +712,64 @@ local function showScriptUI()
     aimbotButton.MouseButton1Click:Connect(function()
         loadstring(aimbotCode)()
     end)
+
+    local copyOutfitLabel = Instance.new("TextLabel")
+    copyOutfitLabel.Size = UDim2.new(0,120,0,30)
+    copyOutfitLabel.Position = UDim2.new(0,10,0,60)
+    copyOutfitLabel.BackgroundTransparency = 1
+    copyOutfitLabel.Text = "Copy เสื้อ"
+    copyOutfitLabel.TextColor3 = Color3.fromRGB(255,255,255)
+    copyOutfitLabel.TextSize = 18
+    copyOutfitLabel.Font = Enum.Font.Gotham
+    copyOutfitLabel.TextXAlignment = Enum.TextXAlignment.Left
+    copyOutfitLabel.Parent = contentFrame
+
+    local copyOutfitButton = Instance.new("TextButton")
+    copyOutfitButton.Size = UDim2.new(0,80,0,30)
+    copyOutfitButton.Position = UDim2.new(0,140,0,60)
+    copyOutfitButton.BackgroundColor3 = Color3.fromRGB(60,60,60)
+    copyOutfitButton.Text = "รัน"
+    copyOutfitButton.TextColor3 = Color3.fromRGB(255,255,255)
+    copyOutfitButton.TextSize = 18
+    copyOutfitButton.Parent = contentFrame
+
+    copyOutfitButton.MouseButton1Click:Connect(function()
+        loadstring(copyOutfitCode)()
+    end)
 end
 
--- เชื่อมปุ่ม
 homeButton.MouseButton1Click:Connect(showHome)
 playerButton.MouseButton1Click:Connect(showPlayer)
 scriptButton.MouseButton1Click:Connect(showScript)
 scriptUIButton.MouseButton1Click:Connect(showScriptUI)
 
--- เปิดหน้าหลักตอนเริ่ม
 showHome()
 
--- สร้าง UI เล็กๆ สำหรับซ่อน (minimize) โดยใช้ ImageButton
+local TextChatService = game:GetService("TextChatService")
+local function sendMessage(msg)
+    local channel = TextChatService:FindFirstChild("TextChannels") and TextChatService.TextChannels:FindFirstChild("RBXGeneral")
+    if channel then
+        channel:SendAsync(msg)
+    else
+        warn("❌ ไม่พบแชนเนล RBXGeneral")
+    end
+end
+sendMessage("SCRIPT CITY THAILAND 2 BY:TOUx1")
+
 local minimizeFrame = Instance.new("Frame")
 minimizeFrame.Size = UDim2.new(0, 50, 0, 50)
 minimizeFrame.Position = UDim2.new(0, 10, 0, 10)
-minimizeFrame.BackgroundTransparency = 1 -- ทำให้พื้นหลังโปร่งใส
+minimizeFrame.BackgroundTransparency = 1
 minimizeFrame.Active = true
 minimizeFrame.Parent = screenGui
 minimizeFrame.Visible = false
 
--- สร้าง ImageButton สำหรับปุ่มซ่อน
 local openButton = Instance.new("ImageButton")
 openButton.Size = UDim2.new(1, 0, 1, 0)
 openButton.BackgroundTransparency = 1
-openButton.Image = "rbxassetid://106575147804507" -- เปลี่ยนเป็น Image ID ที่ต้องการ
+openButton.Image = "rbxassetid://106575147804507"
 openButton.Parent = minimizeFrame
 
--- Drag Manual สำหรับ minimizeFrame
 local minDragging, minDragInput, minDragStart, minStartPos
 
 local function minUpdateInput(input)
@@ -632,40 +807,20 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- เชื่อม closeButton ให้ minimize แทน destroy
 closeButton.MouseButton1Click:Connect(function()
     mainFrame.Visible = false
     minimizeFrame.Visible = true
 end)
 
--- กด openButton เพื่อเปิด mainFrame กลับ
 openButton.MouseButton1Click:Connect(function()
     minimizeFrame.Visible = false
     mainFrame.Visible = true
 end)
 
--- อัปเดต character และ humanoid เมื่อ respawn
 player.CharacterAdded:Connect(function(newCharacter)
     character = newCharacter
     humanoid = newCharacter:WaitForChild("Humanoid")
-    -- รีเฟรช content ถ้าจำเป็น
     if contentFrame.Visible then
-        showHome() -- หรือหน้าเดิมที่เปิดอยู่
+        showHome()
     end
 end)
-
--- รันสคริปต์ส่งข้อความตอนเริ่ม
-local TextChatService = game:GetService("TextChatService")
-
--- ฟังก์ชันส่งข้อความไปยัง RBXGeneral
-local function sendMessage(msg)
-    local channel = TextChatService:FindFirstChild("TextChannels") and TextChatService.TextChannels:FindFirstChild("RBXGeneral")
-    if channel then
-        channel:SendAsync(msg)
-    else
-        warn("❌ ไม่พบแชนเนล RBXGeneral")
-    end
-end
-
--- ทดลองส่งข้อความ
-sendMessage("SCRIPT CITY THAILAND 2 BY:TOUx1")
