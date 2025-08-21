@@ -197,21 +197,40 @@ openButton.MouseButton1Click:Connect(function()
     mainFrame.Visible = true
 end)
 
+-- จัดการการตายและบันทึกตำแหน่ง
+humanoid.Died:Connect(function()
+    if character and character:FindFirstChild("HumanoidRootPart") then
+        lastDeathPos = character.HumanoidRootPart.Position
+        print("บันทึกตำแหน่งที่ตาย: ", lastDeathPos)
+    end
+end)
+
+-- จัดการการเกิดใหม่และวาปไปตำแหน่งที่ตาย
 player.CharacterAdded:Connect(function(newCharacter)
     character = newCharacter
     humanoid = newCharacter:WaitForChild("Humanoid")
-    humanoid.Died:Connect(function()
-        if character and character:FindFirstChild("HumanoidRootPart") then
-            lastDeathPos = character.HumanoidRootPart.Position
-        end
-    end)
     if respawnAtDeathPos and lastDeathPos then
-        wait(0.5)
-        newCharacter.HumanoidRootPart.CFrame = CFrame.new(lastDeathPos)
+        -- รอให้ตัวละครโหลดสมบูรณ์
+        local rootPart = newCharacter:WaitForChild("HumanoidRootPart", 5)
+        if rootPart then
+            -- หน่วงเวลาเล็กน้อยเพื่อให้แน่ใจว่าเกมโหลดตำแหน่งเริ่มต้นเสร็จ
+            wait(0.1)
+            rootPart.CFrame = CFrame.new(lastDeathPos + Vector3.new(0, 3, 0)) -- ยกขึ้น 3 หน่วยเพื่อป้องกันติดพื้น
+            print("วาปไปตำแหน่งที่ตาย: ", lastDeathPos)
+        else
+            warn("ไม่พบ HumanoidRootPart หลังเกิดใหม่")
+        end
     end
     if contentFrame.Visible then
         showHome()
     end
+    -- ผูก event Died อีกครั้งสำหรับตัวละครใหม่
+    humanoid.Died:Connect(function()
+        if character and character:FindFirstChild("HumanoidRootPart") then
+            lastDeathPos = character.HumanoidRootPart.Position
+            print("บันทึกตำแหน่งที่ตาย: ", lastDeathPos)
+        end
+    end)
 end)
 local function clearContent()
     for _, child in pairs(contentFrame:GetChildren()) do
@@ -332,7 +351,7 @@ local function showPlayer()
     respawnButton.Size = UDim2.new(0,80,0,30)
     respawnButton.Position = UDim2.new(0,170,0,100)
     respawnButton.BackgroundColor3 = Color3.fromRGB(60,60,60)
-    respawnButton.Text = "ปิด"
+    respawnButton.Text = respawnAtDeathPos and "เปิด" or "ปิด"
     respawnButton.TextColor3 = Color3.fromRGB(255,255,255)
     respawnButton.TextSize = 18
     respawnButton.Parent = contentFrame
@@ -340,6 +359,7 @@ local function showPlayer()
     respawnButton.MouseButton1Click:Connect(function()
         respawnAtDeathPos = not respawnAtDeathPos
         respawnButton.Text = respawnAtDeathPos and "เปิด" or "ปิด"
+        print("เกิดกลับที่: ", respawnAtDeathPos and "เปิด" or "ปิด")
     end)
 end
 
@@ -349,7 +369,6 @@ local autoEat = false
 
 local function showScript()
     clearContent()
-
     local pumpLabel = Instance.new("TextLabel")
     pumpLabel.Size = UDim2.new(0,100,0,30)
     pumpLabel.Position = UDim2.new(0,10,0,20)
@@ -604,12 +623,12 @@ local function GetPlayerOutfitData(targetName)
         warn("ไม่พบผู้เล่น: " .. targetName)
         return nil
     end
-    local target = targetPlayer.Character
-    if not target then
+    local character = targetPlayer.Character
+    if not character then
         warn("ไม่พบตัวละครผู้เล่น")
         return nil
     end
-    local humanoid = target:FindFirstChildOfClass("Humanoid")
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
     if not humanoid then
         warn("ไม่พบ Humanoid")
         return nil
