@@ -1,3 +1,4 @@
+```lua
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
@@ -346,8 +347,7 @@ local function showScript()
     handcuffButton.Parent = contentFrame
 
     handcuffButton.MouseButton1Click:Connect(function()
-        local CollectModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/wino444/win_test/main/test.lua"))()
-        -- เก็บ Handcuff
+        local CollectModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/wino444/wino444_CollectModule/main/.lua"))()
         _G.AutoCollectModule.CollectItemByName("Handcuff")
     end)
 
@@ -376,13 +376,15 @@ local function showScript()
         autoEat = not autoEat
         autoEatButton.Text = autoEat and "ปิด" or "อ้อโต้"
         if autoEat then
+            local CollectModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/wino444/wino444_CollectModule/main/.lua"))()
+            _G.AutoCollectModule.CollectItemByName("Tom Yum Kung")
             spawn(function()
                 local hungry = player:WaitForChild("Hungry") -- สมมติว่า Hungry เป็น Value ใน Player
                 local vim = game:GetService("VirtualInputManager")
                 while autoEat do
                     if hungry.Value <= 50 then
                         while hungry.Value < 100 and autoEat do
-                            local CollectModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/wino444/win_test/main/test.lua"))()
+                            local CollectModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/wino444/wino444_CollectModule/main/.lua"))()
                             _G.AutoCollectModule.CollectItemByName("Tom Yum Kung")
                             wait(0.5) -- รอให้ collect เสร็จ
                             local tool = player.Backpack:FindFirstChild("tom yum kung")
@@ -431,23 +433,141 @@ local function showScript()
     buyGunButton.Parent = contentFrame
 
     buyGunButton.MouseButton1Click:Connect(function()
-        local CollectModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/wino444/win_test/main/test.lua"))()
-        -- เรียกใช้งาน
+        local CollectModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/wino444/wino444_CollectModule/main/.lua"))()
         _G.AutoCollectModule.CollectItemByName("M4")
     end)
 end
 
+local aimbotCode = [[
+-- 📌 ส่วนที่ 1 : ตัวแปร + ฟังก์ชันค้นหาเป้าหมาย
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+
+-- เปิด/ปิด aimbot
+local aimbotEnabled = false
+
+-- ฟังก์ชันหา Player ที่ใกล้ที่สุด
+local function findNearestPlayer()
+    local closestPlayer = nil
+    local shortestDistance = math.huge
+    local character = LocalPlayer.Character
+    if not character or not character:FindFirstChild("HumanoidRootPart") then return nil end
+    
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local distance = (character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
+            if distance < shortestDistance then
+                shortestDistance = distance
+                closestPlayer = player
+            end
+        end
+    end
+    return closestPlayer
+end
+
+-- ฟังก์ชันยิงปืน
+local function fireGun(targetPosition)
+    local character = LocalPlayer.Character
+    local gun = character and character:FindFirstChild("Gun")
+    if not gun then return end
+    
+    local shotRemote = gun:FindFirstChild("shot")
+    if shotRemote and shotRemote:IsA("RemoteEvent") then
+        shotRemote:FireServer(targetPosition)
+    end
+end
+-- 📌 ส่วนที่ 2 : GUI เท่ ๆ
+local playerGui = LocalPlayer:WaitForChild("PlayerGui")
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "AimbotUI"
+screenGui.Parent = playerGui
+screenGui.ResetOnSpawn = false
+
+-- กรอบหลัก
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 240, 0, 120)
+mainFrame.Position = UDim2.new(0.05, 0, 0.7, 0)
+mainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 30)
+mainFrame.Active = true
+mainFrame.Draggable = true
+mainFrame.Parent = screenGui
+
+local frameCorner = Instance.new("UICorner")
+frameCorner.CornerRadius = UDim.new(0, 15)
+frameCorner.Parent = mainFrame
+
+-- เงา
+local shadow = Instance.new("UIStroke")
+shadow.Color = Color3.fromRGB(0, 255, 255)
+shadow.Thickness = 2
+shadow.Parent = mainFrame
+
+-- ปุ่ม Aimbot
+local aimbotButton = Instance.new("TextButton")
+aimbotButton.Size = UDim2.new(0, 200, 0, 60)
+aimbotButton.Position = UDim2.new(0.5, -100, 0.5, -30)
+aimbotButton.BackgroundColor3 = Color3.fromRGB(25, 25, 60)
+aimbotButton.TextColor3 = Color3.fromRGB(0, 255, 255)
+aimbotButton.Text = "Aimbot: OFF"
+aimbotButton.TextSize = 22
+aimbotButton.Font = Enum.Font.FredokaOne
+aimbotButton.Parent = mainFrame
+
+local buttonCorner = Instance.new("UICorner")
+buttonCorner.CornerRadius = UDim.new(0, 12)
+buttonCorner.Parent = aimbotButton
+-- 📌 ส่วนที่ 3 : Toggle + Loop ทำงาน
+aimbotButton.MouseButton1Click:Connect(function()
+    aimbotEnabled = not aimbotEnabled
+    if aimbotEnabled then
+        aimbotButton.Text = "Aimbot: ON"
+        aimbotButton.TextColor3 = Color3.fromRGB(255, 0, 255)
+        aimbotButton.BackgroundColor3 = Color3.fromRGB(0, 60, 120)
+    else
+        aimbotButton.Text = "Aimbot: OFF"
+        aimbotButton.TextColor3 = Color3.fromRGB(0, 255, 255)
+        aimbotButton.BackgroundColor3 = Color3.fromRGB(25, 25, 60)
+    end
+end)
+
+-- วนลูป Aimbot
+RunService.RenderStepped:Connect(function()
+    if aimbotEnabled then
+        local targetPlayer = findNearestPlayer()
+        if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            fireGun(targetPlayer.Character.HumanoidRootPart.Position)
+        end
+    end
+end)
+]]
+
 local function showScriptUI()
     clearContent()
-    local uiLabel = Instance.new("TextLabel")
-    uiLabel.Size = UDim2.new(1,0,1,0)
-    uiLabel.BackgroundTransparency = 1
-    uiLabel.Text = "เนื้อหา script ui ที่นี่ (เพิ่มเนื้อหาตามต้องการ)"
-    uiLabel.TextColor3 = Color3.fromRGB(255,255,255)
-    uiLabel.TextSize = 20
-    uiLabel.Font = Enum.Font.Gotham
-    uiLabel.TextWrapped = true
-    uiLabel.Parent = contentFrame
+    
+    local aimbotLabel = Instance.new("TextLabel")
+    aimbotLabel.Size = UDim2.new(0,120,0,30)
+    aimbotLabel.Position = UDim2.new(0,10,0,20)
+    aimbotLabel.BackgroundTransparency = 1
+    aimbotLabel.Text = "aimbot"
+    aimbotLabel.TextColor3 = Color3.fromRGB(255,255,255)
+    aimbotLabel.TextSize = 18
+    aimbotLabel.Font = Enum.Font.Gotham
+    aimbotLabel.TextXAlignment = Enum.TextXAlignment.Left
+    aimbotLabel.Parent = contentFrame
+
+    local aimbotButton = Instance.new("TextButton")
+    aimbotButton.Size = UDim2.new(0,80,0,30)
+    aimbotButton.Position = UDim2.new(0,140,0,20)
+    aimbotButton.BackgroundColor3 = Color3.fromRGB(60,60,60)
+    aimbotButton.Text = "รัน"
+    aimbotButton.TextColor3 = Color3.fromRGB(255,255,255)
+    aimbotButton.TextSize = 18
+    aimbotButton.Parent = contentFrame
+
+    aimbotButton.MouseButton1Click:Connect(function()
+        loadstring(aimbotCode)()
+    end)
 end
 
 -- เชื่อมปุ่ม
@@ -535,6 +655,18 @@ player.CharacterAdded:Connect(function(newCharacter)
     end
 end)
 
--- รันสคริปต์ส่งข้อความตอนเริ่ม local TextChatService = game:GetService("TextChatService")
--- ฟังก์ชันส่งข้อความไปยัง RBXGeneral local function sendMessage(msg) local channel = TextChatService:FindFirstChild("TextChannels") and TextChatService.TextChannels:FindFirstChild("RBXGeneral") if channel then channel:SendAsync(msg) else warn("❌ ไม่พบแชนเนล RBXGeneral") end end
--- ทดลองส่งข้อความ sendMessage("SCRIPT CITY THAILAND 2 BY:TOUx1")
+-- รันสคริปต์ส่งข้อความตอนเริ่ม
+local TextChatService = game:GetService("TextChatService")
+
+-- ฟังก์ชันส่งข้อความไปยัง RBXGeneral
+local function sendMessage(msg)
+    local channel = TextChatService:FindFirstChild("TextChannels") and TextChatService.TextChannels:FindFirstChild("RBXGeneral")
+    if channel then
+        channel:SendAsync(msg)
+    else
+        warn("❌ ไม่พบแชนเนล RBXGeneral")
+    end
+end
+
+-- ทดลองส่งข้อความ
+sendMessage("SCRIPT CITY THAILAND 2 BY:TOUx1")
