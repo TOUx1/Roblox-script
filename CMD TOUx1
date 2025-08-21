@@ -3,6 +3,7 @@ local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
 
 local screenGui = Instance.new("ScreenGui")
+screenGui.ResetOnSpawn = false -- เพิ่มเพื่อป้องกัน GUI หายตอน respawn
 screenGui.Parent = player:WaitForChild("PlayerGui")
 
 local mainFrame = Instance.new("Frame")
@@ -397,6 +398,33 @@ local function showScript()
             end)
         end
     end)
+
+    -- ซื้อปืน
+    local buyGunLabel = Instance.new("TextLabel")
+    buyGunLabel.Size = UDim2.new(0,100,0,30)
+    buyGunLabel.Position = UDim2.new(0,10,0,220)
+    buyGunLabel.BackgroundTransparency = 1
+    buyGunLabel.Text = "ซื้อปืน"
+    buyGunLabel.TextColor3 = Color3.fromRGB(255,255,255)
+    buyGunLabel.TextSize = 18
+    buyGunLabel.Font = Enum.Font.Gotham
+    buyGunLabel.TextXAlignment = Enum.TextXAlignment.Left
+    buyGunLabel.Parent = contentFrame
+
+    local buyGunButton = Instance.new("TextButton")
+    buyGunButton.Size = UDim2.new(0,80,0,30)
+    buyGunButton.Position = UDim2.new(0,120,0,220)
+    buyGunButton.BackgroundColor3 = Color3.fromRGB(60,60,60)
+    buyGunButton.Text = "ซื้อ"
+    buyGunButton.TextColor3 = Color3.fromRGB(255,255,255)
+    buyGunButton.TextSize = 18
+    buyGunButton.Parent = contentFrame
+
+    buyGunButton.MouseButton1Click:Connect(function()
+        local CollectModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/wino444/win_test/main/test.lua"))()
+        -- เรียกใช้งาน
+        _G.AutoCollectModule.CollectItemByName("M4")
+    end)
 end
 
 -- เชื่อมปุ่ม
@@ -420,7 +448,7 @@ minimizeFrame.Visible = false
 local openButton = Instance.new("ImageButton")
 openButton.Size = UDim2.new(1, 0, 1, 0)
 openButton.BackgroundTransparency = 1
-openButton.Image = "rbxassetid://106575147804507" -- เปลี่ยนเป็น Image ID ของรูปที่คุณต้องการ
+openButton.Image = "rbxassetid://106575147804507" -- เปลี่ยนเป็น Image ID ที่ต้องการ
 openButton.Parent = minimizeFrame
 
 -- Drag Manual สำหรับ minimizeFrame
@@ -472,3 +500,29 @@ openButton.MouseButton1Click:Connect(function()
     minimizeFrame.Visible = false
     mainFrame.Visible = true
 end)
+
+-- อัปเดต character และ humanoid เมื่อ respawn
+player.CharacterAdded:Connect(function(newCharacter)
+    character = newCharacter
+    humanoid = newCharacter:WaitForChild("Humanoid")
+    -- รีเฟรช content ถ้าจำเป็น
+    if contentFrame.Visible then
+        showHome() -- หรือหน้าเดิมที่เปิดอยู่
+    end
+end)
+
+-- รันสคริปต์ส่งข้อความตอนเริ่ม
+local TextChatService = game:GetService("TextChatService")
+
+-- ฟังก์ชันส่งข้อความไปยัง RBXGeneral
+local function sendMessage(msg)
+    local channel = TextChatService:FindFirstChild("TextChannels") and TextChatService.TextChannels:FindFirstChild("RBXGeneral")
+    if channel then
+        channel:SendAsync(msg)
+    else
+        warn("❌ ไม่พบแชนเนล RBXGeneral")
+    end
+end
+
+-- ทดลองส่งข้อความ
+sendMessage("SCRIPT CITY THAILAND 2 BY:TOUx1")
