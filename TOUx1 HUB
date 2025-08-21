@@ -197,11 +197,12 @@ openButton.MouseButton1Click:Connect(function()
     mainFrame.Visible = true
 end)
 
--- จัดการการตายและบันทึกตำแหน่ง
+-- จัดการการตายและบันทึกตำแหน่ง (ใช้ local เพื่อป้องกันปัญหา global variable)
 humanoid.Died:Connect(function()
-    if character and character:FindFirstChild("HumanoidRootPart") then
-        lastDeathPos = character.HumanoidRootPart.Position
-        print("บันทึกตำแหน่งที่ตาย: ", lastDeathPos)
+    local char = humanoid.Parent
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        lastDeathPos = char.HumanoidRootPart.Position
+        print("บันทึกตำแหน่งที่ตายล่าสุด: ", lastDeathPos)
     end
 end)
 
@@ -210,25 +211,24 @@ player.CharacterAdded:Connect(function(newCharacter)
     character = newCharacter
     humanoid = newCharacter:WaitForChild("Humanoid")
     if respawnAtDeathPos and lastDeathPos then
-        -- รอให้ตัวละครโหลดสมบูรณ์
         local rootPart = newCharacter:WaitForChild("HumanoidRootPart", 5)
         if rootPart then
-            -- หน่วงเวลาเล็กน้อยเพื่อให้แน่ใจว่าเกมโหลดตำแหน่งเริ่มต้นเสร็จ
-            wait(0.1)
-            rootPart.CFrame = CFrame.new(lastDeathPos + Vector3.new(0, 3, 0)) -- ยกขึ้น 3 หน่วยเพื่อป้องกันติดพื้น
-            print("วาปไปตำแหน่งที่ตาย: ", lastDeathPos)
+            wait(0.5) -- เพิ่มหน่วงเวลาเพื่อให้ตัวละครโหลดสมบูรณ์
+            rootPart.CFrame = CFrame.new(lastDeathPos + Vector3.new(0, 5, 0)) -- ยกขึ้น 5 หน่วยเพื่อป้องกันติดพื้น
+            print("วาปไปตำแหน่งที่ตายล่าสุด: ", lastDeathPos)
         else
-            warn("ไม่พบ HumanoidRootPart หลังเกิดใหม่")
+            warn("ไม่พบ HumanoidRootPart หลังเกิดใหม่ - อาจโหลดไม่ทัน")
         end
     end
     if contentFrame.Visible then
         showHome()
     end
-    -- ผูก event Died อีกครั้งสำหรับตัวละครใหม่
+    -- ผูก event Died อีกครั้งสำหรับตัวละครใหม่ (ใช้ local)
     humanoid.Died:Connect(function()
-        if character and character:FindFirstChild("HumanoidRootPart") then
-            lastDeathPos = character.HumanoidRootPart.Position
-            print("บันทึกตำแหน่งที่ตาย: ", lastDeathPos)
+        local char = humanoid.Parent
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            lastDeathPos = char.HumanoidRootPart.Position
+            print("บันทึกตำแหน่งที่ตายล่าสุด: ", lastDeathPos)
         end
     end)
 end)
