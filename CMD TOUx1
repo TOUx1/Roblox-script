@@ -146,97 +146,7 @@ openButton.Size = UDim2.new(1, 0, 1, 0)
 openButton.BackgroundTransparency = 1
 openButton.Image = "rbxassetid://106575147804507"
 openButton.Parent = minimizeFrame
-
-local minDragging, minDragInput, minDragStart, minStartPos
-
-local function minUpdateInput(input)
-    local delta = input.Position - minDragStart
-    minimizeFrame.Position = UDim2.new(
-        minStartPos.X.Scale, minStartPos.X.Offset + delta.X,
-        minStartPos.Y.Scale, minStartPos.Y.Offset + delta.Y
-    )
-end
-
-minimizeFrame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 
-    or input.UserInputType == Enum.UserInputType.Touch then
-        minDragging = true
-        minDragStart = input.Position
-        minStartPos = minimizeFrame.Position
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                minDragging = false
-            end
-        end)
-    end
-end)
-
-minimizeFrame.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement 
-    or input.UserInputType == Enum.UserInputType.Touch then
-        minDragInput = input
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if minDragging and input == minDragInput then
-        minUpdateInput(input)
-    end
-end)
-
-closeButton.MouseButton1Click:Connect(function()
-    mainFrame.Visible = false
-    minimizeFrame.Visible = true
-end)
-
-openButton.MouseButton1Click:Connect(function()
-    minimizeFrame.Visible = false
-    mainFrame.Visible = true
-end)
-
-player.CharacterAdded:Connect(function(newCharacter)
-    character = newCharacter
-    humanoid = newCharacter:WaitForChild("Humanoid")
-    if contentFrame.Visible then
-        showHome()
-    end
-end)
-
-local Players = game:GetService("Players")
-local function addCreatorLabel(plr)
-    if plr.Name == "birdV2_123" and plr.Character then
-        local head = plr.Character:FindFirstChild("Head")
-        if head then
-            local bill = Instance.new("BillboardGui")
-            bill.Parent = head
-            bill.Size = UDim2.new(0, 200, 0, 50)
-            bill.AlwaysOnTop = true
-            bill.StudsOffset = Vector3.new(0, 3, 0)
-            local label = Instance.new("TextLabel")
-            label.Parent = bill
-            label.Size = UDim2.new(1, 0, 1, 0)
-            label.BackgroundTransparency = 1
-            label.Text = "คนสร้าง"
-            label.TextColor3 = Color3.fromRGB(255, 0, 0) -- สีแดง RGB
-            label.TextSize = 20
-            label.Font = Enum.Font.GothamBold
-        end
-    end
-end
-
-for _, plr in ipairs(Players:GetPlayers()) do
-    addCreatorLabel(plr)
-    plr.CharacterAdded:Connect(function()
-        addCreatorLabel(plr)
-    end)
-end
-
-Players.PlayerAdded:Connect(function(plr)
-    addCreatorLabel(plr)
-    plr.CharacterAdded:Connect(function()
-        addCreatorLabel(plr)
-    end)
-end)
+local minD
 local function clearContent()
     for _, child in pairs(contentFrame:GetChildren()) do
         child:Destroy()
@@ -369,46 +279,16 @@ local function showPlayer()
     respawnButton.Size = UDim2.new(0,80,0,30)
     respawnButton.Position = UDim2.new(0,170,0,100)
     respawnButton.BackgroundColor3 = Color3.fromRGB(60,60,60)
-    respawnButton.Text = "ปิด"
+    respawnButton.Text = "เกิด"
     respawnButton.TextColor3 = Color3.fromRGB(255,255,255)
     respawnButton.TextSize = 18
     respawnButton.Parent = contentFrame
 
     respawnButton.MouseButton1Click:Connect(function()
-        respawnAtDeathPos = not respawnAtDeathPos
-        respawnButton.Text = respawnAtDeathPos and "เปิด" or "ปิด"
-        if respawnAtDeathPos then
-            if _G.ReviveBackConnection then _G.ReviveBackConnection:Disconnect() end
-            _G.LastDeathPos = nil
-            _G.ReviveBackConnection = player.CharacterAdded:Connect(function(char)
-                task.wait(0.5)
-                local hrp = char:WaitForChild("HumanoidRootPart")
-                if _G.LastDeathPos then
-                    hrp.CFrame = _G.LastDeathPos
-                end
-            end)
-            task.spawn(function()
-                while player.Character do
-                    local char = player.Character
-                    local humanoid = char:FindFirstChildOfClass("Humanoid")
-                    if humanoid and humanoid.Health <= 0 then
-                        local hrp = char:FindFirstChild("HumanoidRootPart")
-                        if hrp then
-                            _G.LastDeathPos = hrp.CFrame
-                        end
-                    end
-                    task.wait(0.2)
-                end
-            end)
-        else
-            if _G.ReviveBackConnection then
-                _G.ReviveBackConnection:Disconnect()
-                _G.ReviveBackConnection = nil
-            end
-            _G.LastDeathPos = nil
-        end
+        humanoid.Health = 0
     end)
 end
+
 local moneyLoop = false
 local loopSpeed = 0.1
 local autoEat = false
@@ -537,64 +417,13 @@ local function showScript()
         autoEat = not autoEat
         autoEatButton.Text = autoEat and "ปิด" or "อ้อโต้"
         if autoEat then
-            local CollectModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/wino444/wino444_CollectModule/main/.lua"))()
-            _G.AutoCollectModule.CollectItemByName("Tom Yum Kung")
             spawn(function()
-                local hungry = player:WaitForChild("Hungry")
-                local vim = game:GetService("VirtualInputManager")
                 while autoEat do
-                    if hungry.Value <= 50 then
-                        while hungry.Value < 100 and autoEat do
-                            local CollectModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/wino444/wino444_CollectModule/main/.lua"))()
-                            _G.AutoCollectModule.CollectItemByName("Tom Yum Kung")
-                            wait(0.5)
-                            local tool = player.Backpack:FindFirstChild("tom yum kung")
-                            if tool then
-                                humanoid:EquipTool(tool)
-                                wait(0.1)
-                                tool = character:FindFirstChild("tom yum kung")
-                                if tool then
-                                    while autoEat and hungry.Value < 100 and tool.Parent == character do
-                                        vim:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-                                        wait(0.05)
-                                        vim:SendMouseButtonEvent(0, 0, 0, false, game, 0)
-                                        wait(1)
-                                    end
-                                end
-                            else
-                                wait(1)
-                            end
-                        end
-                    end
+                    -- ใส่โค้ดสำหรับ auto eat ที่นี่ (เช่น FireServer สำหรับกินอาหาร ถ้ามี)
                     wait(1)
                 end
             end)
         end
-    end)
-
-    local buyGunLabel = Instance.new("TextLabel")
-    buyGunLabel.Size = UDim2.new(0,100,0,30)
-    buyGunLabel.Position = UDim2.new(0,10,0,220)
-    buyGunLabel.BackgroundTransparency = 1
-    buyGunLabel.Text = "ซื้อปืน"
-    buyGunLabel.TextColor3 = Color3.fromRGB(255,255,255)
-    buyGunLabel.TextSize = 18
-    buyGunLabel.Font = Enum.Font.Gotham
-    buyGunLabel.TextXAlignment = Enum.TextXAlignment.Left
-    buyGunLabel.Parent = contentFrame
-
-    local buyGunButton = Instance.new("TextButton")
-    buyGunButton.Size = UDim2.new(0,80,0,30)
-    buyGunButton.Position = UDim2.new(0,120,0,220)
-    buyGunButton.BackgroundColor3 = Color3.fromRGB(60,60,60)
-    buyGunButton.Text = "ซื้อ"
-    buyGunButton.TextColor3 = Color3.fromRGB(255,255,255)
-    buyGunButton.TextSize = 18
-    buyGunButton.Parent = contentFrame
-
-    buyGunButton.MouseButton1Click:Connect(function()
-        local CollectModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/wino444/wino444_CollectModule/main/.lua"))()
-        _G.AutoCollectModule.CollectItemByName("M4")
     end)
 end
 local preventBangCode = [[
@@ -719,6 +548,11 @@ Button.MouseButton1Click:Connect(function()
     loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-anti-bang-21721"))()
 end)
 ]]
+
+local function showScriptUI()
+    clearContent()
+    loadstring(preventBangCode)()
+end
 
 homeButton.MouseButton1Click:Connect(showHome)
 playerButton.MouseButton1Click:Connect(showPlayer)
