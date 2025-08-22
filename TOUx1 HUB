@@ -237,10 +237,24 @@ local function showHome()
     ageLabel.Font = Enum.Font.Gotham
     ageLabel.TextXAlignment = Enum.TextXAlignment.Left
     ageLabel.Parent = contentFrame
+
+    local creatorLabel = Instance.new("TextLabel")
+    creatorLabel.Size = UDim2.new(1,-20,0,50)
+    creatorLabel.Position = UDim2.new(0,10,0,90)
+    creatorLabel.BackgroundTransparency = 1
+    creatorLabel.Text = "คนสร้าง @TOUx1 สร้าง GUI , script \nคนช่วยสร้าง @wino444 สร้าง script หยิบของ"
+    creatorLabel.TextColor3 = Color3.fromRGB(255,255,255)
+    creatorLabel.TextSize = 16
+    creatorLabel.Font = Enum.Font.Gotham
+    creatorLabel.TextXAlignment = Enum.TextXAlignment.Left
+    creatorLabel.TextYAlignment = Enum.TextYAlignment.Top
+    creatorLabel.TextWrapped = true
+    creatorLabel.Parent = contentFrame
 end
 
 local function showPlayer()
     clearContent()
+    -- Speed
     local speedLabel = Instance.new("TextLabel")
     speedLabel.Size = UDim2.new(0,150,0,30)
     speedLabel.Position = UDim2.new(0,10,0,20)
@@ -273,6 +287,7 @@ local function showPlayer()
         end
     end)
 
+    -- Jump
     local jumpLabel = Instance.new("TextLabel")
     jumpLabel.Size = UDim2.new(0,150,0,30)
     jumpLabel.Position = UDim2.new(0,10,0,60)
@@ -549,7 +564,6 @@ local function showScript()
         _G.AutoCollectModule.CollectItemByName("M4")
     end)
 end
-
 local copyOutfitCode = [[
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -626,13 +640,13 @@ local function ExtractId(id)
 end
 
 local function GetPlayerOutfitData(targetName)
-	local target = FindPlayerByPartialName(targetName)
-	if not target then
+	local targetPlayer = FindPlayerByPartialName(targetName)
+	if not targetPlayer then
 		warn("ไม่พบผู้เล่น: " .. targetName)
 		return nil
 	end
 
-	local character = target.Character
+	local character = targetPlayer.Character
 	if not character then
 		warn("ไม่พบตัวละครผู้เล่น")
 		return nil
@@ -893,6 +907,30 @@ local function showScriptUI()
 
     copyOutfitButton.MouseButton1Click:Connect(function()
         loadstring(copyOutfitCode)()
+    end)
+
+    local preventArrestLabel = Instance.new("TextLabel")
+    preventArrestLabel.Size = UDim2.new(0,120,0,30)
+    preventArrestLabel.Position = UDim2.new(0,10,0,100)
+    preventArrestLabel.BackgroundTransparency = 1
+    preventArrestLabel.Text = "ป้องกันโดนจับ"
+    preventArrestLabel.TextColor3 = Color3.fromRGB(255,255,255)
+    preventArrestLabel.TextSize = 18
+    preventArrestLabel.Font = Enum.Font.Gotham
+    preventArrestLabel.TextXAlignment = Enum.TextXAlignment.Left
+    preventArrestLabel.Parent = contentFrame
+
+    local preventArrestButton = Instance.new("TextButton")
+    preventArrestButton.Size = UDim2.new(0,80,0,30)
+    preventArrestButton.Position = UDim2.new(0,140,0,100)
+    preventArrestButton.BackgroundColor3 = Color3.fromRGB(60,60,60)
+    preventArrestButton.Text = "รัน"
+    preventArrestButton.TextColor3 = Color3.fromRGB(255,255,255)
+    preventArrestButton.TextSize = 18
+    preventArrestButton.Parent = contentFrame
+
+    preventArrestButton.MouseButton1Click:Connect(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/TOUx1/Roblox-script/refs/heads/main/Touscript"))()
     end)
 end
 
