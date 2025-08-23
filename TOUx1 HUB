@@ -954,17 +954,6 @@ end
 
 sendMessage("SCRIPT CITY THAILAND 2 BY:TOUx1")
 
-
-
-
-
-
-
-
-
-
-
-
 --== ส่วนที่ 1 : ระบบหลัก ==--
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -1140,5 +1129,3 @@ _G.HandleExtraCommands = function(speaker, msg, LocalPlayer, specialUsers)
 		end
 	end
 end
-end
-
