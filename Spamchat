@@ -1,0 +1,528 @@
+--// LocalScript: RBXGeneral Auto Messenger — PART 1/3
+-- Services
+local Players            = game:GetService("Players")
+local TextChatService    = game:GetService("TextChatService")
+local TweenService       = game:GetService("TweenService")
+local UserInputService   = game:GetService("UserInputService")
+
+-- Config & Theme
+local TITLE = "RBXGeneral Messenger"
+local DEFAULT_INTERVAL = 2
+local THEME = {
+    bg     = Color3.fromRGB(16,17,22),
+    panel  = Color3.fromRGB(28,29,38),
+    card   = Color3.fromRGB(22,23,30),
+    text   = Color3.fromRGB(235,235,245),
+    subtle = Color3.fromRGB(155,160,175),
+    accent = Color3.fromRGB(120,90,255),
+    good   = Color3.fromRGB(60,210,120),
+    bad    = Color3.fromRGB(245,95,95),
+}
+
+-- Parent GUI safely
+local function getParentGui()
+    local lp = Players.LocalPlayer
+    local pg = lp:FindFirstChildOfClass("PlayerGui") or lp:WaitForChild("PlayerGui")
+    return pg
+end
+
+-- ScreenGui
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "RBXGeneralMessengerUI"
+ScreenGui.IgnoreGuiInset = true
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = getParentGui()
+
+-- Main Window
+local Main = Instance.new("Frame")
+Main.Name = "Main"
+Main.AnchorPoint = Vector2.new(0.5,0.5)
+Main.Position = UDim2.new(0.5,0,0.5,0)
+Main.Size = UDim2.new(0,520,0,420)
+Main.BackgroundColor3 = THEME.bg
+Main.Parent = ScreenGui
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0,22)
+local MainStroke = Instance.new("UIStroke", Main)
+MainStroke.Thickness = 1.6
+MainStroke.Color = THEME.accent
+MainStroke.Transparency = 0.45
+
+-- Title Bar (Drag)
+local TitleBar = Instance.new("Frame")
+TitleBar.Name = "TitleBar"
+TitleBar.Size = UDim2.new(1,-18,0,50)
+TitleBar.Position = UDim2.new(0,9,0,9)
+TitleBar.BackgroundColor3 = THEME.panel
+TitleBar.Parent = Main
+Instance.new("UICorner", TitleBar).CornerRadius = UDim.new(0,16)
+local TitleStroke = Instance.new("UIStroke", TitleBar)
+TitleStroke.Color = THEME.accent
+TitleStroke.Transparency = 0.65
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = TITLE
+TitleLabel.TextColor3 = THEME.text
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.TextSize = 18
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.Size = UDim2.new(1,-120,1,0)
+TitleLabel.Position = UDim2.new(0,16,0,0)
+TitleLabel.Parent = TitleBar
+
+local StatusDot = Instance.new("Frame")
+StatusDot.Name = "StatusDot"
+StatusDot.Size = UDim2.new(0,12,0,12)
+StatusDot.Position = UDim2.new(1,-28,0.5,-6)
+StatusDot.BackgroundColor3 = THEME.bad
+StatusDot.Parent = TitleBar
+Instance.new("UICorner", StatusDot).CornerRadius = UDim.new(1,0)
+
+-- Drag logic (mouse & touch)
+local dragging, dragStart, startPos
+local function beginDrag(input)
+    dragging = true
+    dragStart = input.Position
+    startPos = Main.Position
+    input.Changed:Connect(function()
+        if input.UserInputState == Enum.UserInputState.End then dragging = false end
+    end)
+end
+TitleBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+    or input.UserInputType == Enum.UserInputType.Touch then
+        beginDrag(input)
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement
+        or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStart
+        Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
+                                  startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+-- Body
+local Body = Instance.new("Frame")
+Body.Name = "Body"
+Body.Size = UDim2.new(1,-18,1,-68)
+Body.Position = UDim2.new(0,9,0,59)
+Body.BackgroundTransparency = 1
+Body.Parent = Main
+
+-- Left panel (Message list)
+local Left = Instance.new("Frame")
+Left.Name = "Left"
+Left.Size = UDim2.new(0.56,0,1,0)
+Left.BackgroundColor3 = THEME.panel
+Left.Parent = Body
+Instance.new("UICorner", Left).CornerRadius = UDim.new(0,16)
+local LeftStroke = Instance.new("UIStroke", Left)
+LeftStroke.Color = THEME.accent
+LeftStroke.Transparency = 0.75
+
+local ListTitle = Instance.new("TextLabel")
+ListTitle.BackgroundTransparency = 1
+ListTitle.Text = "Message Queue"
+ListTitle.TextColor3 = THEME.text
+ListTitle.Font = Enum.Font.GothamBold
+ListTitle.TextSize = 16
+ListTitle.TextXAlignment = Enum.TextXAlignment.Left
+ListTitle.Size = UDim2.new(1,-16,0,32)
+ListTitle.Position = UDim2.new(0,10,0,8)
+ListTitle.Parent = Left
+
+local List = Instance.new("ScrollingFrame")
+List.Name = "List"
+List.Active = true
+List.ClipsDescendants = true
+List.AutomaticCanvasSize = Enum.AutomaticSize.Y
+List.CanvasSize = UDim2.new(0,0,0,0)
+List.ScrollBarThickness = 6
+List.Size = UDim2.new(1,-16,1,-52)
+List.Position = UDim2.new(0,8,0,42)
+List.BackgroundColor3 = THEME.card
+List.Parent = Left
+Instance.new("UICorner", List).CornerRadius = UDim.new(0,12)
+local UIL = Instance.new("UIListLayout", List)
+UIL.Padding = UDim.new(0,6)
+UIL.SortOrder = Enum.SortOrder.LayoutOrder
+local UIP = Instance.new("UIPadding", List)
+UIP.PaddingTop = UDim.new(0,8)
+UIP.PaddingLeft = UDim.new(0,8)
+UIP.PaddingRight = UDim.new(0,8)
+UIP.PaddingBottom = UDim.new(0,8)
+
+-- Right panel (Controls)
+local Right = Instance.new("Frame")
+Right.Name = "Right"
+Right.Size = UDim2.new(0.42,0,1,0)
+Right.Position = UDim2.new(0.58,8,0,0)
+Right.BackgroundColor3 = THEME.panel
+Right.Parent = Body
+Instance.new("UICorner", Right).CornerRadius = UDim.new(0,16)
+local RightStroke = Instance.new("UIStroke", Right)
+RightStroke.Color = THEME.accent
+RightStroke.Transparency = 0.75
+
+local AddBox = Instance.new("TextBox")
+AddBox.Name = "AddBox"
+AddBox.PlaceholderText = "พิมพ์ข้อความ..."
+AddBox.Text = ""
+AddBox.ClearTextOnFocus = false
+AddBox.TextSize = 14
+AddBox.Font = Enum.Font.Gotham
+AddBox.TextColor3 = THEME.text
+AddBox.BackgroundColor3 = THEME.card
+AddBox.Size = UDim2.new(1,-16,0,36)
+AddBox.Position = UDim2.new(0,8,0,12)
+AddBox.Parent = Right
+Instance.new("UICorner", AddBox).CornerRadius = UDim.new(0,10)
+local AddBoxStroke = Instance.new("UIStroke", AddBox)
+AddBoxStroke.Color = THEME.accent
+AddBoxStroke.Transparency = 0.75
+
+local AddBtn = Instance.new("TextButton")
+AddBtn.Name = "AddBtn"
+AddBtn.Size = UDim2.new(1,-16,0,36)
+AddBtn.Position = UDim2.new(0,8,0,54)
+AddBtn.BackgroundColor3 = THEME.good
+AddBtn.Text = "Add Message"
+AddBtn.TextColor3 = THEME.text
+AddBtn.Font = Enum.Font.GothamBold
+AddBtn.TextSize = 14
+AddBtn.Parent = Right
+Instance.new("UICorner", AddBtn).CornerRadius = UDim.new(0,10)
+
+local ClearBtn = Instance.new("TextButton")
+ClearBtn.Name = "ClearBtn"
+ClearBtn.Size = UDim2.new(1,-16,0,36)
+ClearBtn.Position = UDim2.new(0,8,0,96)
+ClearBtn.BackgroundColor3 = THEME.bad
+ClearBtn.Text = "ลบข้อความทั้งหมด"
+ClearBtn.TextColor3 = THEME.text
+ClearBtn.Font = Enum.Font.GothamBold
+ClearBtn.TextSize = 14
+ClearBtn.Parent = Right
+Instance.new("UICorner", ClearBtn).CornerRadius = UDim.new(0,10)
+
+local IntervalBox = Instance.new("TextBox")
+IntervalBox.Name = "IntervalBox"
+IntervalBox.PlaceholderText = "Spam Interval (วินาที)"
+IntervalBox.Text = tostring(DEFAULT_INTERVAL)
+IntervalBox.TextSize = 14
+IntervalBox.Font = Enum.Font.Gotham
+IntervalBox.TextColor3 = THEME.text
+IntervalBox.BackgroundColor3 = THEME.card
+IntervalBox.Size = UDim2.new(1,-16,0,36)
+IntervalBox.Position = UDim2.new(0,8,0,140)
+IntervalBox.Parent = Right
+Instance.new("UICorner", IntervalBox).CornerRadius = UDim.new(0,10)
+local IntervalStroke = Instance.new("UIStroke", IntervalBox)
+IntervalStroke.Color = THEME.accent
+IntervalStroke.Transparency = 0.75
+
+local StartBtn = Instance.new("TextButton")
+StartBtn.Name = "StartBtn"
+StartBtn.Size = UDim2.new(1,-16,0,36)
+StartBtn.Position = UDim2.new(0,8,0,184)
+StartBtn.BackgroundColor3 = THEME.accent
+StartBtn.Text = "▶ Start (เรียงลำดับ)"
+StartBtn.TextColor3 = THEME.text
+StartBtn.Font = Enum.Font.GothamBold
+StartBtn.TextSize = 14
+StartBtn.Parent = Right
+Instance.new("UICorner", StartBtn).CornerRadius = UDim.new(0,10)
+
+local RandomBtn = Instance.new("TextButton")
+RandomBtn.Name = "RandomBtn"
+RandomBtn.Size = UDim2.new(1,-16,0,36)
+RandomBtn.Position = UDim2.new(0,8,0,226)
+RandomBtn.BackgroundColor3 = THEME.good
+RandomBtn.Text = "🎲 Random Loop (สุ่ม)"
+RandomBtn.TextColor3 = THEME.text
+RandomBtn.Font = Enum.Font.GothamBold
+RandomBtn.TextSize = 14
+RandomBtn.Parent = Right
+Instance.new("UICorner", RandomBtn).CornerRadius = UDim.new(0,10)
+
+local StopBtn = Instance.new("TextButton")
+StopBtn.Name = "StopBtn"
+StopBtn.Size = UDim2.new(1,-16,0,36)
+StopBtn.Position = UDim2.new(0,8,0,268)
+StopBtn.BackgroundColor3 = THEME.bad
+StopBtn.Text = "■ Stop"
+StopBtn.TextColor3 = THEME.text
+StopBtn.Font = Enum.Font.GothamBold
+StopBtn.TextSize = 14
+StopBtn.Parent = Right
+Instance.new("UICorner", StopBtn).CornerRadius = UDim.new(0,10)
+
+local Info = Instance.new("TextLabel")
+Info.Name = "Info"
+Info.BackgroundTransparency = 1
+Info.Text = "พร้อมใช้งาน"
+Info.TextColor3 = THEME.subtle
+Info.Font = Enum.Font.Gotham
+Info.TextSize = 14
+Info.TextWrapped = true
+Info.Size = UDim2.new(1,-16,0,40)
+Info.Position = UDim2.new(0,8,0,312)
+Info.Parent = Right
+
+local ChannelStatus = Instance.new("TextLabel")
+ChannelStatus.Name = "ChannelStatus"
+ChannelStatus.BackgroundTransparency = 1
+ChannelStatus.Text = "Channel: Checking..."
+ChannelStatus.TextColor3 = THEME.subtle
+ChannelStatus.Font = Enum.Font.Gotham
+ChannelStatus.TextSize = 14
+ChannelStatus.Size = UDim2.new(1,-16,0,24)
+ChannelStatus.Position = UDim2.new(0,8,1,-28)
+ChannelStatus.Parent = Right
+
+-- สร้าง item ในคิว (พร้อมปุ่มลบรายข้อความ)
+local function makeMessageItem(text)
+    local item = Instance.new("Frame")
+    item.Size = UDim2.new(1,-8,0,42)
+    item.BackgroundColor3 = THEME.card
+    item.Parent = List
+    Instance.new("UICorner", item).CornerRadius = UDim.new(0,10)
+    local st = Instance.new("UIStroke", item)
+    st.Color = THEME.accent
+    st.Transparency = 0.85
+
+    local lbl = Instance.new("TextLabel")
+    lbl.BackgroundTransparency = 1
+    lbl.Text = text
+    lbl.TextColor3 = THEME.text
+    lbl.Font = Enum.Font.Gotham
+    lbl.TextSize = 14
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.Size = UDim2.new(1,-96,1,0)
+    lbl.Position = UDim2.new(0,12,0,0)
+    lbl.Parent = item
+
+    local del = Instance.new("TextButton")
+    del.Text = "✕"
+    del.Font = Enum.Font.GothamBold
+    del.TextSize = 16
+    del.TextColor3 = THEME.text
+    del.BackgroundColor3 = THEME.bad
+    del.Size = UDim2.new(0,34,0,28)
+    del.Position = UDim2.new(1,-46,0.5,-14)
+    del.Parent = item
+    Instance.new("UICorner", del).CornerRadius = UDim.new(0,8)
+    del.MouseButton1Click:Connect(function() item:Destroy() end)
+end
+
+-- ข้อความตัวอย่าง (ปลอดภัย/สุภาพ) — แก้ไข/ลบได้
+local defaultMessages = {
+    "[GOOO22446]: กุขย ะสังคม😛",
+    "[GOOO22446]: กุเหงาจัดไปหาเรื่อ งไปทั่ว🥺",
+    "[GOOO22446]: กุไม่เคยเรียนหนังสือ กุเล่นแต่เกม😭!",
+    "[GOOO22446]: ชีวิตกุเก็บขวดขายไปวันๆๆ😔",
+}
+for _,m in ipairs(defaultMessages) do makeMessageItem(m) end
+--// LocalScript: RBXGeneral Auto Messenger — PART 2/3
+-- ใช้ตัวแปร/วัตถุจาก PART 1 ที่สร้างไว้แล้ว
+
+-- หา RBXGeneral ด้วยการรอเล็กน้อย
+local function getGeneralChannel(timeout)
+    timeout = timeout or 6
+    local t0 = time()
+    while time() - t0 < timeout do
+        local chs = TextChatService:FindFirstChild("TextChannels")
+        if chs then
+            local ch = chs:FindFirstChild("RBXGeneral")
+            if ch then return ch end
+        end
+        task.wait(0.25)
+    end
+    return nil
+end
+
+local function sendMessage(msg)
+    local ch = getGeneralChannel(1.2)
+    if ch then
+        local ok,err = pcall(function() ch:SendAsync(msg) end)
+        return ok
+    end
+    return false
+end
+
+-- UI helpers
+local function setStatus(on)
+    StatusDot.BackgroundColor3 = on and THEME.good or THEME.bad
+end
+
+local function getQueue()
+    local arr = {}
+    for _,child in ipairs(List:GetChildren()) do
+        if child:IsA("Frame") then
+            local lbl = child:FindFirstChildOfClass("TextLabel")
+            if lbl and lbl.Text and #lbl.Text > 0 then
+                table.insert(arr, lbl.Text)
+            end
+        end
+    end
+    return arr
+end
+
+local function updateChannelStatus()
+    local ch = getGeneralChannel(0.5)
+    if ch then
+        ChannelStatus.Text = "Channel: RBXGeneral ✓"
+        ChannelStatus.TextColor3 = THEME.good
+    else
+        ChannelStatus.Text = "Channel: Not Found ✗"
+        ChannelStatus.TextColor3 = THEME.bad
+    end
+end
+updateChannelStatus()
+task.spawn(function()
+    while true do
+        updateChannelStatus()
+        task.wait(3)
+    end
+end)
+
+-- Add message (ปุ่ม + กด Enter ในช่อง)
+AddBtn.MouseButton1Click:Connect(function()
+    local t = AddBox.Text
+    if t and #t > 0 then
+        local function makeItem(txt)
+            -- ใช้ฟังก์ชันจาก PART 1 (อยู่ในสโคปเดียวกัน)
+            -- ถ้าสภาพแวดล้อมแยก ให้คัดลอกฟังก์ชัน makeMessageItem มาไว้ส่วนนี้
+        end
+        -- เรียกของ PART 1 ที่อยู่ในสโคปเดียวกัน
+        for _,_ in pairs({1}) do end -- no-op เพื่อกัน optimizer บางตัว
+        -- สร้างใหม่
+        local item = nil
+        -- ค้นหา makeMessageItem จาก _G เผื่อบางแพลตฟอร์ม
+        if typeof(makeMessageItem) == "function" then
+            makeMessageItem(t)
+        else
+            -- fallback: สร้าง label แบบง่าย (กรณีผู้รันตัด PART 1)
+            local f = Instance.new("TextLabel")
+            f.Size = UDim2.new(1,-8,0,36)
+            f.Text = t
+            f.TextColor3 = THEME.text
+            f.Font = Enum.Font.Gotham
+            f.TextSize = 14
+            f.BackgroundColor3 = THEME.card
+            f.Parent = List
+            Instance.new("UICorner", f).CornerRadius = UDim.new(0,8)
+        end
+        AddBox.Text = ""
+        Info.Text = "เพิ่มข้อความเข้าคิวแล้ว"
+    end
+end)
+
+AddBox.FocusLost:Connect(function(enterPressed)
+    if enterPressed then
+        AddBtn:Activate()
+    end
+end)
+
+-- Clear All
+ClearBtn.MouseButton1Click:Connect(function()
+    local count = 0
+    for _,child in ipairs(List:GetChildren()) do
+        if child:IsA("Frame") then
+            count += 1
+            child:Destroy()
+        end
+    end
+    Info.Text = (count > 0) and ("ลบทั้งหมดแล้ว ("..count..")") or "คิวว่างอยู่แล้ว"
+end)
+--// LocalScript: RBXGeneral Auto Messenger — PART 3/3
+-- ใช้ตัวแปร/วัตถุจาก PART 1 และฟังก์ชันจาก PART 2
+
+local running = false
+local randomRunning = false
+
+local function getInterval()
+    local v = tonumber(IntervalBox.Text) or DEFAULT_INTERVAL
+    if v < 0.1 then v = 0.1 end
+    return v
+end
+
+local function normalLoop()
+    running = true
+    randomRunning = false
+    setStatus(true)
+    Info.Text = "เริ่มส่งแบบเรียงลำดับ…"
+    local idx = 1
+    while running do
+        local q = getQueue()
+        if #q == 0 then
+            Info.Text = "คิวว่าง — หยุดอัตโนมัติ"
+            running = false
+            break
+        end
+        if idx > #q then idx = 1 end
+        local msg = q[idx]
+        local ok = sendMessage(msg)
+        Info.Text = ok and ("ส่งแล้ว: "..msg) or "ส่งไม่สำเร็จ: RBXGeneral ไม่พร้อม"
+        idx += 1
+        task.wait(getInterval())
+    end
+    setStatus(false)
+end
+
+local function randomLoop()
+    randomRunning = true
+    running = false
+    setStatus(true)
+    Info.Text = "เริ่มส่งแบบสุ่ม…"
+    while randomRunning do
+        local q = getQueue()
+        if #q == 0 then
+            Info.Text = "คิวว่าง — หยุดอัตโนมัติ"
+            randomRunning = false
+            break
+        end
+        local msg = q[math.random(1,#q)]
+        local ok = sendMessage(msg)
+        Info.Text = ok and ("ส่งแล้ว(สุ่ม): "..msg) or "ส่งไม่สำเร็จ: RBXGeneral ไม่พร้อม"
+        task.wait(getInterval())
+    end
+    setStatus(false)
+end
+
+-- Buttons
+StartBtn.MouseButton1Click:Connect(function()
+    if running then return end
+    running = true
+    randomRunning = false
+    task.spawn(normalLoop)
+end)
+
+RandomBtn.MouseButton1Click:Connect(function()
+    if randomRunning then return end
+    randomRunning = true
+    running = false
+    task.spawn(randomLoop)
+end)
+
+StopBtn.MouseButton1Click:Connect(function()
+    running = false
+    randomRunning = false
+    setStatus(false)
+    Info.Text = "⏹ หยุดส่งแล้ว"
+end)
+
+-- Hotkeys: Ctrl+Enter = Start (เรียง), R = Random, Esc = Stop
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if gpe then return end
+    if input.KeyCode == Enum.KeyCode.Return and
+       (UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) or UserInputService:IsKeyDown(Enum.KeyCode.RightControl)) then
+        StartBtn:Activate()
+    elseif input.KeyCode == Enum.KeyCode.R then
+        RandomBtn:Activate()
+    elseif input.KeyCode == Enum.KeyCode.Escape then
+        StopBtn:Activate()
+    end
+end)
