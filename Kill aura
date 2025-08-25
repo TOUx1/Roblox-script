@@ -182,12 +182,20 @@ local function CollectGun()
     _G.AutoCollectModule.CollectItemByName("Revolver2")
 end
 
--- ถือปืนอัตโนมัติ
-local function EquipGun()
-    local gun = LocalPlayer.Backpack:FindFirstChild("Gun") or (LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Gun"))
-    if gun then
-        LocalPlayer.Character.Humanoid:EquipTool(gun)
+-- กำหนดชื่อไอเทมที่จะใช้ยิง
+local itemName = "Gun"  -- ชื่อปืน
+
+-- ฟังก์ชันหา Gun / Tool และ Equip ทันที ถ้ายังไม่อยู่ใน Character
+local function getGun()
+    local tool = LocalPlayer.Character:FindFirstChild(itemName)
+    if not tool then
+        local backpack = LocalPlayer:FindFirstChild("Backpack")
+        if backpack and backpack:FindFirstChild(itemName) then
+            tool = backpack[itemName]
+            tool.Parent = LocalPlayer.Character -- Equip ทันที
+        end
     end
+    return tool
 end
 
 -- หาผู้เล่นชื่อคล้าย
@@ -219,7 +227,7 @@ local function FindNearestPlayer(radius)
     end
     return nearest
 end
--- Advanced Prediction + Warp + ยิงหลายจุด (สำหรับ Toggle หลัก) - แก้ไขใช้ PivotTo และเพิ่ม delay
+-- Advanced Prediction + Warp + ยิงหลายจุด (สำหรับ Toggle หลัก) - แก้ไขใช้ PivotTo และเพิ่ม delay + ยิงแบบไม่ถือค้าง
 local function WarpAndShootAdvanced(target)
     if not target or not target.Character or not LocalPlayer.Character then return end
     local character = LocalPlayer.Character
@@ -235,8 +243,8 @@ local function WarpAndShootAdvanced(target)
     -- วาปไปใกล้เป้าหมายด้วย PivotTo แทน set CFrame โดยตรง
     character:PivotTo(part.CFrame + Vector3.new(0,5,0))
 
-    -- ยิงหลายจุดสแปม
-    local gun = character:FindFirstChild("Gun")
+    -- ยิงหลายจุดสแปมแบบไม่ถือค้าง
+    local gun = getGun()
     if not gun or not gun:FindFirstChild("shot") then return end
 
     local targetPos = part.Position
@@ -252,11 +260,17 @@ local function WarpAndShootAdvanced(target)
         local offset = Vector3.new(math.random(-2,2), math.random(-1,1), math.random(-2,2))
         local predictedPos = targetPos + targetVel * travelTime + offset
         local args = {predictedPos}
-        gun.shot:FireServer(unpack(args))
+        pcall(function()
+            gun.shot:FireServer(unpack(args))
+        end)
     end
+    -- ปล่อย Tool กลับ Backpack ทันที
+    pcall(function()
+        gun.Parent = LocalPlayer.Backpack
+    end)
 end
 
--- Advanced Prediction + ยิงหลายจุด (สำหรับ Kill Aura ไม่มีวาร์ป)
+-- Advanced Prediction + ยิงหลายจุด (สำหรับ Kill Aura ไม่มีวาร์ป) + ยิงแบบไม่ถือค้าง
 local function ShootAdvanced(target)
     if not target or not target.Character or not LocalPlayer.Character then return end
     local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
@@ -265,8 +279,8 @@ local function ShootAdvanced(target)
     local part = target.Character:FindFirstChild(AimPart)
     if not part then return end
 
-    -- ยิงหลายจุดสแปม
-    local gun = LocalPlayer.Character:FindFirstChild("Gun")
+    -- ยิงหลายจุดสแปมแบบไม่ถือค้าง
+    local gun = getGun()
     if not gun or not gun:FindFirstChild("shot") then return end
 
     local targetPos = part.Position
@@ -282,8 +296,14 @@ local function ShootAdvanced(target)
         local offset = Vector3.new(math.random(-2,2), math.random(-1,1), math.random(-2,2))
         local predictedPos = targetPos + targetVel * travelTime + offset
         local args = {predictedPos}
-        gun.shot:FireServer(unpack(args))
+        pcall(function()
+            gun.shot:FireServer(unpack(args))
+        end)
     end
+    -- ปล่อย Tool กลับ Backpack ทันที
+    pcall(function()
+        gun.Parent = LocalPlayer.Backpack
+    end)
 end
 
 -- ฟังก์ชัน Dupe Gun
@@ -345,8 +365,6 @@ KillAuraButton.MouseButton1Click:Connect(function()
             if not LocalPlayer.Backpack:FindFirstChild("Gun") and not (LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Gun")) then
                 CollectGun()
             end
-            -- ถือปืนออโต้
-            EquipGun()
             -- Kill Aura
             local nearest = FindNearestPlayer(50)
             if nearest then
@@ -373,8 +391,6 @@ ToggleButton.MouseButton1Click:Connect(function()
             if not LocalPlayer.Backpack:FindFirstChild("Gun") and not (LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Gun")) then
                 CollectGun()
             end
-            -- ถือปืนออโต้
-            EquipGun()
 
             -- ยิงเป้าหมายชื่อ
             if targetPlayer then
