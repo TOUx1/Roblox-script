@@ -125,6 +125,8 @@ MinimizeButton.BackgroundColor3 = Color3.fromRGB(30,30,30)
 MinimizeButton.TextColor3 = Color3.fromRGB(255,255,255)
 MinimizeButton.Font = Enum.Font.SourceSansBold
 MinimizeButton.TextSize = 18
+MinimizeButton.Active = true
+MinimizeButton.Draggable = true
 MinimizeButton.Parent = ScreenGui
 
 local MiniUICorner = Instance.new("UICorner", MinimizeButton)
