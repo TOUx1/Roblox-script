@@ -1,0 +1,547 @@
+--// GUI หลัก
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+
+--// GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "OutfitChangerUI"
+ScreenGui.Parent = game.CoreGui
+
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 250, 0, 120)
+Frame.Position = UDim2.new(0.5, -125, 0.8, -60)
+Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+Frame.BorderSizePixel = 0
+Frame.Active = true
+Frame.Draggable = true
+Frame.Parent = ScreenGui
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.BackgroundTransparency = 1
+Title.Text = "🔥 Outfit Cycler 🔥"
+Title.TextColor3 = Color3.fromRGB(255, 170, 0)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 18
+Title.Parent = Frame
+
+local StartButton = Instance.new("TextButton")
+StartButton.Size = UDim2.new(0.5, -5, 0, 40)
+StartButton.Position = UDim2.new(0, 5, 0, 40)
+StartButton.Text = "▶ Start"
+StartButton.Font = Enum.Font.GothamBold
+StartButton.TextSize = 16
+StartButton.TextColor3 = Color3.new(1,1,1)
+StartButton.BackgroundColor3 = Color3.fromRGB(0,170,0)
+StartButton.Parent = Frame
+
+local StopButton = Instance.new("TextButton")
+StopButton.Size = UDim2.new(0.5, -5, 0, 40)
+StopButton.Position = UDim2.new(0.5, 0, 0, 40)
+StopButton.Text = "⏹ Stop"
+StopButton.Font = Enum.Font.GothamBold
+StopButton.TextSize = 16
+StopButton.TextColor3 = Color3.new(1,1,1)
+StopButton.BackgroundColor3 = Color3.fromRGB(170,0,0)
+StopButton.Parent = Frame
+
+-- ตัวแปรควบคุม
+local running = false
+local remote = ReplicatedStorage:WaitForChild("BloxbizRemotes"):WaitForChild("CatalogOnApplyOutfit")
+
+-- ฟังก์ชันส่ง Outfit
+local function applyOutfit(args)
+    remote:FireServer(unpack(args))
+end
+
+-- คำนวณดีเลย์ตาม WalkSpeed
+local function getDelay()
+    local ws = Character:FindFirstChild("Humanoid") and Character.Humanoid.WalkSpeed or 16
+    return 16 / ws
+end
+
+-- เช็คผู้เล่นหยุดเดิน
+local function isStopped()
+    local hum = Character:FindFirstChild("HumanoidRootPart")
+    if hum then
+        return hum.Velocity.Magnitude < 1
+    end
+    return false
+end
+
+--// จะต่อ Outfit scripts ในส่วนถัดไป
+--// ส่วน Outfit script list
+local outfits = {}
+
+-- สีแดง
+table.insert(outfits, {
+    {
+        SwimAnimation = 0,
+        DepthScale = 1,
+        RightLegColor = Color3.new(1, 0, 0),
+        MoodAnimation = 0,
+        Face = 0,
+        JumpAnimation = 0,
+        HeadColor = Color3.new(1, 0, 0),
+        BodyTypeScale = 0.3,
+        ClimbAnimation = 0,
+        LeftArmColor = Color3.new(1, 0, 0),
+        LeftLegColor = Color3.new(1, 0, 0),
+        Pants = 0,
+        RightArmColor = Color3.new(1, 0, 0),
+        WidthScale = 1,
+        LeftArm = 27112052,
+        IdleAnimation = 0,
+        RightArm = 27112039,
+        GraphicTShirt = 0,
+        Head = 0,
+        Shirt = 0,
+        Torso = 27112025,
+        RunAnimation = 0,
+        WalkAnimation = 0,
+        FallAnimation = 0,
+        TorsoColor = Color3.new(1, 0, 0),
+        Accessories = {},
+        RightLeg = 27112068,
+        HeadScale = 1,
+        HeightScale = 1,
+        ProportionScale = 1,
+        LeftLeg = 27112056
+    }
+})
+
+-- สีส้ม
+table.insert(outfits, {
+    {
+        SwimAnimation = 0,
+        DepthScale = 1,
+        RightLegColor = Color3.new(1, 0.6862745, 0),
+        MoodAnimation = 0,
+        Face = 0,
+        JumpAnimation = 0,
+        HeadColor = Color3.new(1, 0.6862745, 0),
+        BodyTypeScale = 0.3,
+        ClimbAnimation = 0,
+        LeftArmColor = Color3.new(1, 0.6862745, 0),
+        LeftLegColor = Color3.new(1, 0.6862745, 0),
+        Pants = 0,
+        RightArmColor = Color3.new(1, 0.6862745, 0),
+        WidthScale = 1,
+        LeftArm = 27112052,
+        IdleAnimation = 0,
+        RightArm = 27112039,
+        GraphicTShirt = 0,
+        Head = 0,
+        Shirt = 0,
+        Torso = 27112025,
+        RunAnimation = 0,
+        WalkAnimation = 0,
+        FallAnimation = 0,
+        TorsoColor = Color3.new(1, 0.6862745, 0),
+        Accessories = {},
+        RightLeg = 27112068,
+        HeadScale = 1,
+        HeightScale = 1,
+        ProportionScale = 1,
+        LeftLeg = 27112056
+    }
+})
+
+-- สีเหลือง
+table.insert(outfits, {
+    {
+        SwimAnimation = 0,
+        DepthScale = 1,
+        RightLegColor = Color3.new(1, 1, 0),
+        MoodAnimation = 0,
+        Face = 0,
+        JumpAnimation = 0,
+        HeadColor = Color3.new(1, 1, 0),
+        BodyTypeScale = 0.3,
+        ClimbAnimation = 0,
+        LeftArmColor = Color3.new(1, 1, 0),
+        LeftLegColor = Color3.new(1, 1, 0),
+        Pants = 0,
+        RightArmColor = Color3.new(1, 1, 0),
+        WidthScale = 1,
+        LeftArm = 27112052,
+        IdleAnimation = 0,
+        RightArm = 27112039,
+        GraphicTShirt = 0,
+        Head = 0,
+        Shirt = 0,
+        Torso = 27112025,
+        RunAnimation = 0,
+        WalkAnimation = 0,
+        FallAnimation = 0,
+        TorsoColor = Color3.new(1, 1, 0),
+        Accessories = {},
+        RightLeg = 27112068,
+        HeadScale = 1,
+        HeightScale = 1,
+        ProportionScale = 1,
+        LeftLeg = 27112056
+    }
+})
+
+-- สีเขียว
+table.insert(outfits, {
+    {
+        SwimAnimation = 0,
+        DepthScale = 1,
+        RightLegColor = Color3.new(0, 1, 0),
+        MoodAnimation = 0,
+        Face = 0,
+        JumpAnimation = 0,
+        HeadColor = Color3.new(0, 1, 0),
+        BodyTypeScale = 0.3,
+        ClimbAnimation = 0,
+        LeftArmColor = Color3.new(0, 1, 0),
+        LeftLegColor = Color3.new(0, 1, 0),
+        Pants = 0,
+        RightArmColor = Color3.new(0, 1, 0),
+        WidthScale = 1,
+        LeftArm = 27112052,
+        IdleAnimation = 0,
+        RightArm = 27112039,
+        GraphicTShirt = 0,
+        Head = 0,
+        Shirt = 0,
+        Torso = 27112025,
+        RunAnimation = 0,
+        WalkAnimation = 0,
+        FallAnimation = 0,
+        TorsoColor = Color3.new(0, 1, 0),
+        Accessories = {},
+        RightLeg = 27112068,
+        HeadScale = 1,
+        HeightScale = 1,
+        ProportionScale = 1,
+        LeftLeg = 27112056
+    }
+})
+
+-- ฟังก์ชันรัน Outfit ทีละตัว
+local function runOutfits()
+    if running then return end
+    running = true
+    spawn(function()
+        while running do
+            for i, outfit in ipairs(outfits) do
+                if not running then break end
+                applyOutfit(outfit)
+                wait(getDelay())
+            end
+            -- ตรวจสอบผู้เล่นหยุดเดิน ถ้าใช่จะรัน outfit สุดท้าย
+            if Character.Humanoid.MoveDirection.Magnitude == 0 then
+                running = false
+            end
+        end
+    end)
+end
+
+-- ปุ่ม Start
+StartButton.MouseButton1Click:Connect(function()
+    runOutfits()
+end)
+
+-- ปุ่ม Stop
+StopButton.MouseButton1Click:Connect(function()
+    running = false
+end)
+-- สีเขียวเข้ม
+table.insert(outfits, {
+    {
+        SwimAnimation = 0,
+        DepthScale = 1,
+        RightLegColor = Color3.new(0.22745098, 0.49019608, 0.08235294),
+        MoodAnimation = 0,
+        Face = 0,
+        JumpAnimation = 0,
+        HeadColor = Color3.new(0.22745098, 0.49019608, 0.08235294),
+        BodyTypeScale = 0.3,
+        ClimbAnimation = 0,
+        LeftArmColor = Color3.new(0.22745098, 0.49019608, 0.08235294),
+        LeftLegColor = Color3.new(0.22745098, 0.49019608, 0.08235294),
+        Pants = 0,
+        RightArmColor = Color3.new(0.22745098, 0.49019608, 0.08235294),
+        WidthScale = 1,
+        LeftArm = 27112052,
+        IdleAnimation = 0,
+        RightArm = 27112039,
+        GraphicTShirt = 0,
+        Head = 0,
+        Shirt = 0,
+        Torso = 27112025,
+        RunAnimation = 0,
+        WalkAnimation = 0,
+        FallAnimation = 0,
+        TorsoColor = Color3.new(0.22745098, 0.49019608, 0.08235294),
+        Accessories = {},
+        RightLeg = 27112068,
+        HeadScale = 1,
+        HeightScale = 1,
+        ProportionScale = 1,
+        LeftLeg = 27112056
+    }
+})
+
+-- สีฟ้าเขียว
+table.insert(outfits, {
+    {
+        SwimAnimation = 0,
+        DepthScale = 1,
+        RightLegColor = Color3.new(0, 1, 1),
+        MoodAnimation = 0,
+        Face = 0,
+        JumpAnimation = 0,
+        HeadColor = Color3.new(0, 1, 1),
+        BodyTypeScale = 0.3,
+        ClimbAnimation = 0,
+        LeftArmColor = Color3.new(0, 1, 1),
+        LeftLegColor = Color3.new(0, 1, 1),
+        Pants = 0,
+        RightArmColor = Color3.new(0, 1, 1),
+        WidthScale = 1,
+        LeftArm = 27112052,
+        IdleAnimation = 0,
+        RightArm = 27112039,
+        GraphicTShirt = 0,
+        Head = 0,
+        Shirt = 0,
+        Torso = 27112025,
+        RunAnimation = 0,
+        WalkAnimation = 0,
+        FallAnimation = 0,
+        TorsoColor = Color3.new(0, 1, 1),
+        Accessories = {},
+        RightLeg = 27112068,
+        HeadScale = 1,
+        HeightScale = 1,
+        ProportionScale = 1,
+        LeftLeg = 27112056
+    }
+})
+
+-- สีน้ำเงิน
+table.insert(outfits, {
+    {
+        SwimAnimation = 0,
+        DepthScale = 1,
+        RightLegColor = Color3.new(0, 0, 1),
+        MoodAnimation = 0,
+        Face = 0,
+        JumpAnimation = 0,
+        HeadColor = Color3.new(0, 0, 1),
+        BodyTypeScale = 0.3,
+        ClimbAnimation = 0,
+        LeftArmColor = Color3.new(0, 0, 1),
+        LeftLegColor = Color3.new(0, 0, 1),
+        Pants = 0,
+        RightArmColor = Color3.new(0, 0, 1),
+        WidthScale = 1,
+        LeftArm = 27112052,
+        IdleAnimation = 0,
+        RightArm = 27112039,
+        GraphicTShirt = 0,
+        Head = 0,
+        Shirt = 0,
+        Torso = 27112025,
+        RunAnimation = 0,
+        WalkAnimation = 0,
+        FallAnimation = 0,
+        TorsoColor = Color3.new(0, 0, 1),
+        Accessories = {},
+        RightLeg = 27112068,
+        HeadScale = 1,
+        HeightScale = 1,
+        ProportionScale = 1,
+        LeftLeg = 27112056
+    }
+})
+
+-- สีชมพูม่วง
+table.insert(outfits, {
+    {
+        SwimAnimation = 0,
+        DepthScale = 1,
+        RightLegColor = Color3.new(1, 0, 0.7490196),
+        MoodAnimation = 0,
+        Face = 0,
+        JumpAnimation = 0,
+        HeadColor = Color3.new(1, 0, 0.7490196),
+        BodyTypeScale = 0.3,
+        ClimbAnimation = 0,
+        LeftArmColor = Color3.new(1, 0, 0.7490196),
+        LeftLegColor = Color3.new(1, 0, 0.7490196),
+        Pants = 0,
+        RightArmColor = Color3.new(1, 0, 0.7490196),
+        WidthScale = 1,
+        LeftArm = 27112052,
+        IdleAnimation = 0,
+        RightArm = 27112039,
+        GraphicTShirt = 0,
+        Head = 0,
+        Shirt = 0,
+        Torso = 27112025,
+        RunAnimation = 0,
+        WalkAnimation = 0,
+        FallAnimation = 0,
+        TorsoColor = Color3.new(1, 0, 0.7490196),
+        Accessories = {},
+        RightLeg = 27112068,
+        HeadScale = 1,
+        HeightScale = 1,
+        ProportionScale = 1,
+        LeftLeg = 27112056
+    }
+})
+
+-- ฟังก์ชันรัน outfit สุดท้ายเมื่อหยุดเดิน
+local function runStoppedOutfit()
+    local stoppedOutfit = {
+        {
+            SwimAnimation = 0,
+            DepthScale = 1,
+            RightLegColor = Color3.new(0.7411765, 0.7372549, 0.7411765),
+            MoodAnimation = 0,
+            Face = 51241171,
+            JumpAnimation = 0,
+            HeadColor = Color3.new(0.7411765, 0.7372549, 0.7411765),
+            BodyTypeScale = 0.3,
+            ClimbAnimation = 0,
+            LeftArmColor = Color3.new(0.7411765, 0.7372549, 0.7411765),
+            LeftLegColor = Color3.new(0.7411765, 0.7372549, 0.7411765),
+            Pants = 17761081613,
+            RightArmColor = Color3.new(0.7411765, 0.7372549, 0.7411765),
+            WidthScale = 1,
+            LeftArm = 27112052,
+            IdleAnimation = 0,
+            RightArm = 27112039,
+            GraphicTShirt = 0,
+            Head = 0,
+            Shirt = 71072007171100,
+            Torso = 27112025,
+            RunAnimation = 0,
+            WalkAnimation = 0,
+            FallAnimation = 0,
+            TorsoColor = Color3.new(0.7411765, 0.7372549, 0.7411765),
+            Accessories = {
+                {Rotation=Vector3.new(), AssetId=10928435480, Position=Vector3.new(), Scale=Vector3.new(1,1,1), IsLayered=false, AccessoryType=Enum.AccessoryType.Hair},
+                {Rotation=Vector3.new(), AssetId=13641422551, Position=Vector3.new(), Scale=Vector3.new(1,1,1), IsLayered=false, AccessoryType=Enum.AccessoryType.Face}
+            },
+            RightLeg = 27112068,
+            HeadScale = 1,
+            HeightScale = 1,
+            ProportionScale = 1,
+            LeftLeg = 27112056
+        }
+    }
+    applyOutfit(stoppedOutfit)
+end
+
+-- เช็คทุก frame ถ้าหยุดเดินจะรัน outfit สุดท้าย
+RunService.RenderStepped:Connect(function()
+    if Character:FindFirstChild("Humanoid") and Character.Humanoid.MoveDirection.Magnitude == 0 and not running then
+        runStoppedOutfit()
+    end
+end)
+--// GUI หลัก
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "OutfitGUI"
+ScreenGui.Parent = game:GetService("CoreGui")
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 400, 0, 300)
+mainFrame.Position = UDim2.new(0.5, -200, 0.5, -150)
+mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Draggable = true
+mainFrame.Parent = ScreenGui
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 30)
+title.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+title.BorderSizePixel = 0
+title.Text = "Outfit Changer"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.Font = Enum.Font.SourceSansBold
+title.TextSize = 20
+title.Parent = mainFrame
+
+local startButton = Instance.new("TextButton")
+startButton.Size = UDim2.new(0, 120, 0, 40)
+startButton.Position = UDim2.new(0.5, -60, 0.7, 0)
+startButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+startButton.Text = "Start"
+startButton.TextColor3 = Color3.fromRGB(255,255,255)
+startButton.Font = Enum.Font.SourceSansBold
+startButton.TextSize = 18
+startButton.Parent = mainFrame
+
+local stopButton = Instance.new("TextButton")
+stopButton.Size = UDim2.new(0, 120, 0, 40)
+stopButton.Position = UDim2.new(0.5, -60, 0.85, 0)
+stopButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+stopButton.Text = "Stop"
+stopButton.TextColor3 = Color3.fromRGB(255,255,255)
+stopButton.Font = Enum.Font.SourceSansBold
+stopButton.TextSize = 18
+stopButton.Parent = mainFrame
+
+--// ฟังก์ชันรัน outfit ตามความเร็วผู้เล่น
+local function getDelay()
+    local humanoid = Character:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        local speed = humanoid.WalkSpeed
+        return 16 / speed -- ถ้า WalkSpeed =16 จะ delay=1s
+    else
+        return 1
+    end
+end
+
+local runningLoop = false
+
+startButton.MouseButton1Click:Connect(function()
+    runningLoop = true
+    spawn(function()
+        while runningLoop do
+            for _, outfit in ipairs(outfits) do
+                if not runningLoop then break end
+                applyOutfit(outfit)
+                wait(getDelay())
+            end
+        end
+    end)
+end)
+
+stopButton.MouseButton1Click:Connect(function()
+    runningLoop = false
+end)
+
+--// ข้อความบอกสถานะ
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Size = UDim2.new(1, 0, 0, 20)
+statusLabel.Position = UDim2.new(0, 0, 0.05, 0)
+statusLabel.BackgroundTransparency = 1
+statusLabel.TextColor3 = Color3.fromRGB(255, 255, 0)
+statusLabel.Font = Enum.Font.SourceSansBold
+statusLabel.TextSize = 16
+statusLabel.Text = "Status: Stopped"
+statusLabel.Parent = mainFrame
+
+spawn(function()
+    while true do
+        if runningLoop then
+            statusLabel.Text = "Status: Running"
+        else
+            statusLabel.Text = "Status: Stopped"
+        end
+        wait(0.2)
+    end
+end)
