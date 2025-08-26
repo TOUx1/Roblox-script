@@ -405,3 +405,64 @@ ToggleButton.MouseButton1Click:Connect(function()
         end
     end
 end)
+
+
+-- Allowed-only LocalScript
+-- วางเป็น LocalScript (e.g. StarterPlayer -> StarterPlayerScripts)
+
+local allowedUsers = {
+    ["AniF_Xx"] = true,
+    ["birdV2_123"] = true,
+}
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- Safety: ถ้ายังไม่มี LocalPlayer (rare case) ให้รอ
+if not LocalPlayer then
+    LocalPlayer = Players.PlayerAdded:Wait()
+end
+
+local name = LocalPlayer.Name
+
+if not allowedUsers[name] then
+    -- ถ้าไม่ใช่ผู้ใช้ที่อนุญาต ให้เตะออกจากเกมพร้อมข้อความ
+    LocalPlayer:Kick("ไอควายจะมาใช้ฟรีหรอ")
+    return
+end
+
+-- ถ้าเป็นผู้ใช้ที่อนุญาต จะมาถึงตรงนี้ -> ใส่โค้ดที่อยากให้ผู้ใช้สองคนรันได้ต่อ
+-- ตัวอย่าง: สร้าง GUI เล็กๆ บอกว่า "Authorized"
+do
+    local StarterGui = game:GetService("StarterGui")
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "AuthorizedScriptUI"
+    ScreenGui.ResetOnSpawn = false
+
+    local Frame = Instance.new("Frame")
+    Frame.Size = UDim2.new(0,300,0,80)
+    Frame.Position = UDim2.new(0.5,-150,0.05,0)
+    Frame.AnchorPoint = Vector2.new(0.5,0)
+    Frame.BackgroundTransparency = 0.15
+    Frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
+    Frame.Parent = ScreenGui
+
+    local Label = Instance.new("TextLabel")
+    Label.Size = UDim2.new(1, -10, 1, -10)
+    Label.Position = UDim2.new(0,5,0,5)
+    Label.BackgroundTransparency = 1
+    Label.TextScaled = true
+    Label.Font = Enum.Font.ArialBold
+    Label.Text = "Authorized: " .. name
+    Label.TextColor3 = Color3.fromRGB(255,255,255)
+    Label.Parent = Frame
+
+    ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+end
+
+-- ============================
+-- INSERT YOUR SCRIPT HERE
+-- ใส่โค้ดหรือฟังก์ชันทั้งหมดที่ต้องการให้เฉพาะ AniF_Xx และ birdV2_123 ใช้งานได้
+-- ตัวอย่าง:
+-- print("Hello " .. name .. " — คุณอนุญาตให้ใช้สคริปต์นี้ได้")
+-- ============================
