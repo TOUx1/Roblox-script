@@ -89,6 +89,7 @@ local contentFrame = Instance.new("Frame")
 contentFrame.Size = UDim2.new(1,-120,1,0)
 contentFrame.Position = UDim2.new(0,120,0,0)
 contentFrame.BackgroundTransparency = 1
+contentFrame.ClipsDescendants = true
 contentFrame.Parent = mainFrame
 
 -- Tabs
@@ -145,7 +146,7 @@ autoTabBtn.MouseButton1Click:Connect(function()
 	warpTab.Visible = false
 	autoTab.Visible = true
 end)
---== ปุ่มวาป ==--
+--== ปุ่มวาปทุกจุด ==--
 local warpPositions = {
 	["ร้านปืน"] = Vector3.new(495.77, 6.62, 1155.32),
 	["สถานีตำรวจ"] = Vector3.new(803.28, 13.27, -32.92),
@@ -175,7 +176,7 @@ for name, pos in pairs(warpPositions) do
 	end)
 end
 
---== ปุ่มซ่อน/แสดง GUI ==--
+--== ปุ่มซ่อน/แสดง GUI (ลากได้) ==--
 local hideBtn = Instance.new("TextButton")
 hideBtn.Size = UDim2.new(0,40,0,40)
 hideBtn.Position = UDim2.new(1,-50,0,50)
@@ -185,17 +186,16 @@ hideBtn.TextSize = 18
 hideBtn.TextColor3 = Color3.new(1,1,1)
 hideBtn.BackgroundColor3 = Color3.fromRGB(60,60,60)
 Instance.new("UICorner", hideBtn).CornerRadius = UDim.new(0,8)
-hideBtn.Parent = mainFrame
+hideBtn.Parent = gui -- อยู่นอก mainFrame เพื่อให้มองเห็นตลอด
 
 local hidden = false
 hideBtn.MouseButton1Click:Connect(function()
 	hidden = not hidden
-	contentFrame.Visible = not hidden
-	sidebar.Visible = not hidden
+	mainFrame.Visible = not hidden
 	hideBtn.Text = hidden and "🙈" or "👁"
 end)
 
---== Dragging GUI ==--
+--== Dragging GUI ทั้งหมด ==--
 do
 	local dragging = false
 	local dragStart, startPos
@@ -224,14 +224,14 @@ autoToolBtn.Size = UDim2.new(0,180,0,50)
 autoToolBtn.Text = "ออโต้ใช้ของ: OFF"
 autoToolBtn.Font = Enum.Font.GothamBold
 autoToolBtn.TextSize = 18
-autoToolBtn.TextColor3 = Color3.new(1,1,1)
+autoToolBtn.TextColor3 = Color3.fromRGB(255,255,255)
 autoToolBtn.BackgroundColor3 = Color3.fromRGB(70,70,70)
 Instance.new("UICorner", autoToolBtn).CornerRadius = UDim.new(0,8)
 autoToolBtn.Parent = autoTab
 
 local autoRunning = false
 
--- ฟังก์ชันหาปุ่ม RemoteEvent ของ Tool Punch
+-- ฟังก์ชันหา RemoteEvent ของ Tool Punch
 local function getPunchRemote()
 	local char = player.Character
 	if char then
@@ -252,7 +252,7 @@ local function autoUseTool()
 				remote:FireServer()
 			end)
 		end
-		task.wait(0.2) -- หน่วงเวลา สามารถปรับได้
+		task.wait(0.2) -- หน่วงเวลา ปรับได้
 	end
 end
 
@@ -268,7 +268,7 @@ autoToolBtn.MouseButton1Click:Connect(function()
 	end
 end)
 
--- ปรับ Toggle ให้ไม่หายเวลาเปลี่ยน Tab
+-- แก้ปัญหา Toggle ไม่หายเวลาเปลี่ยน Tab
 warpTabBtn.MouseButton1Click:Connect(function()
 	warpTab.Visible = true
 	autoTab.Visible = false
