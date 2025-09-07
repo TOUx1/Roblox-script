@@ -1,0 +1,212 @@
+-- LocalScript GUI แบบใหม่ (Part 1/2)
+local player = game.Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local hrp = char:WaitForChild("HumanoidRootPart")
+
+-- สร้าง ScreenGui
+local gui = Instance.new("ScreenGui")
+gui.Name = "NewCoolGUI"
+gui.Parent = player:WaitForChild("PlayerGui")
+
+-- กรอบหลัก
+local main = Instance.new("Frame")
+main.Size = UDim2.new(0, 360, 0, 300)
+main.Position = UDim2.new(0.3, 0, 0.3, 0)
+main.BackgroundColor3 = Color3.fromRGB(25,25,25)
+main.BorderSizePixel = 0
+main.Active = true
+main.Draggable = true
+main.Parent = gui
+
+-- Header
+local header = Instance.new("TextLabel")
+header.Size = UDim2.new(1,0,0,30)
+header.BackgroundColor3 = Color3.fromRGB(45,45,45)
+header.Text = "🔥 TOU MENU 🔥"
+header.TextColor3 = Color3.fromRGB(255,170,0)
+header.Font = Enum.Font.FredokaOne
+header.TextSize = 18
+header.Parent = main
+
+-- ปุ่มซ่อน/แสดง GUI
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Size = UDim2.new(0, 80, 0, 25)
+toggleBtn.Position = UDim2.new(1, -85, 0, 2)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+toggleBtn.Text = "⏩ ซ่อน"
+toggleBtn.TextColor3 = Color3.fromRGB(255,255,255)
+toggleBtn.Font = Enum.Font.SourceSansBold
+toggleBtn.TextSize = 14
+toggleBtn.Parent = main
+
+toggleBtn.MouseButton1Click:Connect(function()
+	main.Visible = not main.Visible
+	toggleBtn.Text = main.Visible and "⏩ ซ่อน" or "⏪ แสดง"
+end)
+
+-- แถบด้านซ้าย
+local sideBar = Instance.new("Frame")
+sideBar.Size = UDim2.new(0, 120, 1, -30)
+sideBar.Position = UDim2.new(0,0,0,30)
+sideBar.BackgroundColor3 = Color3.fromRGB(40,40,40)
+sideBar.BorderSizePixel = 0
+sideBar.Parent = main
+
+local function createSideButton(text, y, callback)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(1, -10, 0, 30)
+	btn.Position = UDim2.new(0,5,0,y)
+	btn.BackgroundColor3 = Color3.fromRGB(70,70,70)
+	btn.TextColor3 = Color3.fromRGB(255,255,255)
+	btn.Font = Enum.Font.SourceSansBold
+	btn.TextSize = 16
+	btn.Text = text
+	btn.Parent = sideBar
+	btn.MouseButton1Click:Connect(callback)
+	return btn
+end
+
+-- กรอบเนื้อหา ขวา (ปุ่มแสดงตามหมวด)
+local contentFrame = Instance.new("Frame")
+contentFrame.Size = UDim2.new(1, -120, 1, -30)
+contentFrame.Position = UDim2.new(0,120,0,30)
+contentFrame.BackgroundColor3 = Color3.fromRGB(35,35,35)
+contentFrame.BorderSizePixel = 0
+contentFrame.Parent = main
+
+-- ฟังก์ชันวาร์ป
+local function warpTo(pos)
+	if char and hrp then
+		hrp.CFrame = CFrame.new(pos)
+	end
+end
+
+-- ฟังก์ชันสร้างปุ่มใน contentFrame
+local function makeContentButton(text, order, callback)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(0, contentFrame.Size.X.Offset - 20, 0, 30)
+	btn.Position = UDim2.new(0,10,0,10 + order*40)
+	btn.BackgroundColor3 = Color3.fromRGB(70,70,70)
+	btn.TextColor3 = Color3.fromRGB(255,255,255)
+	btn.Font = Enum.Font.SourceSansBold
+	btn.TextSize = 16
+	btn.Text = text
+	btn.Parent = contentFrame
+	btn.MouseButton1Click:Connect(callback)
+	return btn
+end
+
+-- แสดงปุ่มวาร์ป
+local warpButtons = {
+	{"🏹 ร้านปืน", Vector3.new(495.77, 6.62, 1155.32)},
+	{"👮 สถานีตำรวจ", Vector3.new(803.28, 13.27, -32.92)},
+	{"🚗 ร้านรถ", Vector3.new(209.14, 6.43, 1176.07)},
+	{"🛒 ร้านค้า", Vector3.new(767.00, 6.55, 174.00)},
+	{"🚚 ขนส่ง", Vector3.new(26.80, 6.37, -193.39)},
+	{"🏥 โรงพยาบาล", Vector3.new(-187.00, 6.37, 1453.00)}
+}
+
+local warpContentButtons = {}
+for i,v in ipairs(warpButtons) do
+	table.insert(warpContentButtons, makeContentButton(v[1], i-1, function() warpTo(v[2]) end))
+end
+
+-- แสดงปุ่ม Script Auto (ยังไม่เพิ่มปุ่ม auto tool)
+local autoContentButtons = {}
+-- LocalScript GUI แบบใหม่ (Part 2/2)
+-- สร้างปุ่มด้านซ้าย Script Auto
+createSideButton("Script Auto", 40, function()
+	-- ลบปุ่มเก่าใน contentFrame
+	for _, child in ipairs(contentFrame:GetChildren()) do
+		if child:IsA("TextButton") then
+			child:Destroy()
+		end
+	end
+
+	-- สร้างปุ่มออโต้ใช้ Tool
+	local btnAutoTool = makeContentButton("👊 ออโต้ใช้ของ : ปิด", 0, function() end)
+	local autoToolOn = false
+
+	btnAutoTool.MouseButton1Click:Connect(function()
+		autoToolOn = not autoToolOn
+		btnAutoTool.Text = autoToolOn and "👊 ออโต้ใช้ของ : เปิด" or "👊 ออโต้ใช้ของ : ปิด"
+		running = autoToolOn
+		if autoToolOn then
+			task.spawn(useToolLoop)
+		end
+	end)
+end)
+
+-- สร้างปุ่มด้านซ้าย Warp
+createSideButton("วาป", 5, function()
+	-- ลบปุ่มเก่าใน contentFrame
+	for _, child in ipairs(contentFrame:GetChildren()) do
+		if child:IsA("TextButton") then
+			child:Destroy()
+		end
+	end
+
+	-- สร้างปุ่มวาร์ปอีกครั้ง
+	for i,v in ipairs(warpButtons) do
+		makeContentButton(v[1], i-1, function() warpTo(v[2]) end)
+	end
+end)
+
+-- ====== Auto Tool Logic ======
+local Players = game:GetService("Players")
+local VirtualUser = game:GetService("VirtualUser")
+local player = Players.LocalPlayer
+
+local running = false
+local currentTool
+local cachedRemotes = {}
+local cachedFunctions = {}
+
+-- ยิง Mouse เสมือน
+local function fireMouseClick()
+	pcall(function()
+		VirtualUser:Button1Down(Vector2.new(0,0), workspace.CurrentCamera and workspace.CurrentCamera.CFrame or CFrame.new())
+		task.wait(0.03)
+		VirtualUser:Button1Up(Vector2.new(0,0), workspace.CurrentCamera and workspace.CurrentCamera.CFrame or CFrame.new())
+	end)
+end
+
+-- เก็บ Remote ของ Tool
+local function cacheRemotes(tool)
+	cachedRemotes = {}
+	cachedFunctions = {}
+	if not tool then return end
+	for _, d in ipairs(tool:GetDescendants()) do
+		if d:IsA("RemoteEvent") then
+			table.insert(cachedRemotes, d)
+		elseif d:IsA("RemoteFunction") then
+			table.insert(cachedFunctions, d)
+		end
+	end
+end
+
+-- Loop ใช้ Tool
+function useToolLoop()
+	while running do
+		local char = player.Character
+		local tool = char and char:FindFirstChildOfClass("Tool")
+
+		if tool ~= currentTool then
+			currentTool = tool
+			cacheRemotes(currentTool)
+		end
+
+		if tool then
+			pcall(function() tool:Activate() end)
+			fireMouseClick()
+			for _, re in ipairs(cachedRemotes) do
+				pcall(function() re:FireServer() end)
+			end
+			for _, rf in ipairs(cachedFunctions) do
+				pcall(function() rf:InvokeServer() end)
+			end
+		end
+
+		task.wait(0.2)
+	end
+end
