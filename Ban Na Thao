@@ -1,6 +1,7 @@
 --== Services ==--
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 
 --== ScreenGui ==--
@@ -12,211 +13,273 @@ gui.Parent = player:WaitForChild("PlayerGui")
 --== Main Frame ==--
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
-mainFrame.Size = UDim2.new(0, 520, 0, 400)
+mainFrame.Size = UDim2.new(0, 520, 0, 420)
 mainFrame.Position = UDim2.new(0.25, 0, 0.2, 0)
-mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+mainFrame.BackgroundColor3 = Color3.fromRGB(18,18,18)
 mainFrame.BorderSizePixel = 0
 mainFrame.Parent = gui
 
-Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 12)
+local mainCorner = Instance.new("UICorner", mainFrame)
+mainCorner.CornerRadius = UDim.new(0, 16)
 
---== Sidebar (แท็บซ้าย) ==--
+-- Gradient + Shadow
+local grad = Instance.new("UIGradient", mainFrame)
+grad.Color = ColorSequence.new(Color3.fromRGB(28,28,28), Color3.fromRGB(12,12,12))
+
+local shadow = Instance.new("ImageLabel")
+shadow.Name = "Shadow"
+shadow.BackgroundTransparency = 1
+shadow.Image = "rbxassetid://5028857084"
+shadow.ScaleType = Enum.ScaleType.Slice
+shadow.SliceCenter = Rect.new(24,24,276,276)
+shadow.Size = UDim2.new(1, 40, 1, 40)
+shadow.Position = UDim2.new(0, -20, 0, -10)
+shadow.ImageTransparency = 0.4
+shadow.ZIndex = 0
+shadow.Parent = mainFrame
+
+--== Header ==--
+local header = Instance.new("Frame")
+header.Name = "Header"
+header.Size = UDim2.new(1, 0, 0, 40)
+header.BackgroundColor3 = Color3.fromRGB(32,32,38)
+header.BorderSizePixel = 0
+header.ZIndex = 2
+header.Parent = mainFrame
+
+Instance.new("UICorner", header).CornerRadius = UDim.new(0, 16)
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -50, 1, 0)
+title.Position = UDim2.new(0,12,0,0)
+title.Text = "GUI TOU"
+title.Font = Enum.Font.GothamBold
+title.TextSize = 22
+title.TextColor3 = Color3.fromRGB(240,240,255)
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.BackgroundTransparency = 1
+title.Parent = header
+
+-- Close Button
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 30, 0, 30)
+closeBtn.Position = UDim2.new(1, -36, 0.5, -15)
+closeBtn.Text = "X"
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextSize = 18
+closeBtn.TextColor3 = Color3.fromRGB(255,255,255)
+closeBtn.BackgroundColor3 = Color3.fromRGB(210,60,60)
+Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0,8)
+closeBtn.Parent = header
+
+closeBtn.MouseButton1Click:Connect(function()
+	gui.Enabled = false
+end)
+
+--== Sidebar ==--
 local sidebar = Instance.new("Frame")
-sidebar.Name = "Sidebar"
 sidebar.Size = UDim2.new(0, 120, 1, 0)
-sidebar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+sidebar.Position = UDim2.new(0,0,0,0)
+sidebar.BackgroundColor3 = Color3.fromRGB(30,30,30)
 sidebar.BorderSizePixel = 0
 sidebar.Parent = mainFrame
 
 local tabLayout = Instance.new("UIListLayout", sidebar)
-tabLayout.Padding = UDim.new(0, 8)
+tabLayout.Padding = UDim.new(0,8)
 tabLayout.FillDirection = Enum.FillDirection.Vertical
 tabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 tabLayout.VerticalAlignment = Enum.VerticalAlignment.Top
 
---== Content Area ==--
+--== Content Frame ==--
 local contentFrame = Instance.new("Frame")
-contentFrame.Name = "ContentFrame"
-contentFrame.Size = UDim2.new(1, -120, 1, 0)
-contentFrame.Position = UDim2.new(0, 120, 0, 0)
+contentFrame.Size = UDim2.new(1,-120,1,0)
+contentFrame.Position = UDim2.new(0,120,0,0)
 contentFrame.BackgroundTransparency = 1
 contentFrame.Parent = mainFrame
 
---== Tab Buttons ==--
-local function createTabButton(name)
-	local btn = Instance.new("TextButton")
-	btn.Size = UDim2.new(0, 100, 0, 40)
-	btn.Text = name
-	btn.Font = Enum.Font.GothamBold
-	btn.TextSize = 18
-	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-	btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
-	btn.Parent = sidebar
-	return btn
-end
+-- Tabs
+local warpTabBtn = Instance.new("TextButton")
+warpTabBtn.Size = UDim2.new(0,100,0,40)
+warpTabBtn.Text = "วาป"
+warpTabBtn.Font = Enum.Font.GothamBold
+warpTabBtn.TextSize = 18
+warpTabBtn.TextColor3 = Color3.new(1,1,1)
+warpTabBtn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+Instance.new("UICorner", warpTabBtn).CornerRadius = UDim.new(0,8)
+warpTabBtn.Parent = sidebar
 
-local warpTabBtn = createTabButton("วาป")
-local autoTabBtn = createTabButton("Script Auto")
+local autoTabBtn = Instance.new("TextButton")
+autoTabBtn.Size = UDim2.new(0,100,0,40)
+autoTabBtn.Text = "Script Auto"
+autoTabBtn.Font = Enum.Font.GothamBold
+autoTabBtn.TextSize = 18
+autoTabBtn.TextColor3 = Color3.new(1,1,1)
+autoTabBtn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+Instance.new("UICorner", autoTabBtn).CornerRadius = UDim.new(0,8)
+autoTabBtn.Parent = sidebar
 
---== Tab Containers ==--
 local warpTab = Instance.new("Frame")
-warpTab.Size = UDim2.new(1, 0, 1, 0)
+warpTab.Size = UDim2.new(1,0,1,0)
 warpTab.BackgroundTransparency = 1
 warpTab.Visible = true
 warpTab.Parent = contentFrame
 
 local autoTab = Instance.new("Frame")
-autoTab.Size = UDim2.new(1, 0, 1, 0)
+autoTab.Size = UDim2.new(1,0,1,0)
 autoTab.BackgroundTransparency = 1
 autoTab.Visible = false
 autoTab.Parent = contentFrame
 
--- Layout ในแต่ละ Tab
 local warpLayout = Instance.new("UIListLayout", warpTab)
-warpLayout.Padding = UDim.new(0, 10)
+warpLayout.Padding = UDim.new(0,10)
 warpLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 warpLayout.VerticalAlignment = Enum.VerticalAlignment.Top
 
 local autoLayout = Instance.new("UIListLayout", autoTab)
-autoLayout.Padding = UDim.new(0, 10)
+autoLayout.Padding = UDim.new(0,10)
 autoLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 autoLayout.VerticalAlignment = Enum.VerticalAlignment.Top
 
---== Switch Tabs ==--
+-- Switch Tabs
 warpTabBtn.MouseButton1Click:Connect(function()
 	warpTab.Visible = true
 	autoTab.Visible = false
 end)
-
 autoTabBtn.MouseButton1Click:Connect(function()
 	warpTab.Visible = false
 	autoTab.Visible = true
 end)
---== ฟังก์ชันสร้างปุ่มวาป ==--
-local function createWarpButton(name, position)
+--== ปุ่มวาป ==--
+local warpPositions = {
+	["ร้านปืน🥶"] = Vector3.new(495.77, 6.62, 1155.32),
+	["สถานีตำรวจ😱"] = Vector3.new(803.28, 13.27, -32.92),
+	["ร้านรถ🤓"] = Vector3.new(209.14, 6.43, 1176.07),
+	["ร้านค้า🤤"] = Vector3.new(767.00, 6.55, 174.00),
+	["ขนส่ง🥵"] = Vector3.new(26.80, 6.37, -193.39),
+	["โรงพยาบาล😔"] = Vector3.new(-187.00, 6.37, 1453.00)
+}
+
+for name, pos in pairs(warpPositions) do
 	local btn = Instance.new("TextButton")
-	btn.Size = UDim2.new(0, 200, 0, 40)
+	btn.Size = UDim2.new(0,180,0,40)
 	btn.Text = name
 	btn.Font = Enum.Font.GothamBold
 	btn.TextSize = 18
 	btn.TextColor3 = Color3.new(1,1,1)
-	btn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
-	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+	btn.BackgroundColor3 = Color3.fromRGB(70,70,70)
+	Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
 	btn.Parent = warpTab
 
 	btn.MouseButton1Click:Connect(function()
 		local char = player.Character
 		if char and char:FindFirstChild("HumanoidRootPart") then
-			char.HumanoidRootPart.CFrame = CFrame.new(position)
+			char.HumanoidRootPart.CFrame = CFrame.new(pos)
 		end
 	end)
 end
 
---== ปุ่มวาปทั้งหมด ==--
-createWarpButton("ร้านปืน", Vector3.new(495.77, 6.62, 1155.32))
-createWarpButton("สถานีตำรวจ", Vector3.new(803.28, 13.27, -32.92))
-createWarpButton("ร้านรถ", Vector3.new(209.14, 6.43, 1176.07))
-createWarpButton("ร้านค้า", Vector3.new(767.00, 6.55, 174.00))
-createWarpButton("ขนส่ง", Vector3.new(26.80, 6.37, -193.39))
-createWarpButton("โรงพยาบาล", Vector3.new(-187.00, 6.37, 1453.00))
-
---== ปุ่มซ่อน/แสดง GUI ==--
+--== ปุ่มซ่อน/แสดง GUI ลากได้ ==--
 local hideBtn = Instance.new("TextButton")
-hideBtn.Size = UDim2.new(0, 100, 0, 30)
-hideBtn.Position = UDim2.new(1, -110, 0, 10)
-hideBtn.Text = "ซ่อน/แสดง"
+hideBtn.Size = UDim2.new(0,40,0,40)
+hideBtn.Position = UDim2.new(1,-50,0,50)
+hideBtn.Text = "👁"
 hideBtn.Font = Enum.Font.GothamBold
-hideBtn.TextSize = 16
+hideBtn.TextSize = 18
 hideBtn.TextColor3 = Color3.new(1,1,1)
-hideBtn.BackgroundColor3 = Color3.fromRGB(90, 90, 90)
-Instance.new("UICorner", hideBtn).CornerRadius = UDim.new(0, 6)
+hideBtn.BackgroundColor3 = Color3.fromRGB(60,60,60)
+Instance.new("UICorner", hideBtn).CornerRadius = UDim.new(0,8)
 hideBtn.Parent = mainFrame
 
-local guiVisible = true
+local hidden = false
 hideBtn.MouseButton1Click:Connect(function()
-	guiVisible = not guiVisible
-	contentFrame.Visible = guiVisible
-	sidebar.Visible = guiVisible
+	hidden = not hidden
+	contentFrame.Visible = not hidden
+	sidebar.Visible = not hidden
+	hideBtn.Text = hidden and "🙈" or "👁"
 end)
 
---== ลาก GUI ได้ด้วย hideBtn ==--
-local dragging = false
-local dragStartPos, startPos
-hideBtn.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		dragging = true
-		dragStartPos = input.Position
-		startPos = mainFrame.Position
-		input.Changed:Connect(function()
-			if input.UserInputState == Enum.UserInputState.End then
-				dragging = false
-			end
-		end)
-	end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-	if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-		local delta = input.Position - dragStartPos
-		mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-	end
-end)
+--== Dragging GUI ==--
+do
+	local dragging = false
+	local dragStart, startPos
+	mainFrame.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = input.Position
+			startPos = mainFrame.Position
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
+		end
+	end)
+	UserInputService.InputChanged:Connect(function(input)
+		if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+			local delta = input.Position - dragStart
+			mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+		end
+	end)
+end
 --== ปุ่มออโต้ใช้ของ ==--
 local autoToolBtn = Instance.new("TextButton")
-autoToolBtn.Size = UDim2.new(0, 200, 0, 40)
-autoToolBtn.Text = "👊 เปิดออโต้ใช้ของ"
+autoToolBtn.Size = UDim2.new(0,180,0,50)
+autoToolBtn.Text = "ออโต้ใช้ของ: OFF"
 autoToolBtn.Font = Enum.Font.GothamBold
 autoToolBtn.TextSize = 18
 autoToolBtn.TextColor3 = Color3.new(1,1,1)
-autoToolBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
-Instance.new("UICorner", autoToolBtn).CornerRadius = UDim.new(0, 8)
+autoToolBtn.BackgroundColor3 = Color3.fromRGB(70,70,70)
+Instance.new("UICorner", autoToolBtn).CornerRadius = UDim.new(0,8)
 autoToolBtn.Parent = autoTab
 
-local autoEnabled = false
-local autoConn
+local autoRunning = false
 
--- ฟังก์ชันดึง Remote ของ Punch
 local function getPunchRemote()
 	local char = player.Character
-	if char and char:FindFirstChild("Punch") and char.Punch:FindFirstChild("MeleeEvent") then
-		return char.Punch.MeleeEvent
+	if char then
+		local punchTool = char:FindFirstChild("Punch") or player.Backpack:FindFirstChild("Punch")
+		if punchTool and punchTool:FindFirstChild("MeleeEvent") then
+			return punchTool.MeleeEvent
+		end
 	end
 	return nil
 end
 
--- Toggle Auto Tool
-local function toggleAutoTool()
-	autoEnabled = not autoEnabled
-	autoToolBtn.Text = autoEnabled and "👊 ปิดออโต้ใช้ของ" or "👊 เปิดออโต้ใช้ของ"
-
-	if autoEnabled then
-		autoConn = game:GetService("RunService").Heartbeat:Connect(function()
-			local char = player.Character
-			if char and char:FindFirstChild("HumanoidRootPart") then
-				for _, other in ipairs(Players:GetPlayers()) do
-					if other ~= player and other.Character and other.Character:FindFirstChild("HumanoidRootPart") then
-						local dist = (char.HumanoidRootPart.Position - other.Character.HumanoidRootPart.Position).Magnitude
-						if dist <= 8 then -- ระยะ 8 studs
-							local remote = getPunchRemote()
-							if remote then
-								remote:FireServer()
-							end
-						end
-					end
-				end
-			end
-		end)
-	else
-		if autoConn then
-			autoConn:Disconnect()
-			autoConn = nil
+local function autoUseTool()
+	while autoRunning do
+		local remote = getPunchRemote()
+		if remote then
+			pcall(function()
+				remote:FireServer()
+			end)
 		end
+		task.wait(0.2) -- หน่วงเวลา กำหนดได้
 	end
 end
 
-autoToolBtn.MouseButton1Click:Connect(toggleAutoTool)
+autoToolBtn.MouseButton1Click:Connect(function()
+	autoRunning = not autoRunning
+	if autoRunning then
+		autoToolBtn.Text = "ออโต้ใช้ของ: ON"
+		autoToolBtn.BackgroundColor3 = Color3.fromRGB(60,190,90)
+		task.spawn(autoUseTool)
+	else
+		autoToolBtn.Text = "ออโต้ใช้ของ: OFF"
+		autoToolBtn.BackgroundColor3 = Color3.fromRGB(70,70,70)
+	end
+end)
 
--- เปิดเริ่มต้นแท็บวาป
-warpTab.Visible = true
-autoTab.Visible = false
+-- ทำให้ Toggle ไม่หายเวลาเปลี่ยนแท็บ
+warpTabBtn.MouseButton1Click:Connect(function()
+	warpTab.Visible = true
+	autoTab.Visible = false
+	autoToolBtn.Text = autoRunning and "ออโต้ใช้ของ: ON" or "ออโต้ใช้ของ: OFF"
+	autoToolBtn.BackgroundColor3 = autoRunning and Color3.fromRGB(60,190,90) or Color3.fromRGB(70,70,70)
+end)
+
+autoTabBtn.MouseButton1Click:Connect(function()
+	warpTab.Visible = false
+	autoTab.Visible = true
+	autoToolBtn.Text = autoRunning and "ออโต้ใช้ของ: ON" or "ออโต้ใช้ของ: OFF"
+	autoToolBtn.BackgroundColor3 = autoRunning and Color3.fromRGB(60,190,90) or Color3.fromRGB(70,70,70)
+end)
