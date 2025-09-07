@@ -1,17 +1,19 @@
--- LocalScript GUI ใหม่ (รวมทุกอย่าง)
-local player = game.Players.LocalPlayer
+-- LocalScript Part 1
+local Players = game:GetService("Players")
+local VirtualUser = game:GetService("VirtualUser")
+local player = Players.LocalPlayer
 local char = player.Character or player.CharacterAdded:Wait()
 local hrp = char:WaitForChild("HumanoidRootPart")
 
 -- ScreenGui
 local gui = Instance.new("ScreenGui")
-gui.Name = "NewCoolGUI"
+gui.Name = "FullCoolGUI"
 gui.Parent = player:WaitForChild("PlayerGui")
 
--- กรอบหลัก
+-- ===== Main Frame =====
 local main = Instance.new("Frame")
-main.Size = UDim2.new(0, 360, 0, 300)
-main.Position = UDim2.new(0.3, 0, 0.3, 0)
+main.Size = UDim2.new(0,360,0,300)
+main.Position = UDim2.new(0.3,0,0.3,0)
 main.BackgroundColor3 = Color3.fromRGB(25,25,25)
 main.BorderSizePixel = 0
 main.Active = true
@@ -28,26 +30,9 @@ header.Font = Enum.Font.FredokaOne
 header.TextSize = 18
 header.Parent = main
 
--- ปุ่มซ่อน/แสดง GUI
-local toggleBtn = Instance.new("TextButton")
-toggleBtn.Size = UDim2.new(0, 80, 0, 25)
-toggleBtn.Position = UDim2.new(1, -10, 0, 2)
-toggleBtn.AnchorPoint = Vector2.new(1, 0)
-toggleBtn.BackgroundColor3 = Color3.fromRGB(50,50,50)
-toggleBtn.Text = "⏩ ซ่อน"
-toggleBtn.TextColor3 = Color3.fromRGB(255,255,255)
-toggleBtn.Font = Enum.Font.SourceSansBold
-toggleBtn.TextSize = 14
-toggleBtn.Parent = main
-
-toggleBtn.MouseButton1Click:Connect(function()
-	main.Visible = not main.Visible
-	toggleBtn.Text = main.Visible and "⏩ ซ่อน" or "⏪ แสดง"
-end)
-
--- แถบด้านซ้าย
+-- ===== SideBar =====
 local sideBar = Instance.new("Frame")
-sideBar.Size = UDim2.new(0, 120, 1, -30)
+sideBar.Size = UDim2.new(0,120,1, -30)
 sideBar.Position = UDim2.new(0,0,0,30)
 sideBar.BackgroundColor3 = Color3.fromRGB(40,40,40)
 sideBar.BorderSizePixel = 0
@@ -67,7 +52,7 @@ local function createSideButton(text, y, callback)
 	return btn
 end
 
--- กรอบเนื้อหา ขวา
+-- ===== Content Frame =====
 local contentFrame = Instance.new("Frame")
 contentFrame.Size = UDim2.new(1, -120, 1, -30)
 contentFrame.Position = UDim2.new(0,120,0,30)
@@ -75,23 +60,41 @@ contentFrame.BackgroundColor3 = Color3.fromRGB(35,35,35)
 contentFrame.BorderSizePixel = 0
 contentFrame.Parent = main
 
--- UIListLayout ให้ปุ่มเรียงอัตโนมัติ
+-- UIListLayout เรียงปุ่มอัตโนมัติ
 local listLayout = Instance.new("UIListLayout")
 listLayout.Padding = UDim.new(0,8)
 listLayout.SortOrder = Enum.SortOrder.LayoutOrder
 listLayout.Parent = contentFrame
 
--- ฟังก์ชันวาร์ป
-local function warpTo(pos)
-	if char and hrp then
-		hrp.CFrame = CFrame.new(pos)
+-- ปุ่มซ่อน/แสดง GUI แยก Parent
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Size = UDim2.new(0,80,0,25)
+toggleBtn.Position = UDim2.new(0.6,0,0.3,-30) -- อยู่เหนือ main
+toggleBtn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+toggleBtn.Text = "⏩ ซ่อน"
+toggleBtn.TextColor3 = Color3.fromRGB(255,255,255)
+toggleBtn.Font = Enum.Font.SourceSansBold
+toggleBtn.TextSize = 14
+toggleBtn.Parent = gui -- แยกจาก main
+
+toggleBtn.MouseButton1Click:Connect(function()
+	main.Visible = not main.Visible
+	toggleBtn.Text = main.Visible and "⏩ ซ่อน" or "⏪ แสดง"
+end)
+
+-- ฟังก์ชันลบปุ่มเก่า
+local function clearContent()
+	for _, child in ipairs(contentFrame:GetChildren()) do
+		if child:IsA("TextButton") then
+			child:Destroy()
+		end
 	end
 end
 
--- ปุ่มสร้างใน contentFrame
+-- ฟังก์ชันสร้างปุ่ม Content
 local function makeContentButton(text, callback)
 	local btn = Instance.new("TextButton")
-	btn.Size = UDim2.new(1, -20, 0, 30)
+	btn.Size = UDim2.new(1,-20,0,30)
 	btn.BackgroundColor3 = Color3.fromRGB(70,70,70)
 	btn.TextColor3 = Color3.fromRGB(255,255,255)
 	btn.Font = Enum.Font.SourceSansBold
@@ -103,6 +106,13 @@ local function makeContentButton(text, callback)
 	return btn
 end
 
+-- ฟังก์ชันวาร์ป
+local function warpTo(pos)
+	if char and hrp then
+		hrp.CFrame = CFrame.new(pos)
+	end
+end
+
 -- ปุ่มวาร์ป
 local warpButtons = {
 	{"🏹 ร้านปืน", Vector3.new(495.77, 6.62, 1155.32)},
@@ -112,37 +122,23 @@ local warpButtons = {
 	{"🚚 ขนส่ง", Vector3.new(26.80, 6.37, -193.39)},
 	{"🏥 โรงพยาบาล", Vector3.new(-187.00, 6.37, 1453.00)}
 }
--- ===== ส่วนที่ 2 / Script Auto + Auto Tool =====
 
--- ฟังก์ชันลบปุ่มเก่าก่อนสร้างหมวดใหม่
-local function clearContent()
-	for _, child in ipairs(contentFrame:GetChildren()) do
-		if child:IsA("TextButton") then
-			child:Destroy()
-		end
-	end
-end
-
--- สร้าง SideButton วาป
-createSideButton("วาป", 5, function()
+-- SideButton วาป
+createSideButton("วาป",5,function()
 	clearContent()
-	for _, v in ipairs(warpButtons) do
-		makeContentButton(v[1], function() warpTo(v[2]) end)
+	for _,v in ipairs(warpButtons) do
+		makeContentButton(v[1],function() warpTo(v[2]) end)
 	end
 end)
-
--- สร้าง SideButton Script Auto
-createSideButton("Script Auto", 50, function()
+-- SideButton Script Auto
+createSideButton("Script Auto",50,function()
 	clearContent()
 
 	-- ปุ่มออโต้ใช้ Tool
-	local btnAutoTool = makeContentButton("👊 ออโต้ใช้ของ : ปิด", function() end)
+	local btnAutoTool = makeContentButton("👊 ออโต้ใช้ของ : ปิด",function() end)
 	local autoToolOn = false
 
-	-- ออโต้ Tool Logic
-	local Players = game:GetService("Players")
-	local VirtualUser = game:GetService("VirtualUser")
-	local player = Players.LocalPlayer
+	-- ===== Auto Tool Logic =====
 	local running = false
 	local currentTool
 	local cachedRemotes = {}
@@ -162,9 +158,9 @@ createSideButton("Script Auto", 50, function()
 		if not tool then return end
 		for _, d in ipairs(tool:GetDescendants()) do
 			if d:IsA("RemoteEvent") then
-				table.insert(cachedRemotes, d)
+				table.insert(cachedRemotes,d)
 			elseif d:IsA("RemoteFunction") then
-				table.insert(cachedFunctions, d)
+				table.insert(cachedFunctions,d)
 			end
 		end
 	end
@@ -182,14 +178,14 @@ createSideButton("Script Auto", 50, function()
 			if tool then
 				pcall(function() tool:Activate() end)
 				fireMouseClick()
-				for _, re in ipairs(cachedRemotes) do
+				for _,re in ipairs(cachedRemotes) do
 					pcall(function() re:FireServer() end)
 				end
-				for _, rf in ipairs(cachedFunctions) do
+				for _,rf in ipairs(cachedFunctions) do
 					pcall(function() rf:InvokeServer() end)
 				end
 			end
-			task.wait(0.2)
+			task.wait(0.2) -- หน่วงเวลารัว Tool ปรับได้
 		end
 	end
 
