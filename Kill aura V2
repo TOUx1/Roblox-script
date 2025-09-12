@@ -189,7 +189,7 @@ end)
 -- ฟังก์ชันเก็บปืน
 local function CollectGun()
     local CollectModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/wino444/wino444_CollectModule/main/.lua"))()
-    _G.AutoCollectModule.CollectItemByName("Revolver2")
+    _G.AutoCollectModule.CollectItemByName("Gun")
 end
 
 -- กำหนดชื่อไอเทมที่จะใช้ยิง
