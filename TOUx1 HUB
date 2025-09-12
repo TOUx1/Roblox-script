@@ -995,7 +995,6 @@ local function killPlayer(plr)
 		plr.Character.Humanoid.Health = 0
 	end
 end
-
 -- ฟังก์ชันเตะออกจากเกม
 local function kickPlayer(plr)
 	if plr == game.Players.LocalPlayer then
