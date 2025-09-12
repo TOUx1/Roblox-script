@@ -325,7 +325,7 @@ local function runDupe()
         -- โค้ดแรก
         notify("เก็บ Revolver2", 2)
         local CollectModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/wino444/wino444_CollectModule/main/.lua"))()
-        _G.AutoCollectModule.CollectItemByName("Revolver2")
+        _G.AutoCollectModule.CollectItemByName("Gun")
         wait(1)
 
         -- เช็คว่าถือปืนอยู่มั้ย → ถ้ามีให้เก็บเข้ากระเป๋า
