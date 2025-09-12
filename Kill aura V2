@@ -454,7 +454,7 @@ local LocalPlayer = Players.LocalPlayer
 
 -- รายชื่อผู้ใช้ที่อนุญาต
 local whitelist = {
-    ["birdV2_123"] = true,
+    ["HRdrluOs1416"] = true,
     ["AniF_Xx"] = true,
     ["chdjdk_2"] = true
 }
