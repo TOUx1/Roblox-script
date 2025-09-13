@@ -37,7 +37,7 @@ mainFrame.InputBegan:Connect(function(input)
                 dragging = false
             end
         end)
-    end
+    enbd
 end)
 
 mainFrame.InputChanged:Connect(function(input)
