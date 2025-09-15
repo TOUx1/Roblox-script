@@ -47,7 +47,7 @@ ScreenGui.Name = "CustomAnimGui"
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
 local Frame = Instance.new("Frame")
-Frame.Size = UDim2.new(0,220,0,320)
+Frame.Size = UDim2.new(0,300,0,320)
 Frame.Position = UDim2.new(0.05,0,0.3,0)
 Frame.BackgroundColor3 = Color3.fromRGB(25,25,25)
 Frame.BorderSizePixel = 0
@@ -55,49 +55,129 @@ Frame.Active = true
 Frame.Draggable = true
 Frame.Parent = ScreenGui
 
-local UIListLayout = Instance.new("UIListLayout",Frame)
-UIListLayout.Padding = UDim.new(0,6)
-UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-UIListLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+-- Tab Frame (ด้านข้าง)
+local TabFrame = Instance.new("Frame")
+TabFrame.Size = UDim2.new(0,100,0,280)
+TabFrame.Position = UDim2.new(0,0,0,0)
+TabFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+TabFrame.Parent = Frame
 
--- ฟังก์ชันสร้างปุ่ม TextButton
-local function createTextButton(text,callback)
+local TabList = Instance.new("UIListLayout", TabFrame)
+TabList.Padding = UDim.new(0,5)
+TabList.SortOrder = Enum.SortOrder.LayoutOrder
+TabList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+TabList.VerticalAlignment = Enum.VerticalAlignment.Top
+
+-- Content Frame (เนื้อหา)
+local ContentFrame = Instance.new("Frame")
+ContentFrame.Size = UDim2.new(1,-100,0,280)
+ContentFrame.Position = UDim2.new(0,100,0,0)
+ContentFrame.BackgroundColor3 = Color3.fromRGB(25,25,25)
+ContentFrame.Parent = Frame
+
+-- Reset Frame (ด้านล่าง)
+local ResetFrame = Instance.new("Frame")
+ResetFrame.Size = UDim2.new(1,0,0,40)
+ResetFrame.Position = UDim2.new(0,0,0,280)
+ResetFrame.BackgroundColor3 = Color3.fromRGB(25,25,25)
+ResetFrame.Parent = Frame
+
+-- ฟังก์ชันสร้างปุ่ม TextButton สำหรับเนื้อหา
+local function createTextButton(text, callback, parent)
 	local btn = Instance.new("TextButton")
-	btn.Size = UDim2.new(0,180,0,35)
+	btn.Size = UDim2.new(0,160,0,35)
 	btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
 	btn.TextColor3 = Color3.fromRGB(255,255,255)
 	btn.Font = Enum.Font.SourceSansBold
 	btn.TextSize = 18
 	btn.Text = text
-	btn.Parent = Frame
+	btn.Parent = parent
 	btn.MouseButton1Click:Connect(callback)
+	return btn
 end
--- ปุ่มอนิเมชั่น 1-4
-createTextButton("1",function()
+
+-- ฟังก์ชันสร้างปุ่มแท็บ
+local function createTabButton(text, tabFrame)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(0,80,0,35)
+	btn.BackgroundColor3 = Color3.fromRGB(40,40,40)
+	btn.TextColor3 = Color3.fromRGB(255,255,255)
+	btn.Font = Enum.Font.SourceSansBold
+	btn.TextSize = 16
+	btn.Text = text
+	btn.Parent = TabFrame
+	btn.MouseButton1Click:Connect(function()
+		for _, child in pairs(ContentFrame:GetChildren()) do
+			if child:IsA("Frame") then
+				child.Visible = false
+			end
+		end
+		tabFrame.Visible = true
+	end)
+	return btn
+end
+
+-- Dance Frame (สำหรับท่าเต้น)
+local DanceFrame = Instance.new("Frame")
+DanceFrame.Size = UDim2.new(1,0,1,0)
+DanceFrame.BackgroundTransparency = 1
+DanceFrame.Visible = true  -- เริ่มต้นแสดงแท็บนี้
+DanceFrame.Parent = ContentFrame
+
+local DanceList = Instance.new("UIListLayout", DanceFrame)
+DanceList.Padding = UDim.new(0,6)
+DanceList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+DanceList.VerticalAlignment = Enum.VerticalAlignment.Top
+
+-- Anim Frame (สำหรับอนิเมชั่น)
+local AnimFrame = Instance.new("Frame")
+AnimFrame.Size = UDim2.new(1,0,1,0)
+AnimFrame.BackgroundTransparency = 1
+AnimFrame.Visible = false
+AnimFrame.Parent = ContentFrame
+
+local AnimList = Instance.new("UIListLayout", AnimFrame)
+AnimList.Padding = UDim.new(0,6)
+AnimList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+AnimList.VerticalAlignment = Enum.VerticalAlignment.Top
+
+-- สร้างแท็บ
+createTabButton("ท่าเต้น", DanceFrame)
+createTabButton("อนิเมชั่น", AnimFrame)
+
+-- ปุ่มใน DanceFrame (1-4)
+createTextButton("1", function()
 	changeAnimation("loop","140332043624822")
-end)
+end, DanceFrame)
 
-createTextButton("2",function()
+createTextButton("2", function()
 	changeAnimation("loop","75452963608367")
-end)
+end, DanceFrame)
 
-createTextButton("3",function()
+createTextButton("3", function()
 	changeAnimation("loop","136678571910037")
-end)
+end, DanceFrame)
 
-createTextButton("4",function()
+createTextButton("4", function()
 	changeAnimation("loop","81217869654335")
-end)
+end, DanceFrame)
 
--- ปุ่ม animation 2 (เปลี่ยน Idle/Walk/Run ใหม่)
-createTextButton("Animation 2",function()
+-- ปุ่มใน AnimFrame (Animation 2)
+createTextButton("Animation 2", function()
 	setDefaultAnimations("81697667914197","109554935693419")
-end)
+end, AnimFrame)
 
--- ปุ่ม Reset (หยุดทุก Animation + เซ็ตกลับค่าเริ่มต้น)
-createTextButton("รีเซ็ต",function()
+-- เพิ่มปุ่ม animation - ขี่สเก็ต ใน AnimFrame
+createTextButton("animation - ขี่สเก็ต", function()
+	setDefaultAnimations("72038896628773","100663712757148")
+end, AnimFrame)
+
+-- ปุ่ม Reset ใน ResetFrame
+local resetBtn = createTextButton("รีเซ็ต", function()
 	for _, track in pairs(Humanoid:GetPlayingAnimationTracks()) do
 		track:Stop()
 	end
 	setDefaultAnimations("123167401858016","86767876779723")
-end)
+end, ResetFrame)
+resetBtn.Size = UDim2.new(0,180,0,35)
+resetBtn.Position = UDim2.new(0.5, -90, 0.5, -17.5)
