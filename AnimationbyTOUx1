@@ -177,6 +177,26 @@ createTextButton("animation -idk", function()
 	setDefaultAnimations("101810746304426","74288964113793")
 end, AnimFrame)
 
+-- เพิ่มปุ่ม animation -GOD ใน AnimFrame
+createTextButton("animation -GOD", function()
+	setDefaultAnimations("100965812488567","122746752555782")
+end, AnimFrame)
+
+-- เพิ่มปุ่ม animation -Help ใน AnimFrame
+createTextButton("animation -Help", function()
+	setDefaultAnimations("123635307035478","138402679058341")
+end, AnimFrame)
+
+-- เพิ่มปุ่ม animation -สมองเน่า ใน AnimFrame
+createTextButton("animation -สมองเน่า", function()
+	setDefaultAnimations("124522818196151","135532093218300")
+end, AnimFrame)
+
+-- เพิ่มปุ่ม animation - fast ใน AnimFrame
+createTextButton("animation - fast", function()
+	setDefaultAnimations("111255966764779","90584560149153")
+end, AnimFrame)
+
 -- ปุ่ม Reset ใน ResetFrame
 local resetBtn = createTextButton("รีเซ็ต", function()
 	for _, track in pairs(Humanoid:GetPlayingAnimationTracks()) do
