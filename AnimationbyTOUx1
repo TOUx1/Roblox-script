@@ -1,0 +1,103 @@
+--// LocalScript ใส่ใน StarterPlayerScripts
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local Humanoid = Character:WaitForChild("Humanoid")
+
+-- ฟังก์ชันเปลี่ยน Animation ชั่วคราว
+local function changeAnimation(animType, animId)
+	if Humanoid:FindFirstChild("Animator") then
+		local animator = Humanoid:FindFirstChild("Animator")
+		local newAnim = Instance.new("Animation")
+		newAnim.AnimationId = "rbxassetid://" .. animId
+		local track = animator:LoadAnimation(newAnim)
+		if animType == "loop" then
+			track.Looped = true
+		end
+		track:Play()
+	end
+end
+
+-- ฟังก์ชันเซ็ต Idle/Walk/Run
+local function setDefaultAnimations(idleId, moveId)
+	local animate = Character:FindFirstChild("Animate")
+	if animate then
+		-- Idle
+		if animate:FindFirstChild("idle") then
+			animate.idle.Animation1.AnimationId = "rbxassetid://"..idleId
+			animate.idle.Animation2.AnimationId = "rbxassetid://"..idleId
+		end
+		-- Walk
+		if animate:FindFirstChild("walk") then
+			animate.walk.WalkAnim.AnimationId = "rbxassetid://"..moveId
+		end
+		-- Run ใช้เหมือน Walk
+		if animate:FindFirstChild("run") then
+			animate.run.RunAnim.AnimationId = "rbxassetid://"..moveId
+		end
+	end
+end
+
+-- ตั้งค่าเริ่มต้น
+setDefaultAnimations("123167401858016","86767876779723")
+
+-- GUI หลัก
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "CustomAnimGui"
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0,220,0,320)
+Frame.Position = UDim2.new(0.05,0,0.3,0)
+Frame.BackgroundColor3 = Color3.fromRGB(25,25,25)
+Frame.BorderSizePixel = 0
+Frame.Active = true
+Frame.Draggable = true
+Frame.Parent = ScreenGui
+
+local UIListLayout = Instance.new("UIListLayout",Frame)
+UIListLayout.Padding = UDim.new(0,6)
+UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+UIListLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+
+-- ฟังก์ชันสร้างปุ่ม TextButton
+local function createTextButton(text,callback)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(0,180,0,35)
+	btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+	btn.TextColor3 = Color3.fromRGB(255,255,255)
+	btn.Font = Enum.Font.SourceSansBold
+	btn.TextSize = 18
+	btn.Text = text
+	btn.Parent = Frame
+	btn.MouseButton1Click:Connect(callback)
+end
+-- ปุ่มอนิเมชั่น 1-4
+createTextButton("1",function()
+	changeAnimation("loop","140332043624822")
+end)
+
+createTextButton("2",function()
+	changeAnimation("loop","75452963608367")
+end)
+
+createTextButton("3",function()
+	changeAnimation("loop","136678571910037")
+end)
+
+createTextButton("4",function()
+	changeAnimation("loop","81217869654335")
+end)
+
+-- ปุ่ม animation 2 (เปลี่ยน Idle/Walk/Run ใหม่)
+createTextButton("Animation 2",function()
+	setDefaultAnimations("81697667914197","109554935693419")
+end)
+
+-- ปุ่ม Reset (หยุดทุก Animation + เซ็ตกลับค่าเริ่มต้น)
+createTextButton("รีเซ็ต",function()
+	for _, track in pairs(Humanoid:GetPlayingAnimationTracks()) do
+		track:Stop()
+	end
+	setDefaultAnimations("123167401858016","86767876779723")
+end)
