@@ -172,6 +172,11 @@ createTextButton("animation - ขี่สเก็ต", function()
 	setDefaultAnimations("72038896628773","100663712757148")
 end, AnimFrame)
 
+-- เพิ่มปุ่ม animation -idk ใน AnimFrame
+createTextButton("animation -idk", function()
+	setDefaultAnimations("101810746304426","74288964113793")
+end, AnimFrame)
+
 -- ปุ่ม Reset ใน ResetFrame
 local resetBtn = createTextButton("รีเซ็ต", function()
 	for _, track in pairs(Humanoid:GetPlayingAnimationTracks()) do
