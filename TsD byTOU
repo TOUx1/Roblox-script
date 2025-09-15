@@ -1,0 +1,344 @@
+local player = game.Players.LocalPlayer  
+local RunService = game:GetService("RunService")  
+local cam = workspace.CurrentCamera  
+local character = player.Character or player.CharacterAdded:Wait()  
+local hrp = character:WaitForChild("HumanoidRootPart")  
+local humanoid = character:WaitForChild("Humanoid")  
+
+local systemEnabled = false  
+local targetHRP, targetHumanoid = nil, nil  
+local orbitConnection = nil  
+local timeCounter = 0  
+local orbitSpeed, orbitRadiusMin, orbitRadiusMax, switchTime = 200, 6, 12, 0.01  
+
+local originalPosition = nil
+local selectedName = nil
+
+local function stopOrbit()
+    if orbitConnection then
+        orbitConnection:Disconnect()
+        orbitConnection = nil
+    end
+    targetHRP, targetHumanoid = nil, nil
+    cam.CameraType = Enum.CameraType.Custom
+    cam.CameraSubject = humanoid
+    HealthLabel.Text = "Target HP: N/A"
+end
+
+local function resetCamera()
+    cam.CameraType = Enum.CameraType.Custom
+    cam.CameraSubject = humanoid
+end
+
+local function startOrbit()
+    if orbitConnection then orbitConnection:Disconnect() end
+    orbitConnection = RunService.Heartbeat:Connect(function(dt)
+        if not systemEnabled then
+            stopOrbit()
+            return
+        end
+        if not targetHRP or not targetHumanoid or targetHumanoid.Health <= 0 then
+            stopOrbit()
+            return
+        end
+        cam.CameraType = Enum.CameraType.Scriptable
+        timeCounter = (timeCounter + dt * orbitSpeed) % (math.pi * 2)
+        local radius = orbitRadiusMin + (math.sin(timeCounter / switchTime) * (orbitRadiusMax - orbitRadiusMin))
+        local offsetX, offsetZ = math.cos(timeCounter) * radius, math.sin(timeCounter) * radius
+        cam.CFrame = CFrame.new(targetHRP.Position + Vector3.new(0, 5, 15), targetHRP.Position)
+        hrp.CFrame = CFrame.new(targetHRP.Position + Vector3.new(offsetX, 0, offsetZ), targetHRP.Position)
+        HealthLabel.Text = string.format("Target HP: %.1f%%", math.clamp(targetHumanoid.Health / targetHumanoid.MaxHealth * 100, 0, 100))
+    end)
+end
+
+local function getNearestEnemy()
+    local closestDist, closestHRP, closestHumanoid = math.huge, nil, nil
+    for _, plr in ipairs(game.Players:GetPlayers()) do
+        if plr ~= player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") and plr.Character:FindFirstChild("Humanoid") then
+            if plr.Character.Humanoid.Health > 0 then
+                local dist = (hrp.Position - plr.Character.HumanoidRootPart.Position).Magnitude
+                if dist < closestDist then
+                    closestDist = dist
+                    closestHRP, closestHumanoid = plr.Character.HumanoidRootPart, plr.Character.Humanoid
+                end
+            end
+        end
+    end
+    return closestHRP, closestHumanoid
+end
+local ScreenGui = Instance.new("ScreenGui", player.PlayerGui)
+ScreenGui.Name = "OrbitDodgeUI"
+ScreenGui.ResetOnSpawn = false
+
+local Frame = Instance.new("Frame", ScreenGui)
+Frame.Size = UDim2.new(0, 240, 0, 340)
+Frame.Position = UDim2.new(0, 50, 0, 100)
+Frame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+Frame.Active = true
+Frame.Draggable = true
+Frame.BorderSizePixel = 0
+Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 10)
+
+local ToggleButton = Instance.new("TextButton", Frame)
+ToggleButton.Size = UDim2.new(0, 220, 0, 40)
+ToggleButton.Position = UDim2.new(0, 10, 0, 20)
+ToggleButton.Text = "TURN ON"
+ToggleButton.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.Font = Enum.Font.GothamBold
+ToggleButton.TextScaled = true
+ToggleButton.BorderSizePixel = 0
+Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(0, 8)
+
+local StatusLabel = Instance.new("TextLabel", Frame)
+StatusLabel.Size = UDim2.new(0, 200, 0, 20)
+StatusLabel.Position = UDim2.new(0, 20, 0, 65)
+StatusLabel.Text = "Status: OFF"
+StatusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
+StatusLabel.Font = Enum.Font.Gotham
+StatusLabel.TextScaled = true
+
+HealthLabel = Instance.new("TextLabel", Frame)
+HealthLabel.Size = UDim2.new(0, 200, 0, 20)
+HealthLabel.Position = UDim2.new(0, 20, 0, 90)
+HealthLabel.Text = "Target HP: N/A"
+HealthLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+HealthLabel.BackgroundTransparency = 1
+HealthLabel.TextXAlignment = Enum.TextXAlignment.Left
+HealthLabel.Font = Enum.Font.GothamBold
+HealthLabel.TextScaled = true
+
+local SelectFrame = Instance.new("Frame", ScreenGui)
+SelectFrame.Size = UDim2.new(0, 200, 0, 300)
+SelectFrame.Position = UDim2.new(0, 300, 0, 100)
+SelectFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+SelectFrame.Visible = false
+SelectFrame.Active = true
+SelectFrame.Draggable = true
+Instance.new("UICorner", SelectFrame).CornerRadius = UDim.new(0, 10)
+
+local UIListLayout = Instance.new("UIListLayout", SelectFrame)
+UIListLayout.Padding = UDim.new(0, 5)
+
+local function updatePlayerList()
+    for _, v in ipairs(SelectFrame:GetChildren()) do
+        if v:IsA("TextButton") then
+            v:Destroy()
+        end
+    end
+    for _, plr in ipairs(game.Players:GetPlayers()) do
+        if plr ~= player then
+            local btn = Instance.new("TextButton", SelectFrame)
+            btn.Size = UDim2.new(1, -10, 0, 40)
+            btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+            btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            btn.Text = plr.DisplayName .. " (" .. plr.Name .. ")"
+            btn.Font = Enum.Font.Gotham
+            btn.TextScaled = true
+            Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+            btn.MouseButton1Click:Connect(function()
+                selectedName = plr.Name
+                SelectFrame.Visible = false
+            end)
+        end
+    end
+end
+local LockByName = Instance.new("TextButton", Frame)
+LockByName.Size = UDim2.new(0, 100, 0, 30)
+LockByName.Position = UDim2.new(0, 10, 0, 150)
+LockByName.Text = "เลือกเป้าหมาย"
+LockByName.BackgroundColor3 = Color3.fromRGB(100, 100, 200)
+LockByName.TextColor3 = Color3.fromRGB(255, 255, 255)
+LockByName.Font = Enum.Font.GothamBold
+LockByName.TextScaled = true
+Instance.new("UICorner", LockByName).CornerRadius = UDim.new(0, 6)
+
+local LockTargetButton = Instance.new("TextButton", Frame)
+LockTargetButton.Size = UDim2.new(0, 100, 0, 30)
+LockTargetButton.Position = UDim2.new(0, 130, 0, 150)
+LockTargetButton.Text = "ล็อค"
+LockTargetButton.BackgroundColor3 = Color3.fromRGB(80, 80, 200)
+LockTargetButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+LockTargetButton.Font = Enum.Font.GothamBold
+LockTargetButton.TextScaled = true
+Instance.new("UICorner", LockTargetButton).CornerRadius = UDim.new(0, 6)
+
+local UnlockButton = Instance.new("TextButton", Frame)
+UnlockButton.Size = UDim2.new(0, 220, 0, 30)
+UnlockButton.Position = UDim2.new(0, 10, 0, 190)
+UnlockButton.Text = "เลิกล็อค"
+UnlockButton.BackgroundColor3 = Color3.fromRGB(200, 80, 80)
+UnlockButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+UnlockButton.Font = Enum.Font.GothamBold
+UnlockButton.TextScaled = true
+Instance.new("UICorner", UnlockButton).CornerRadius = UDim.new(0, 6)
+
+local DropMapBtn = Instance.new("TextButton", Frame)
+DropMapBtn.Size = UDim2.new(0, 220, 0, 30)
+DropMapBtn.Position = UDim2.new(0, 10, 0, 230)
+DropMapBtn.Text = "พาคนไป VOID"
+DropMapBtn.BackgroundColor3 = Color3.fromRGB(200, 100, 100)
+DropMapBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+DropMapBtn.Font = Enum.Font.GothamBold
+DropMapBtn.TextScaled = true
+Instance.new("UICorner", DropMapBtn).CornerRadius = UDim.new(0, 6)
+
+local ResetCamButton = Instance.new("TextButton", Frame)
+ResetCamButton.Size = UDim2.new(0, 220, 0, 30)
+ResetCamButton.Position = UDim2.new(0, 10, 0, 270)
+ResetCamButton.Text = "จอบัคกดนี้"
+ResetCamButton.BackgroundColor3 = Color3.fromRGB(150, 150, 150)
+ResetCamButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ResetCamButton.Font = Enum.Font.GothamBold
+ResetCamButton.TextScaled = true
+Instance.new("UICorner", ResetCamButton).CornerRadius = UDim.new(0, 6)
+
+local HideButton = Instance.new("TextButton", ScreenGui)
+HideButton.Size = UDim2.new(0, 100, 0, 30)
+HideButton.Position = UDim2.new(0, 10, 0, 20)
+HideButton.Text = "ซ่อน UI"
+HideButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+HideButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+HideButton.Font = Enum.Font.GothamBold
+HideButton.TextScaled = true
+HideButton.Draggable = true
+Instance.new("UICorner", HideButton).CornerRadius = UDim.new(0, 6)
+
+HideButton.MouseButton1Click:Connect(function()
+    Frame.Visible = not Frame.Visible
+    if Frame.Visible then
+        HideButton.Text = "ซ่อน UI"
+    else
+        HideButton.Text = "แสดง UI"
+    end
+end)
+
+ToggleButton.MouseButton1Click:Connect(function()
+    targetHRP, targetHumanoid = getNearestEnemy()
+    if targetHRP then
+        timeCounter = 0
+        originalPosition = hrp.CFrame
+        systemEnabled = true
+        ToggleButton.Text = "TURN OFF"
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+        StatusLabel.Text = "Status: ON"
+        startOrbit()
+    end
+end)
+LockByName.MouseButton1Click:Connect(function()
+    updatePlayerList()
+    SelectFrame.Visible = not SelectFrame.Visible
+end)
+
+LockTargetButton.MouseButton1Click:Connect(function()
+    if selectedName then
+        local found = game.Players:FindFirstChild(selectedName)
+        if found and found.Character and found.Character:FindFirstChild("HumanoidRootPart") and found.Character:FindFirstChild("Humanoid") then
+            targetHRP = found.Character.HumanoidRootPart
+            targetHumanoid = found.Character.Humanoid
+            timeCounter = 0
+            originalPosition = hrp.CFrame
+            systemEnabled = true
+            ToggleButton.Text = "TURN OFF"
+            ToggleButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+            StatusLabel.Text = "Status: ON"
+            startOrbit()
+        end
+    end
+end)
+
+UnlockButton.MouseButton1Click:Connect(function()
+    stopOrbit()
+    if originalPosition then
+        hrp.CFrame = originalPosition
+    end
+    systemEnabled = false
+    ToggleButton.Text = "TURN ON"
+    ToggleButton.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+    StatusLabel.Text = "Status: OFF"
+end)
+
+DropMapBtn.MouseButton1Click:Connect(function()
+    if not originalPosition then
+        originalPosition = hrp.CFrame
+    end
+    hrp.CFrame = CFrame.new(0, 100003.24, 0)
+    task.wait(3)
+    hrp.CFrame = originalPosition
+    stopOrbit()
+    systemEnabled = false
+    ToggleButton.Text = "TURN ON"
+    ToggleButton.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+    StatusLabel.Text = "Status: OFF"
+end)
+
+ResetCamButton.MouseButton1Click:Connect(function()
+    resetCamera()
+end)
+
+player.CharacterAdded:Connect(function(char)
+    character = char
+    hrp = char:WaitForChild("HumanoidRootPart")
+    humanoid = char:WaitForChild("Humanoid")
+    cam.CameraType = Enum.CameraType.Custom
+    cam.CameraSubject = humanoid
+    humanoid.Died:Connect(function()
+        systemEnabled = false
+        ToggleButton.Text = "TURN ON"
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+        StatusLabel.Text = "Status: OFF"
+        stopOrbit()
+    end)
+end)
+
+humanoid.Died:Connect(function()
+    systemEnabled = false
+    ToggleButton.Text = "TURN ON"
+    ToggleButton.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+    StatusLabel.Text = "Status: OFF"
+    stopOrbit()
+end)
+
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+-- 🖼 ใส่ Asset ID ของรูปคุณที่อัปโหลดแล้ว
+local imageId = "rbxassetid://ใส่ไอดีของคุณตรงนี้" -- ตัวอย่าง: "rbxassetid://15234213421"
+
+-- สร้างหน้าจอ UI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "ScriptAnnouncement"
+screenGui.Parent = player:WaitForChild("PlayerGui")
+screenGui.IgnoreGuiInset = true
+screenGui.ResetOnSpawn = false
+
+-- สร้างรูปภาพเต็มจอ
+local imageLabel = Instance.new("ImageLabel")
+imageLabel.Parent = screenGui
+imageLabel.Size = UDim2.new(1, 0, 1, 0)
+imageLabel.Position = UDim2.new(0, 0, 0, 0)
+imageLabel.BackgroundTransparency = 1
+imageLabel.Image = imageId
+imageLabel.ImageTransparency = 0.1
+
+-- สร้างข้อความกลางจอ
+local textLabel = Instance.new("TextLabel")
+textLabel.Parent = screenGui
+textLabel.Size = UDim2.new(1, 0, 0.2, 0)
+textLabel.Position = UDim2.new(0, 0, 0.4, 0)
+textLabel.BackgroundTransparency = 1
+textLabel.Text = "script by:TOUx1"
+textLabel.TextColor3 = Color3.new(1, 1, 1)
+textLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+textLabel.TextStrokeTransparency = 0.5
+textLabel.Font = Enum.Font.GothamBlack
+textLabel.TextScaled = true
+
+-- แสดงนาน 5 วินาที
+task.wait(5)
+
+-- ลบ UI
+screenGui:Destroy()
