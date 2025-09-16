@@ -1,0 +1,84 @@
+local args = {
+	{
+		SwimAnimation = 0,
+		DepthScale = 1,
+		RightLegColor = Color3.new(0.6235294342041016, 0.16078431904315948, 0.125490203499794),
+		MoodAnimation = 0,
+		Face = 144075659,
+		JumpAnimation = 0,
+		HeadColor = Color3.new(0.6235294342041016, 0.16078431904315948, 0.125490203499794),
+		BodyTypeScale = 0.30000001192092896,
+		ClimbAnimation = 0,
+		LeftArmColor = Color3.new(0.6235294342041016, 0.16078431904315948, 0.125490203499794),
+		LeftLegColor = Color3.new(0.6235294342041016, 0.16078431904315948, 0.125490203499794),
+		Pants = 2670816818,
+		RightArmColor = Color3.new(0.6235294342041016, 0.16078431904315948, 0.125490203499794),
+		WidthScale = 1,
+		LeftArm = 0,
+		IdleAnimation = 0,
+		RightArm = 0,
+		GraphicTShirt = 0,
+		Head = 0,
+		Shirt = 6454738476,
+		Torso = 0,
+		RunAnimation = 0,
+		WalkAnimation = 0,
+		FallAnimation = 0,
+		TorsoColor = Color3.new(0.6235294342041016, 0.16078431904315948, 0.125490203499794),
+		Accessories = {},
+		RightLeg = 0,
+		HeadScale = 1,
+		HeightScale = 1,
+		ProportionScale = 1,
+		LeftLeg = 0
+	}
+}
+game:GetService("ReplicatedStorage"):WaitForChild("BloxbizRemotes"):WaitForChild("CatalogOnApplyOutfit"):FireServer(unpack(args))
+
+
+--// LocalScript
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local ANIMATION_ID = 123410142940842 -- ใส่ ID อนิเมชั่นของคุณ
+
+local function applyAnimations(character)
+    local humanoid = character:WaitForChild("Humanoid")
+    
+    -- ปิด Default Animation
+    humanoid:ChangeState(Enum.HumanoidStateType.Physics) -- สถานะเริ่มต้น
+    for _, anim in pairs(humanoid:GetPlayingAnimationTracks()) do
+        anim:Stop()
+    end
+    humanoid.AutoRotate = false
+    humanoid:RemoveDefaultAnimations() -- ปิด default
+
+    -- สร้าง Animator ถ้ายังไม่มี
+    local animator = humanoid:FindFirstChildOfClass("Animator")
+    if not animator then
+        animator = Instance.new("Animator")
+        animator.Parent = humanoid
+    end
+
+    -- สร้าง Animation และโหลด
+    local animation = Instance.new("Animation")
+    animation.AnimationId = "rbxassetid://"..ANIMATION_ID
+
+    local track = animator:LoadAnimation(animation)
+    track.Priority = Enum.AnimationPriority.Action -- ให้ priority สูงที่สุด
+    track.Looped = true -- เล่นซ้ำตลอด
+    track:Play()
+end
+
+-- เรียกใช้เมื่อ Spawn ตัวละคร
+LocalPlayer.CharacterAdded:Connect(function(character)
+    character:WaitForChild("Humanoid")
+    applyAnimations(character)
+end)
+
+-- ถ้ามี Character อยู่แล้ว
+if LocalPlayer.Character then
+    applyAnimations(LocalPlayer.Character)
+end
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Imagnir/r6_anims_for_r15/main/r6_anims.lua", true))()
