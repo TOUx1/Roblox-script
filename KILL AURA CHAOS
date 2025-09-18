@@ -1,6 +1,6 @@
 --[[
-    🔥🔥 by:TOU | CHAOS KILL AURA v1.4.1 - PART 1/2 🇹🇭🔥🔥
-    💀 GUI ภาษาไทย + ปุ่ม "อ่อร่าฆ่าทุกคน" + TextBox ความเร็ว/Remote 💀
+    🔥🔥 wino444's AUTO-TARGET SPAMMER v1.3 - PART 1/2 🇹🇭🔥🔥
+    💀 GUI ภาษาไทย + ปุ่ม "อ่อาฆ่าทุกคน" + TextBox ความเร็ว 💀
     📝 คัดลอกส่วนนี้ก่อน แล้วรัน PART 2 ต่อ!
 ]]
 
@@ -15,22 +15,22 @@ local playerGui = player:WaitForChild("PlayerGui")
 
 -- 📊 ตัวแปรหลัก
 local isRunning = false
-local isKillAll = false
+local isKillAll = false -- 🆕 สถานะโหมด "อ่อาฆ่าทุกคน"
 local spamConnection = nil
 local guiVisible = true
 local selectedTarget = nil
 local spamRate = 0.5 -- วินาที
-local animating = false
+local animating = false -- 🆕 ป้องกันแอนิเมชันซ้ำ
 
 -- 🎨 สร้าง GUI หลัก
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "CHAOS_KILL_AURA"
+screenGui.Name = "AutoTargetSpammer"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
 -- 🖼️ กรอบหลัก (ลากได้)
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 380, 0, 400)
+mainFrame.Size = UDim2.new(0, 380, 0, 360) -- 📏 ปรับขนาดเพื่อรองรับปุ่มใหม่
 mainFrame.Position = UDim2.new(0, 50, 0, 50)
 mainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
 mainFrame.BorderSizePixel = 0
@@ -72,7 +72,7 @@ local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(0.65, 0, 1, 0)
 titleLabel.Position = UDim2.new(0, 15, 0, 0)
 titleLabel.BackgroundTransparency = 1
-titleLabel.Text = "🎯 by:TOU | CHAOS KILL AURA v1.4.1"
+titleLabel.Text = "🎯 by:TOU | CHAOS KILL AURA v1.3"
 titleLabel.TextColor3 = Color3.fromRGB(0, 255, 150)
 titleLabel.TextScaled = true
 titleLabel.Font = Enum.Font.GothamBold
@@ -174,7 +174,7 @@ statusLabel.Parent = statusFrame
 
 -- 🎮 แผงปุ่มควบคุม
 local controlsFrame = Instance.new("Frame")
-controlsFrame.Size = UDim2.new(1, -20, 0, 100)
+controlsFrame.Size = UDim2.new(1, -20, 0, 100) -- 📏 ปรับขนาดเพื่อรองรับปุ่มใหม่
 controlsFrame.Position = UDim2.new(0, 10, 0, 180)
 controlsFrame.BackgroundTransparency = 1
 controlsFrame.Parent = mainFrame
@@ -184,7 +184,7 @@ local toggleButton = Instance.new("TextButton")
 toggleButton.Size = UDim2.new(0.31, -5, 0.45, 0)
 toggleButton.Position = UDim2.new(0, 0, 0, 0)
 toggleButton.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
-toggleButton.Text = "▶️ เริ่มออร่า"
+toggleButton.Text = "▶️ เริ่มสแปม"
 toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 toggleButton.TextScaled = true
 toggleButton.Font = Enum.Font.GothamBold
@@ -195,12 +195,12 @@ local toggleCorner = Instance.new("UICorner")
 toggleCorner.CornerRadius = UDim.new(0, 8)
 toggleCorner.Parent = toggleButton
 
--- 🟣 ปุ่มอ่อร่าฆ่าทุกคน
+-- 🟣 ปุ่มอ่อาฆ่าทุกคน 🆕
 local killAllButton = Instance.new("TextButton")
 killAllButton.Size = UDim2.new(0.31, -5, 0.45, 0)
 killAllButton.Position = UDim2.new(0.345, 0, 0, 0)
 killAllButton.BackgroundColor3 = Color3.fromRGB(200, 0, 200)
-killAllButton.Text = "💥 อ่อร่าฆ่าทุกคน"
+killAllButton.Text = "💥 อ่อาฆ่าทุกคน"
 killAllButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 killAllButton.TextScaled = true
 killAllButton.Font = Enum.Font.GothamBold
@@ -229,8 +229,8 @@ stopCorner.Parent = stopButton
 
 -- ⚙️ แผงตั้งค่า
 local settingsFrame = Instance.new("Frame")
-settingsFrame.Size = UDim2.new(1, -20, 0, 100)
-settingsFrame.Position = UDim2.new(0, 10, 0, 290)
+settingsFrame.Size = UDim2.new(1, -20, 0, 60)
+settingsFrame.Position = UDim2.new(0, 10, 0, 290) -- 📏 ปรับตำแหน่ง
 settingsFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 settingsFrame.BorderSizePixel = 0
 settingsFrame.Parent = mainFrame
@@ -239,9 +239,8 @@ local settingsCorner = Instance.new("UICorner")
 settingsCorner.CornerRadius = UDim.new(0, 8)
 settingsCorner.Parent = settingsFrame
 
--- ความเร็ว
 local rateLabel = Instance.new("TextLabel")
-rateLabel.Size = UDim2.new(0.35, 0, 0.3, 0)
+rateLabel.Size = UDim2.new(0.35, 0, 0.5, 0)
 rateLabel.Position = UDim2.new(0, 10, 0, 5)
 rateLabel.BackgroundTransparency = 1
 rateLabel.Text = "ความเร็ว (วิน.):"
@@ -250,8 +249,8 @@ rateLabel.TextScaled = true
 rateLabel.Font = Enum.Font.Gotham
 rateLabel.Parent = settingsFrame
 
-local rateInput = Instance.new("TextBox")
-rateInput.Size = UDim2.new(0.25, 0, 0.3, 0)
+local rateInput = Instance.new("TextBox") -- 🆕 เปลี่ยนจากสไลเดอร์เป็น TextBox
+rateInput.Size = UDim2.new(0.25, 0, 0.5, 0)
 rateInput.Position = UDim2.new(0.35, 0, 0, 5)
 rateInput.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
 rateInput.Text = "0.5"
@@ -265,93 +264,52 @@ local rateInputCorner = Instance.new("UICorner")
 rateInputCorner.CornerRadius = UDim.new(0, 6)
 rateInputCorner.Parent = rateInput
 
--- ชื่อ Remote
-local remoteLabel = Instance.new("TextLabel")
-remoteLabel.Size = UDim2.new(0.35, 0, 0.3, 0)
-remoteLabel.Position = UDim2.new(0, 10, 0.5, 5)
-remoteLabel.BackgroundTransparency = 1
-remoteLabel.Text = "ชื่อ Remote:"
-remoteLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-remoteLabel.TextScaled = true
-remoteLabel.Font = Enum.Font.Gotham
-remoteLabel.Parent = settingsFrame
-
-local remoteInput = Instance.new("TextBox")
-remoteInput.Size = UDim2.new(0.25, 0, 0.3, 0)
-remoteInput.Position = UDim2.new(0.35, 0, 0.5, 5)
-remoteInput.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-remoteInput.Text = "Auto"
-remoteInput.TextColor3 = Color3.fromRGB(0, 255, 150)
-remoteInput.TextScaled = true
-remoteInput.Font = Enum.Font.GothamBold
-remoteInput.BorderSizePixel = 0
-remoteInput.Parent = settingsFrame
-
-local remoteInputCorner = Instance.new("UICorner")
-remoteInputCorner.CornerRadius = UDim.new(0, 6)
-remoteInputCorner.Parent = remoteInput
-
 -- 🎭 แอนิเมชันเปิด
 mainFrame.Size = UDim2.new(0, 0, 0, 0)
-mainFrame.Position = UDim2.new(0.5, -190, 0.5, -200)
+mainFrame.Position = UDim2.new(0.5, -190, 0.5, -180)
 TweenService:Create(mainFrame, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-    Size = UDim2.new(0, 380, 0, 400),
+    Size = UDim2.new(0, 380, 0, 360),
     Position = UDim2.new(0, 50, 0, 50)
 }):Play()
 
-print("🇹🇭 by:TOU | CHAOS KILL AURA v1.4.1 - PART 1/2 (GUI) LOADED! 🇹🇭")
+print("🇹🇭 wino444's Auto-Target Spammer v1.3 - PART 1/2 (GUI) LOADED! 🇹🇭")
 print("📝 รอ PART 2 เพื่อเริ่มใช้งาน...")
 --[[
-    🔥🔥 by:TOU | CHAOS KILL AURA v1.4.1 - PART 2/2 🇹🇭🔥🔥
-    💀 แก้ไขการยิงรีโมท + ข้ามเป้าหมายตาย/มีโล่ + TextBox Remote 💀
-    📝 วางต่อจาก PART 1/2 (v1.4.1) ทันที!
+    🔥🔥 wino444's AUTO-TARGET SPAMMER v1.3.2 - PART 2/2 🇹🇭🔥🔥
+    💀 แก้ไขการยิงรีโมท + สแกนใน Communication.Events + ดีบั๊ก 💀
+    📝 วางต่อจาก PART 1/2 (v1.3) ทันที!
 ]]
 
 -- 🧠 ตัวแปรเพิ่มเติม
-local remoteToUse = nil
-local remoteScanComplete = false
+local remoteToUse = nil -- 🆕 ตัวแปรเก็บ Remote ที่จะใช้
+local remoteScanComplete = false -- 🆕 สถานะการสแกน Remote
 
--- 🔍 ฟังก์ชันสแกน Remote Events
+-- 🔍 ฟังก์ชันสแกน Remote Events ใน Communication.Events
 local function scanRemotes()
     local foundRemotes = {}
-    local communication = ReplicatedStorage:WaitForChild("Communication", 5)
-    if not communication then
-        statusLabel.Text = "สถานะ: ไม่พบ Communication!"
-        statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
-        print("🚨 ไม่พบ ReplicatedStorage.Communication!")
-        remoteScanComplete = true
-        return
-    end
+    local eventsFolder = ReplicatedStorage:FindFirstChild("Communication") and
+                        ReplicatedStorage.Communication:FindFirstChild("Events")
     
-    local eventsFolder = communication:WaitForChild("Events", 5)
-    if not eventsFolder then
-        statusLabel.Text = "สถานะ: ไม่พบ Events!"
-        statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
-        print("🚨 ไม่พบ ReplicatedStorage.Communication.Events!")
-        remoteScanComplete = true
-        return
-    end
-    
-    for _, obj in pairs(eventsFolder:GetChildren()) do
-        if obj:IsA("RemoteEvent") and obj.Name ~= "" then -- 🆕 ข้ามชื่อว่าง
-            table.insert(foundRemotes, {Name = obj.Name, Path = "ReplicatedStorage.Communication.Events." .. obj.Name})
+    if eventsFolder then
+        for _, obj in pairs(eventsFolder:GetChildren()) do
+            if obj:IsA("RemoteEvent") then
+                table.insert(foundRemotes, {Name = obj.Name, Path = "ReplicatedStorage.Communication.Events." .. obj.Name})
+            end
         end
     end
     
     if #foundRemotes > 0 then
-        remoteToUse = foundRemotes[1].Name
+        remoteToUse = foundRemotes[1].Name -- เลือก Remote แรกที่เจอ
         statusLabel.Text = "พบ Remote: " .. remoteToUse
         statusLabel.TextColor3 = Color3.fromRGB(0, 255, 150)
-        remoteInput.Text = remoteToUse
         print("🔍 พบ Remote Events ใน Communication.Events: ")
         for _, remote in pairs(foundRemotes) do
             print(" - " .. remote.Path)
         end
     else
-        statusLabel.Text = "สถานะ: ไม่พบ Remote Event ที่ถูกต้อง!"
+        statusLabel.Text = "สถานะ: ไม่พบ Remote Event ใน Communication.Events!"
         statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
-        remoteInput.Text = "Auto"
-        print("🚨 ไม่พบ Remote Event ที่ถูกต้องใน ReplicatedStorage.Communication.Events!")
+        print("🚨 ไม่พบ Remote Event ใน ReplicatedStorage.Communication.Events!")
     end
     remoteScanComplete = true
 end
@@ -369,26 +327,16 @@ local function getTargetPlayer()
         
         for _, otherPlayer in pairs(Players:GetPlayers()) do
             if otherPlayer ~= player and otherPlayer.Character and otherPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                local humanoid = otherPlayer.Character:FindFirstChild("Humanoid")
-                local hasForceField = otherPlayer.Character:FindFirstChild("ForceField")
-                if humanoid and humanoid.Health > 0 and not hasForceField then
-                    local distance = (myPos - otherPlayer.Character.HumanoidRootPart.Position).Magnitude
-                    if distance < shortestDistance then
-                        shortestDistance = distance
-                        nearestPlayer = otherPlayer
-                    end
+                local distance = (myPos - otherPlayer.Character.HumanoidRootPart.Position).Magnitude
+                if distance < shortestDistance then
+                    shortestDistance = distance
+                    nearestPlayer = otherPlayer
                 end
             end
         end
-        return nearestPlayer, nearestPlayer and "โหมดอ่อร่าฆ่าทุกคน" or "ไม่มีเป้าหมายที่เหมาะสม"
+        return nearestPlayer, nearestPlayer and "โหมดอ่อาฆ่าทุกคน" or "ไม่มีเป้าหมายใกล้เคียง"
     elseif selectedTarget and selectedTarget.Parent then
-        local humanoid = selectedTarget.Character and selectedTarget.Character:FindFirstChild("Humanoid")
-        local hasForceField = selectedTarget.Character and selectedTarget.Character:FindFirstChild("ForceField")
-        if humanoid and humanoid.Health > 0 and not hasForceField then
-            return selectedTarget, "เป้าหมายที่เลือก"
-        else
-            return nil, "เป้าหมายตายหรือมีโล่"
-        end
+        return selectedTarget, "เป้าหมายที่เลือก"
     end
     return nil, "ไม่มีเป้าหมาย"
 end
@@ -404,16 +352,8 @@ local function fireRemoteAtTarget(targetPlayer)
     end
     
     local success, errorMsg = pcall(function()
-        local communication = ReplicatedStorage:WaitForChild("Communication", 5)
-        if not communication then
-            error("ไม่พบ Communication!")
-        end
-        local eventsFolder = communication:WaitForChild("Events", 5)
-        if not eventsFolder then
-            error("ไม่พบ Events!")
-        end
-        local remote = eventsFolder:FindFirstChild(remoteToUse)
-        if not remote or not remote:IsA("RemoteEvent") then
+        local remote = ReplicatedStorage.Communication.Events:FindFirstChild(remoteToUse)
+        if not remote then
             error("ไม่พบ Remote: " .. remoteToUse)
         end
         
@@ -450,9 +390,9 @@ local function startSpamLoop()
         if targetPlayer then
             local success, errorMsg = fireRemoteAtTarget(targetPlayer)
             if success then
-                targetDropdown.Text = isKillAll and "โหมด: อ่อร่าฆ่าทุกคน (" .. targetPlayer.Name .. ")" or targetPlayer.Name
+                targetDropdown.Text = isKillAll and "โหมด: อ่อาฆ่าทุกคน (" .. targetPlayer.Name .. ")" or targetPlayer.Name
                 targetDropdown.TextColor3 = Color3.fromRGB(0, 255, 150)
-                statusLabel.Text = "กำลังยิง: " .. targetPlayer.Name
+                statusLabel.Text = "กำลังสแปม: " .. targetPlayer.Name
                 statusLabel.TextColor3 = Color3.fromRGB(0, 255, 150)
             else
                 targetDropdown.Text = "เกิดข้อผิดพลาด"
@@ -461,13 +401,13 @@ local function startSpamLoop()
                 statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
             end
         else
-            targetDropdown.Text = isKillAll and "ไม่มีเป้าหมายที่เหมาะสม" or "ไม่มีเป้าหมาย"
+            targetDropdown.Text = isKillAll and "ไม่มีเป้าหมายใกล้เคียง" or "ไม่มีเป้าหมาย"
             targetDropdown.TextColor3 = Color3.fromRGB(255, 150, 0)
             statusLabel.Text = "สถานะ: " .. targetStatus
             statusLabel.TextColor3 = Color3.fromRGB(255, 150, 0)
         end
         
-        wait(spamRate + math.random(0.01, 0.05))
+        wait(spamRate + math.random(0.01, 0.05)) -- ความหน่วงสุ่ม
     end)
 end
 
@@ -487,11 +427,11 @@ toggleButton.MouseButton1Click:Connect(function()
     if isRunning then
         toggleButton.Text = "⏸️ หยุดชั่วคราว"
         toggleButton.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
-        killAllButton.Text = "💥 อ่อร่าฆ่าทุกคน"
+        killAllButton.Text = "💥 อ่อาฆ่าทุกคน"
         killAllButton.BackgroundColor3 = Color3.fromRGB(200, 0, 200)
         startSpamLoop()
     else
-        toggleButton.Text = "▶️ เริ่มออร่า"
+        toggleButton.Text = "▶️ เริ่มสแปม"
         toggleButton.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
         statusLabel.Text = "สถานะ: หยุดชั่วคราว"
         statusLabel.TextColor3 = Color3.fromRGB(255, 200, 0)
@@ -502,21 +442,21 @@ toggleButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- อ่อร่าฆ่าทุกคน
+-- อ่อาฆ่าทุกคน
 killAllButton.MouseButton1Click:Connect(function()
     isRunning = not isRunning
     isKillAll = isRunning
     
     if isRunning then
-        killAllButton.Text = "⏸️ หยุดอ่อร่าฆ่า"
+        killAllButton.Text = "⏸️ หยุดอ่อาฆ่า"
         killAllButton.BackgroundColor3 = Color3.fromRGB(255, 100, 255)
-        toggleButton.Text = "▶️ เริ่มออร่า"
+        toggleButton.Text = "▶️ เริ่มสแปม"
         toggleButton.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
         startSpamLoop()
     else
-        killAllButton.Text = "💥 อ่อร่าฆ่าทุกคน"
+        killAllButton.Text = "💥 อ่อาฆ่าทุกคน"
         killAllButton.BackgroundColor3 = Color3.fromRGB(200, 0, 200)
-        statusLabel.Text = "สถานะ: หยุดโหมดอ่อร่าฆ่า"
+        statusLabel.Text = "สถานะ: หยุดโหมดอ่อาฆ่า"
         statusLabel.TextColor3 = Color3.fromRGB(255, 200, 0)
         if spamConnection then
             spamConnection:Disconnect()
@@ -534,9 +474,9 @@ stopButton.MouseButton1Click:Connect(function()
         spamConnection = nil
     end
     
-    toggleButton.Text = "▶️ เริ่มออร่า"
+    toggleButton.Text = "▶️ เริ่มสแปม"
     toggleButton.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
-    killAllButton.Text = "💥 อ่อร่าฆ่าทุกคน"
+    killAllButton.Text = "💥 อ่อาฆ่าทุกคน"
     killAllButton.BackgroundColor3 = Color3.fromRGB(200, 0, 200)
     statusLabel.Text = "สถานะ: หยุดทำงาน"
     statusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -554,7 +494,7 @@ minimizeButton.MouseButton1Click:Connect(function()
     
     if guiVisible then
         TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, 380, 0, 400)
+            Size = UDim2.new(0, 380, 0, 360)
         }):Play()
         minimizeButton.Text = "−"
         minimizeButton.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
@@ -698,33 +638,6 @@ rateInput.FocusLost:Connect(function(enterPressed)
     end
 end)
 
--- 🆕 ฟังก์ชัน TextBox ชื่อ Remote
-remoteInput.FocusLost:Connect(function(enterPressed)
-    if enterPressed then
-        local input = remoteInput.Text
-        if input ~= "Auto" and input ~= "" then
-            local success, remote = pcall(function()
-                return ReplicatedStorage.Communication.Events:FindFirstChild(input)
-            end)
-            if success and remote and remote:IsA("RemoteEvent") then
-                remoteToUse = input
-                remoteInput.TextColor3 = Color3.fromRGB(0, 255, 150)
-                statusLabel.Text = "ตั้ง Remote: " .. remoteToUse
-                statusLabel.TextColor3 = Color3.fromRGB(0, 255, 150)
-                remoteScanComplete = true
-            else
-                remoteInput.TextColor3 = Color3.fromRGB(255, 100, 100)
-                statusLabel.Text = "สถานะ: ไม่พบ Remote '" .. input .. "'"
-                statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
-                remoteInput.Text = "Auto"
-                scanRemotes()
-            end
-        else
-            scanRemotes()
-        end
-    end
-end)
-
 -- 🗑️ ล้างหน่วยความจำเมื่อ GUI ถูกทำลาย
 screenGui.AncestryChanged:Connect(function()
     if not screenGui.Parent then
@@ -745,7 +658,7 @@ spawn(function()
     notify.Size = UDim2.new(0, 300, 0, 40)
     notify.Position = UDim2.new(0.5, -150, 0, 20)
     notify.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
-    notify.Text = "🇹🇭 by:TOU | CHAOS KILL AURA v1.4.1 ใช้งานแล้ว! 💥"
+    notify.Text = "🇹🇭 โปรแกรมสแปมรีโมท v1.3.2 ภาษาไทย ใช้งานแล้ว! 💥"
     notify.TextColor3 = Color3.fromRGB(255, 255, 255)
     notify.TextScaled = true
     notify.Font = Enum.Font.GothamBold
@@ -759,6 +672,5 @@ spawn(function()
     game:GetService("Debris"):AddItem(notify, 4)
 end)
 
-print("🇹🇭 by:TOU | CHAOS KILL AURA v1.4.1 - PART 2/2 (FUNCTIONS) LOADED! 🇹🇭")
-print("🎯 พร้อมใช้งานแล้ว! พิมพ์ชื่อ Remote หรือใช้ Auto แล้วกด 'อ่อร่าฆ่าทุกคน'! 🏴‍☠️")
-print("⚠️ ถ้าไม่ยิงรีโมท ตรวจสอบ Output เพื่อหาชื่อ Remote ที่ถูกต้อง!")
+print("🇹🇭 wino444's Auto-Target Spammer v1.3.2 - PART 2/2 (FUNCTIONS) LOADED! 🇹🇭")
+print("🎯 พร้อมใช้งานแล้ว! ตรวจสอบ Remote ใน Output และเลือกเป้าหมายหรือกด 'อ่อาฆ่าทุกคน'! 🏴‍☠️")
