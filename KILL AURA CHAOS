@@ -1,6 +1,6 @@
 --[[
-    🔥🔥 AURA KILL SCRIPT v1.3 by: TOUx1 - PART 1/2 💀🇹🇭🔥🔥
-    💀 GUI "อ่อร่าฆ่า" + ปุ่มผสม + ฆ่าทุกคน! 💀
+    🔥🔥 wino444's AUTO-TARGET SPAMMER v1.3 - PART 1/2 🇹🇭🔥🔥
+    💀 GUI ภาษาไทย + ปุ่ม "อ่อาฆ่าทุกคน" + TextBox ความเร็ว 💀
     📝 คัดลอกส่วนนี้ก่อน แล้วรัน PART 2 ต่อ!
 ]]
 
@@ -15,22 +15,22 @@ local playerGui = player:WaitForChild("PlayerGui")
 
 -- 📊 ตัวแปรหลัก
 local isRunning = false
-local massKillMode = false
+local isKillAll = false -- 🆕 สถานะโหมด "อ่อาฆ่าทุกคน"
 local spamConnection = nil
 local guiVisible = true
 local selectedTarget = nil
 local spamRate = 0.5 -- วินาที
-local draggingSlider = false
+local animating = false -- 🆕 ป้องกันแอนิเมชันซ้ำ
 
 -- 🎨 สร้าง GUI หลัก
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "AuraKillScript"
+screenGui.Name = "AutoTargetSpammer"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
 -- 🖼️ กรอบหลัก (ลากได้)
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 400, 0, 340)
+mainFrame.Size = UDim2.new(0, 380, 0, 360) -- 📏 ปรับขนาดเพื่อรองรับปุ่มใหม่
 mainFrame.Position = UDim2.new(0, 50, 0, 50)
 mainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
 mainFrame.BorderSizePixel = 0
@@ -38,32 +38,29 @@ mainFrame.Active = true
 mainFrame.Draggable = true
 mainFrame.Parent = screenGui
 
--- 🎭 มุมโค้ง
 local mainCorner = Instance.new("UICorner")
 mainCorner.CornerRadius = UDim.new(0, 12)
 mainCorner.Parent = mainFrame
 
--- 🩸 พื้นหลังไล่สีเลือด
 local gradient = Instance.new("UIGradient")
 gradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(50, 10, 10)),
-    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(30, 5, 5)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 0, 0))
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(25, 25, 35)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(15, 15, 25)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 10, 20))
 }
 gradient.Rotation = 45
 gradient.Parent = mainFrame
 
--- 💀 เอฟเฟกต์ขอบเลือด
 local outerStroke = Instance.new("UIStroke")
-outerStroke.Thickness = 3
-outerStroke.Color = Color3.fromRGB(200, 0, 0)
-outerStroke.Transparency = 0.3
+outerStroke.Thickness = 2
+outerStroke.Color = Color3.fromRGB(0, 255, 150)
+outerStroke.Transparency = 0.5
 outerStroke.Parent = mainFrame
 
--- 🏷️ แถบชื่อ (TOUx1 Edition)
+-- 🏷️ แถบชื่อ
 local titleBar = Instance.new("Frame")
-titleBar.Size = UDim2.new(1, 0, 0, 45)
-titleBar.BackgroundColor3 = Color3.fromRGB(10, 5, 5)
+titleBar.Size = UDim2.new(1, 0, 0, 40)
+titleBar.BackgroundColor3 = Color3.fromRGB(10, 10, 15)
 titleBar.BorderSizePixel = 0
 titleBar.Parent = mainFrame
 
@@ -72,31 +69,20 @@ titleCorner.CornerRadius = UDim.new(0, 12)
 titleCorner.Parent = titleBar
 
 local titleLabel = Instance.new("TextLabel")
-titleLabel.Size = UDim2.new(0.7, 0, 0.6, 0)
-titleLabel.Position = UDim2.new(0, 15, 0, 2)
+titleLabel.Size = UDim2.new(0.65, 0, 1, 0)
+titleLabel.Position = UDim2.new(0, 15, 0, 0)
 titleLabel.BackgroundTransparency = 1
-titleLabel.Text = "อ่อร่าฆ่า script by: TOUx1"
-titleLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
+titleLabel.Text = "🎯 โปรแกรมสแปมรีโมทอัตโนมัติ v1.3"
+titleLabel.TextColor3 = Color3.fromRGB(0, 255, 150)
 titleLabel.TextScaled = true
 titleLabel.Font = Enum.Font.GothamBold
 titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 titleLabel.Parent = titleBar
 
-local versionLabel = Instance.new("TextLabel")
-versionLabel.Size = UDim2.new(0.3, 0, 0.4, 0)
-versionLabel.Position = UDim2.new(0.7, -10, 0.6, 0)
-versionLabel.BackgroundTransparency = 1
-versionLabel.Text = "v1.3"
-versionLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
-versionLabel.TextScaled = true
-versionLabel.Font = Enum.Font.Gotham
-versionLabel.TextXAlignment = Enum.TextXAlignment.Right
-versionLabel.Parent = titleBar
-
 -- 🔴 ปุ่มปิด
 local closeButton = Instance.new("TextButton")
-closeButton.Size = UDim2.new(0, 30, 0, 30)
-closeButton.Position = UDim2.new(1, -40, 0, 7.5)
+closeButton.Size = UDim2.new(0, 25, 0, 25)
+closeButton.Position = UDim2.new(1, -35, 0, 7.5)
 closeButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
 closeButton.Text = "✕"
 closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -106,30 +92,30 @@ closeButton.BorderSizePixel = 0
 closeButton.Parent = titleBar
 
 local closeCorner = Instance.new("UICorner")
-closeCorner.CornerRadius = UDim.new(0, 15)
+closeCorner.CornerRadius = UDim.new(0, 12)
 closeCorner.Parent = closeButton
 
--- 🟣 ปุ่มเปิด/ปิดผสม (Toggle All)
-local toggleAllButton = Instance.new("TextButton")
-toggleAllButton.Size = UDim2.new(0, 80, 0, 30)
-toggleAllButton.Position = UDim2.new(1, -130, 0, 7.5)
-toggleAllButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-toggleAllButton.Text = "🚫 ปิดทั้งหมด"
-toggleAllButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-toggleAllButton.TextScaled = true
-toggleAllButton.Font = Enum.Font.GothamBold
-toggleAllButton.BorderSizePixel = 0
-toggleAllButton.Parent = titleBar
+-- 🟡 ปุ่มซ่อน/แสดง
+local minimizeButton = Instance.new("TextButton")
+minimizeButton.Size = UDim2.new(0, 25, 0, 25)
+minimizeButton.Position = UDim2.new(1, -65, 0, 7.5)
+minimizeButton.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
+minimizeButton.Text = "−"
+minimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+minimizeButton.TextScaled = true
+minimizeButton.Font = Enum.Font.GothamBold
+minimizeButton.BorderSizePixel = 0
+minimizeButton.Parent = titleBar
 
-local toggleAllCorner = Instance.new("UICorner")
-toggleAllCorner.CornerRadius = UDim.new(0, 8)
-toggleAllCorner.Parent = toggleAllButton
+local minimizeCorner = Instance.new("UICorner")
+minimizeCorner.CornerRadius = UDim.new(0, 12)
+minimizeCorner.Parent = minimizeButton
 
 -- 📋 แผงเลือกเป้าหมาย
 local targetFrame = Instance.new("Frame")
 targetFrame.Size = UDim2.new(1, -20, 0, 60)
-targetFrame.Position = UDim2.new(0, 10, 0, 55)
-targetFrame.BackgroundColor3 = Color3.fromRGB(20, 10, 10)
+targetFrame.Position = UDim2.new(0, 10, 0, 50)
+targetFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 targetFrame.BorderSizePixel = 0
 targetFrame.Parent = mainFrame
 
@@ -142,19 +128,18 @@ targetLabel.Size = UDim2.new(0.35, 0, 0.5, 0)
 targetLabel.Position = UDim2.new(0, 10, 0, 5)
 targetLabel.BackgroundTransparency = 1
 targetLabel.Text = "เป้าหมาย:"
-targetLabel.TextColor3 = Color3.fromRGB(200, 150, 150)
+targetLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 targetLabel.TextScaled = true
 targetLabel.Font = Enum.Font.Gotham
 targetLabel.TextXAlignment = Enum.TextXAlignment.Left
 targetLabel.Parent = targetFrame
 
--- 🎯 เมนูเลือกผู้เล่น
 local targetDropdown = Instance.new("TextButton")
 targetDropdown.Size = UDim2.new(0.6, -10, 0.5, 0)
 targetDropdown.Position = UDim2.new(0.35, 0, 0, 5)
-targetDropdown.BackgroundColor3 = Color3.fromRGB(35, 20, 20)
+targetDropdown.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
 targetDropdown.Text = "เลือกผู้เล่น..."
-targetDropdown.TextColor3 = Color3.fromRGB(200, 200, 200)
+targetDropdown.TextColor3 = Color3.fromRGB(150, 150, 150)
 targetDropdown.TextScaled = true
 targetDropdown.Font = Enum.Font.Gotham
 targetDropdown.BorderSizePixel = 0
@@ -164,27 +149,11 @@ local dropdownCorner = Instance.new("UICorner")
 dropdownCorner.CornerRadius = UDim.new(0, 6)
 dropdownCorner.Parent = targetDropdown
 
--- 🩸 ปุ่มฆ่าทุกคน (Mass Kill)
-local massKillButton = Instance.new("TextButton")
-massKillButton.Size = UDim2.new(0.25, -5, 0.5, 0)
-massKillButton.Position = UDim2.new(0.35, 0, 0.5, 5)
-massKillButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-massKillButton.Text = "💀 ฆ่าทุกคน"
-massKillButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-massKillButton.TextScaled = true
-massKillButton.Font = Enum.Font.GothamBold
-massKillButton.BorderSizePixel = 0
-massKillButton.Parent = targetFrame
-
-local massKillCorner = Instance.new("UICorner")
-massKillCorner.CornerRadius = UDim.new(0, 6)
-massKillCorner.Parent = massKillButton
-
 -- 📊 แผงสถานะ
 local statusFrame = Instance.new("Frame")
 statusFrame.Size = UDim2.new(1, -20, 0, 50)
-statusFrame.Position = UDim2.new(0, 10, 0, 125)
-statusFrame.BackgroundColor3 = Color3.fromRGB(20, 10, 10)
+statusFrame.Position = UDim2.new(0, 10, 0, 120)
+statusFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 statusFrame.BorderSizePixel = 0
 statusFrame.Parent = mainFrame
 
@@ -197,36 +166,25 @@ statusLabel.Size = UDim2.new(1, 0, 1, 0)
 statusLabel.Position = UDim2.new(0, 10, 0, 0)
 statusLabel.BackgroundTransparency = 1
 statusLabel.Text = "สถานะ: รอเริ่มต้น"
-statusLabel.TextColor3 = Color3.fromRGB(200, 150, 150)
+statusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 statusLabel.TextScaled = true
 statusLabel.Font = Enum.Font.Gotham
 statusLabel.TextXAlignment = Enum.TextXAlignment.Left
 statusLabel.Parent = statusFrame
 
-local killCountLabel = Instance.new("TextLabel")
-killCountLabel.Size = UDim2.new(0.3, 0, 1, 0)
-killCountLabel.Position = UDim2.new(0.7, 0, 0, 0)
-killCountLabel.BackgroundTransparency = 1
-killCountLabel.Text = "ฆ่า: 0"
-killCountLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
-killCountLabel.TextScaled = true
-killCountLabel.Font = Enum.Font.GothamBold
-killCountLabel.TextXAlignment = Enum.TextXAlignment.Right
-killCountLabel.Parent = statusFrame
-
 -- 🎮 แผงปุ่มควบคุม
 local controlsFrame = Instance.new("Frame")
-controlsFrame.Size = UDim2.new(1, -20, 0, 50)
-controlsFrame.Position = UDim2.new(0, 10, 0, 185)
+controlsFrame.Size = UDim2.new(1, -20, 0, 100) -- 📏 ปรับขนาดเพื่อรองรับปุ่มใหม่
+controlsFrame.Position = UDim2.new(0, 10, 0, 180)
 controlsFrame.BackgroundTransparency = 1
 controlsFrame.Parent = mainFrame
 
 -- 🟢 ปุ่มเริ่ม/หยุด
 local toggleButton = Instance.new("TextButton")
-toggleButton.Size = UDim2.new(0.48, -5, 1, 0)
+toggleButton.Size = UDim2.new(0.31, -5, 0.45, 0)
 toggleButton.Position = UDim2.new(0, 0, 0, 0)
-toggleButton.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
-toggleButton.Text = "▶️ เริ่มฆ่า"
+toggleButton.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+toggleButton.Text = "▶️ เริ่มสแปม"
 toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 toggleButton.TextScaled = true
 toggleButton.Font = Enum.Font.GothamBold
@@ -237,12 +195,28 @@ local toggleCorner = Instance.new("UICorner")
 toggleCorner.CornerRadius = UDim.new(0, 8)
 toggleCorner.Parent = toggleButton
 
+-- 🟣 ปุ่มอ่อาฆ่าทุกคน 🆕
+local killAllButton = Instance.new("TextButton")
+killAllButton.Size = UDim2.new(0.31, -5, 0.45, 0)
+killAllButton.Position = UDim2.new(0.345, 0, 0, 0)
+killAllButton.BackgroundColor3 = Color3.fromRGB(200, 0, 200)
+killAllButton.Text = "💥 อ่อาฆ่าทุกคน"
+killAllButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+killAllButton.TextScaled = true
+killAllButton.Font = Enum.Font.GothamBold
+killAllButton.BorderSizePixel = 0
+killAllButton.Parent = controlsFrame
+
+local killAllCorner = Instance.new("UICorner")
+killAllCorner.CornerRadius = UDim.new(0, 8)
+killAllCorner.Parent = killAllButton
+
 -- 🔴 ปุ่มหยุดฉุกเฉิน
 local stopButton = Instance.new("TextButton")
-stopButton.Size = UDim2.new(0.48, -5, 1, 0)
-stopButton.Position = UDim2.new(0.52, 0, 0, 0)
-stopButton.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
-stopButton.Text = "⏹️ หยุดฆ่า"
+stopButton.Size = UDim2.new(0.31, -5, 0.45, 0)
+stopButton.Position = UDim2.new(0.69, 0, 0, 0)
+stopButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+stopButton.Text = "⏹️ หยุดฉุกเฉิน"
 stopButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 stopButton.TextScaled = true
 stopButton.Font = Enum.Font.GothamBold
@@ -255,9 +229,9 @@ stopCorner.Parent = stopButton
 
 -- ⚙️ แผงตั้งค่า
 local settingsFrame = Instance.new("Frame")
-settingsFrame.Size = UDim2.new(1, -20, 0, 70)
-settingsFrame.Position = UDim2.new(0, 10, 0, 245)
-settingsFrame.BackgroundColor3 = Color3.fromRGB(20, 10, 10)
+settingsFrame.Size = UDim2.new(1, -20, 0, 60)
+settingsFrame.Position = UDim2.new(0, 10, 0, 290) -- 📏 ปรับตำแหน่ง
+settingsFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 settingsFrame.BorderSizePixel = 0
 settingsFrame.Parent = mainFrame
 
@@ -269,87 +243,49 @@ local rateLabel = Instance.new("TextLabel")
 rateLabel.Size = UDim2.new(0.35, 0, 0.5, 0)
 rateLabel.Position = UDim2.new(0, 10, 0, 5)
 rateLabel.BackgroundTransparency = 1
-rateLabel.Text = "ความเร็ว:"
-rateLabel.TextColor3 = Color3.fromRGB(200, 150, 150)
+rateLabel.Text = "ความเร็ว (วิน.):"
+rateLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 rateLabel.TextScaled = true
 rateLabel.Font = Enum.Font.Gotham
 rateLabel.Parent = settingsFrame
 
-local rateValueLabel = Instance.new("TextLabel")
-rateValueLabel.Size = UDim2.new(0.25, 0, 0.5, 0)
-rateValueLabel.Position = UDim2.new(0.35, 0, 0, 5)
-rateValueLabel.BackgroundTransparency = 1
-rateValueLabel.Text = "0.5วิน."
-rateValueLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
-rateValueLabel.TextScaled = true
-rateValueLabel.Font = Enum.Font.GothamBold
-rateValueLabel.Parent = settingsFrame
+local rateInput = Instance.new("TextBox") -- 🆕 เปลี่ยนจากสไลเดอร์เป็น TextBox
+rateInput.Size = UDim2.new(0.25, 0, 0.5, 0)
+rateInput.Position = UDim2.new(0.35, 0, 0, 5)
+rateInput.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+rateInput.Text = "0.5"
+rateInput.TextColor3 = Color3.fromRGB(0, 255, 150)
+rateInput.TextScaled = true
+rateInput.Font = Enum.Font.GothamBold
+rateInput.BorderSizePixel = 0
+rateInput.Parent = settingsFrame
 
--- 🎚️ สไลเดอร์ (เวอร์ชันที่ใช้งานได้จริง)
-local rateSlider = Instance.new("Frame")
-rateSlider.Size = UDim2.new(0.35, 0, 0.5, 0)
-rateSlider.Position = UDim2.new(0.6, 0, 0, 5)
-rateSlider.BackgroundColor3 = Color3.fromRGB(40, 20, 20)
-rateSlider.BorderSizePixel = 0
-rateSlider.Parent = settingsFrame
+local rateInputCorner = Instance.new("UICorner")
+rateInputCorner.CornerRadius = UDim.new(0, 6)
+rateInputCorner.Parent = rateInput
 
-local sliderCorner = Instance.new("UICorner")
-sliderCorner.CornerRadius = UDim.new(0, 10)
-sliderCorner.Parent = rateSlider
-
-local sliderTrack = Instance.new("Frame")
-sliderTrack.Size = UDim2.new(1, -12, 0.3, 0)
-sliderTrack.Position = UDim2.new(0, 6, 0.35, 0)
-sliderTrack.BackgroundColor3 = Color3.fromRGB(60, 30, 30)
-sliderTrack.BorderSizePixel = 0
-sliderTrack.Parent = rateSlider
-
-local trackCorner = Instance.new("UICorner")
-trackCorner.CornerRadius = UDim.new(0, 5)
-trackCorner.Parent = sliderTrack
-
-local sliderHandle = Instance.new("TextButton")
-sliderHandle.Size = UDim2.new(0, 12, 1, 0)
-sliderHandle.Position = UDim2.new(0.21, -6, 0, 0)
-sliderHandle.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-sliderHandle.Text = ""
-sliderHandle.BorderSizePixel = 0
-sliderHandle.Parent = sliderTrack
-
-local handleCorner = Instance.new("UICorner")
-handleCorner.CornerRadius = UDim.new(0, 6)
-handleCorner.Parent = sliderHandle
-
--- 🎭 แอนิเมชันเปิด (รันก่อน)
+-- 🎭 แอนิเมชันเปิด
 mainFrame.Size = UDim2.new(0, 0, 0, 0)
-mainFrame.Position = UDim2.new(0.5, -200, 0.5, -170)
-TweenService:Create(mainFrame, TweenInfo.new(0.7, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-    Size = UDim2.new(0, 400, 0, 340),
+mainFrame.Position = UDim2.new(0.5, -190, 0.5, -180)
+TweenService:Create(mainFrame, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+    Size = UDim2.new(0, 380, 0, 360),
     Position = UDim2.new(0, 50, 0, 50)
 }):Play()
 
-print("💀 AURA KILL SCRIPT v1.3 by: TOUx1 - PART 1/2 (GUI) LOADED! 💀")
-print("🇹🇭 รอ PART 2 เพื่อเริ่มฆ่าทุกคน...")
+print("🇹🇭 wino444's Auto-Target Spammer v1.3 - PART 1/2 (GUI) LOADED! 🇹🇭")
+print("📝 รอ PART 2 เพื่อเริ่มใช้งาน...")
 --[[
-    🔥🔥 AURA KILL SCRIPT v1.3 by: TOUx1 - PART 2/2 💀🇹🇭🔥🔥
-    💀 ฟังก์ชันฆ่าทุกคน + ปุ่มผสม + Event Handlers 💀
+    🔥🔥 wino444's AUTO-TARGET SPAMMER v1.3 - PART 2/2 🇹🇭🔥🔥
+    💀 ฟังก์ชันหลัก + Event Handlers + Remote Spam + โหมดอ่อาฆ่าทุกคน 💀
     📝 วางต่อจาก PART 1 ทันที!
 ]]
-
-local killCount = 0
 
 -- 🧠 ฟังก์ชันหลัก
 
 -- 🎯 หาเป้าหมายที่เลือก
 local function getTargetPlayer()
-    if massKillMode then
-        return nil -- Mass kill mode uses all players
-    end
-    
-    if selectedTarget and selectedTarget.Parent then
-        return selectedTarget
-    elseif not selectedTarget then
-        -- ถ้าไม่เลือก ให้หาคนที่ใกล้ที่สุด
+    if isKillAll then
+        -- โหมด "อ่อาฆ่าทุกคน": หาคนที่ใกล้ที่สุด
         local character = player.Character
         if not character or not character:FindFirstChild("HumanoidRootPart") then
             return nil
@@ -370,191 +306,123 @@ local function getTargetPlayer()
         end
         
         return nearestPlayer
+    elseif selectedTarget and selectedTarget.Parent then
+        -- โหมดปกติ: ใช้เป้าหมายที่เลือก
+        return selectedTarget
     end
     return nil
-end
-
--- 💀 ฆ่าทุกคนในเซิร์ฟเวอร์
-local function massKillAll()
-    local successCount = 0
-    local totalPlayers = 0
-    
-    for _, targetPlayer in pairs(Players:GetPlayers()) do
-        if targetPlayer ~= player and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Humanoid") then
-            totalPlayers = totalPlayers + 1
-            local success = fireRemoteAtTarget(targetPlayer)
-            if success then
-                successCount = successCount + 1
-                killCount = killCount + 1
-                killCountLabel.Text = "ฆ่า: " .. killCount
-            end
-            wait(0.05) -- Small delay to prevent lag
-        end
-    end
-    
-    statusLabel.Text = string.format("ฆ่าทุกคน: %d/%d สำเร็จ", successCount, totalPlayers)
-    statusLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
-    
-    return successCount > 0
 end
 
 -- 🎯 ยิงรีโมทใส่เป้าหมาย
 local function fireRemoteAtTarget(targetPlayer)
     if not targetPlayer or not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("Humanoid") then
-        return false
+        return false, "เป้าหมายไม่พร้อม"
     end
     
     local success, error = pcall(function()
+        local remote = ReplicatedStorage:FindFirstChild("Communication") and
+                      ReplicatedStorage.Communication:FindFirstChild("Events") and
+                      ReplicatedStorage.Communication.Events:FindFirstChild("AttackRemote") -- 🆕 ระบุชื่อ Remote
+        if not remote then
+            error("ไม่พบ AttackRemote!")
+        end
+        
         local args = {
-            targetPlayer.Character:WaitForChild("Humanoid"),
+            targetPlayer.Character.Humanoid,
             false
         }
-        game:GetService("ReplicatedStorage"):WaitForChild("Communication"):WaitForChild("Events"):WaitForChild(""):FireServer(unpack(args))
+        remote:FireServer(unpack(args))
     end)
     
-    if success then
-        killCount = killCount + 1
-        killCountLabel.Text = "ฆ่า: " .. killCount
-    end
-    
-    return success
+    return success, error
 end
 
 -- 🔄 ลูปสแปม
 local function startSpamLoop()
     if spamConnection then
         spamConnection:Disconnect()
+        spamConnection = nil
     end
     
     spamConnection = RunService.Heartbeat:Connect(function()
         if not isRunning then
             spamConnection:Disconnect()
+            spamConnection = nil
             return
         end
         
-        if massKillMode then
-            -- Mass kill mode - target everyone
-            for _, targetPlayer in pairs(Players:GetPlayers()) do
-                if targetPlayer ~= player and targetPlayer.Character and targetPlayer.Character:FindFirstChild("Humanoid") then
-                    local success = fireRemoteAtTarget(targetPlayer)
-                    if success then
-                        statusLabel.Text = "โหมดฆ่าทุกคน: กำลังล่า " .. targetPlayer.Name
-                        targetDropdown.Text = "โหมดฆ่าทุกคน"
-                        targetDropdown.TextColor3 = Color3.fromRGB(255, 0, 0)
-                    end
-                    wait(0.1) -- Delay between targets
-                end
+        local targetPlayer = getTargetPlayer()
+        if targetPlayer then
+            local success, errorMsg = fireRemoteAtTarget(targetPlayer)
+            if success then
+                targetDropdown.Text = isKillAll and "โหมด: อ่อาฆ่าทุกคน (" .. targetPlayer.Name .. ")" or targetPlayer.Name
+                targetDropdown.TextColor3 = Color3.fromRGB(0, 255, 150)
+                statusLabel.Text = "กำลังสแปม: " .. targetPlayer.Name
+                statusLabel.TextColor3 = Color3.fromRGB(0, 255, 150)
+            else
+                targetDropdown.Text = "เกิดข้อผิดพลาด"
+                targetDropdown.TextColor3 = Color3.fromRGB(255, 100, 100)
+                statusLabel.Text = "สถานะ: " .. (errorMsg or "รีโมทมีปัญหา")
+                statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
             end
         else
-            -- Single target mode
-            local targetPlayer = getTargetPlayer()
-            if targetPlayer then
-                local success = fireRemoteAtTarget(targetPlayer)
-                if success then
-                    targetDropdown.Text = targetPlayer.Name
-                    targetDropdown.TextColor3 = Color3.fromRGB(255, 100, 100)
-                    statusLabel.Text = "กำลังฆ่า: " .. targetPlayer.Name
-                    statusLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
-                else
-                    targetDropdown.Text = "เกิดข้อผิดพลาด"
-                    targetDropdown.TextColor3 = Color3.fromRGB(150, 150, 150)
-                    statusLabel.Text = "สถานะ: รีโมทมีปัญหา"
-                    statusLabel.TextColor3 = Color3.fromRGB(150, 0, 0)
-                end
-            else
-                targetDropdown.Text = "ไม่มีเป้าหมาย"
-                targetDropdown.TextColor3 = Color3.fromRGB(100, 100, 100)
-                statusLabel.Text = "สถานะ: ไม่พบเป้าหมายที่เหมาะสม"
-                statusLabel.TextColor3 = Color3.fromRGB(100, 100, 100)
-            end
+            targetDropdown.Text = isKillAll and "ไม่มีเป้าหมายใกล้เคียง" or "ไม่มีเป้าหมาย"
+            targetDropdown.TextColor3 = Color3.fromRGB(255, 150, 0)
+            statusLabel.Text = "สถานะ: ไม่พบเป้าหมายที่เหมาะสม"
+            statusLabel.TextColor3 = Color3.fromRGB(255, 150, 0)
         end
+        
+        wait(spamRate) -- 🆕 ใช้ความเร็วจาก TextBox
     end)
 end
 
 -- 🎛️ ฟังก์ชันปุ่ม
 
--- 🔄 ปุ่มเปิด/ปิดผสม (Toggle All)
-toggleAllButton.MouseButton1Click:Connect(function()
-    isRunning = not isRunning
-    massKillMode = not massKillMode
-    
-    if isRunning and massKillMode then
-        -- Start mass kill
-        toggleAllButton.Text = "💀 กำลังฆ่าทุกคน"
-        toggleAllButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-        statusLabel.Text = "โหมดฆ่าทุกคน: เริ่มล่า!"
-        statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-        startSpamLoop()
-        massKillAll() -- Initial mass kill
-    elseif isRunning then
-        -- Start single target
-        toggleAllButton.Text = "🔪 กำลังฆ่าเป้าหมาย"
-        toggleAllButton.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
-        statusLabel.Text = "โหมดเป้าหมายเดี่ยว: เริ่มล่า!"
-        statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
-        startSpamLoop()
-    else
-        -- Stop everything
-        toggleAllButton.Text = "🚫 ปิดทั้งหมด"
-        toggleAllButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-        statusLabel.Text = "สถานะ: หยุดฆ่า"
-        statusLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
-        if spamConnection then
-            spamConnection:Disconnect()
-            spamConnection = nil
-        end
-        massKillMode = false
-    end
-end)
-
--- 💀 ปุ่มฆ่าทุกคน (One-shot mass kill)
-massKillButton.MouseButton1Click:Connect(function()
-    massKillButton.Text = "กำลังฆ่า..."
-    massKillButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-    
-    spawn(function()
-        local success = massKillAll()
-        if success then
-            statusLabel.Text = "ฆ่าทุกคนสำเร็จ! 💀"
-            statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-        else
-            statusLabel.Text = "ฆ่าทุกคนล้มเหลว! ⚠️"
-            statusLabel.TextColor3 = Color3.fromRGB(150, 0, 0)
-        end
-        
-        wait(2)
-        massKillButton.Text = "💀 ฆ่าทุกคน"
-        massKillButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-    end)
-end)
-
--- สลับเริ่ม/หยุด (Single Target Only)
+-- สลับเริ่ม/หยุด
 toggleButton.MouseButton1Click:Connect(function()
-    if massKillMode then
-        statusLabel.Text = "สถานะ: กำลังใช้โหมดฆ่าทุกคน!"
-        statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-        return
-    end
-    
-    if not selectedTarget and targetDropdown.Text == "เลือกผู้เล่น..." then
+    if not isKillAll and not selectedTarget and targetDropdown.Text == "เลือกผู้เล่น..." then
         statusLabel.Text = "สถานะ: กรุณาเลือกเป้าหมายก่อน!"
         statusLabel.TextColor3 = Color3.fromRGB(255, 150, 0)
         return
     end
     
     isRunning = not isRunning
+    isKillAll = false -- 🆕 ปิดโหมดอ่อาฆ่าทุกคนเมื่อใช้ปุ่มปกติ
     
     if isRunning then
-        toggleButton.Text = "⏸️ หยุดฆ่า"
-        toggleButton.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
-        statusLabel.Text = "กำลังฆ่าเป้าหมายเดี่ยว"
-        statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        toggleButton.Text = "⏸️ หยุดชั่วคราว"
+        toggleButton.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
+        killAllButton.Text = "💥 อ่อาฆ่าทุกคน"
+        killAllButton.BackgroundColor3 = Color3.fromRGB(200, 0, 200)
         startSpamLoop()
     else
-        toggleButton.Text = "▶️ เริ่มฆ่า"
-        toggleButton.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
-        statusLabel.Text = "สถานะ: หยุดฆ่าเป้าหมาย"
-        statusLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+        toggleButton.Text = "▶️ เริ่มสแปม"
+        toggleButton.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+        statusLabel.Text = "สถานะ: หยุดชั่วคราว"
+        statusLabel.TextColor3 = Color3.fromRGB(255, 200, 0)
+        if spamConnection then
+            spamConnection:Disconnect()
+            spamConnection = nil
+        end
+    end
+end)
+
+-- 🆕 อ่อาฆ่าทุกคน
+killAllButton.MouseButton1Click:Connect(function()
+    isRunning = not isRunning
+    isKillAll = isRunning -- 🆕 เปิดโหมดอ่อาฆ่าทุกคน
+    
+    if isRunning then
+        killAllButton.Text = "⏸️ หยุดอ่อาฆ่า"
+        killAllButton.BackgroundColor3 = Color3.fromRGB(255, 100, 255)
+        toggleButton.Text = "▶️ เริ่มสแปม"
+        toggleButton.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+        startSpamLoop()
+    else
+        killAllButton.Text = "💥 อ่อาฆ่าทุกคน"
+        killAllButton.BackgroundColor3 = Color3.fromRGB(200, 0, 200)
+        statusLabel.Text = "สถานะ: หยุดโหมดอ่อาฆ่า"
+        statusLabel.TextColor3 = Color3.fromRGB(255, 200, 0)
         if spamConnection then
             spamConnection:Disconnect()
             spamConnection = nil
@@ -565,64 +433,63 @@ end)
 -- หยุดฉุกเฉิน
 stopButton.MouseButton1Click:Connect(function()
     isRunning = false
-    massKillMode = false
+    isKillAll = false
     if spamConnection then
         spamConnection:Disconnect()
         spamConnection = nil
     end
     
-    toggleButton.Text = "▶️ เริ่มฆ่า"
-    toggleButton.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
-    toggleAllButton.Text = "🚫 ปิดทั้งหมด"
-    toggleAllButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-    massKillButton.Text = "💀 ฆ่าทุกคน"
-    massKillButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-    
-    statusLabel.Text = "สถานะ: หยุดฆ่าทุกอย่าง"
-    statusLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+    toggleButton.Text = "▶️ เริ่มสแปม"
+    toggleButton.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+    killAllButton.Text = "💥 อ่อาฆ่าทุกคน"
+    killAllButton.BackgroundColor3 = Color3.fromRGB(200, 0, 200)
+    statusLabel.Text = "สถานะ: หยุดทำงาน"
+    statusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
     targetDropdown.Text = selectedTarget and selectedTarget.Name or "เลือกผู้เล่น..."
-    targetDropdown.TextColor3 = selectedTarget and Color3.fromRGB(255, 100, 100) or Color3.fromRGB(200, 200, 200)
+    targetDropdown.TextColor3 = selectedTarget and Color3.fromRGB(0, 255, 150) or Color3.fromRGB(150, 150, 150)
 end)
 
 -- 🎯 ซ่อน/แสดง
 minimizeButton.MouseButton1Click:Connect(function()
+    if animating then return end -- 🆕 ป้องกันการกดซ้ำ
+    animating = true
     guiVisible = not guiVisible
     
     local contentToHide = {targetFrame, statusFrame, controlsFrame, settingsFrame}
     
     if guiVisible then
-        -- แสดง GUI
         TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, 400, 0, 340)
+            Size = UDim2.new(0, 380, 0, 360)
         }):Play()
         minimizeButton.Text = "−"
-        minimizeButton.BackgroundColor3 = Color3.fromRGB(150, 150, 0)
+        minimizeButton.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
         
-        -- แสดงเนื้อหาทั้งหมด
         for _, frame in pairs(contentToHide) do
             frame.Visible = true
         end
     else
-        -- ซ่อน GUI
         TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
-            Size = UDim2.new(0, 400, 0, 45)
+            Size = UDim2.new(0, 380, 0, 40)
         }):Play()
         minimizeButton.Text = "+"
-        minimizeButton.BackgroundColor3 = Color3.fromRGB(150, 100, 0)
+        minimizeButton.BackgroundColor3 = Color3.fromRGB(255, 100, 0)
         
-        -- ซ่อนเนื้อหาทั้งหมด
         for _, frame in pairs(contentToHide) do
             frame.Visible = false
         end
     end
+    
+    wait(0.3) -- รอแอนิเมชันเสร็จ
+    animating = false
 end)
 
 -- ปิด GUI
 closeButton.MouseButton1Click:Connect(function()
     isRunning = false
-    massKillMode = false
+    isKillAll = false
     if spamConnection then
         spamConnection:Disconnect()
+        spamConnection = nil
     end
     screenGui:Destroy()
 end)
@@ -632,12 +499,6 @@ local dropdownOpen = false
 local dropdownList = nil
 
 targetDropdown.MouseButton1Click:Connect(function()
-    if massKillMode then
-        statusLabel.Text = "สถานะ: กำลังใช้โหมดฆ่าทุกคน!"
-        statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-        return
-    end
-    
     if dropdownOpen then
         if dropdownList then
             dropdownList:Destroy()
@@ -648,11 +509,10 @@ targetDropdown.MouseButton1Click:Connect(function()
     
     dropdownOpen = true
     
-    -- สร้างรายการผู้เล่น
     dropdownList = Instance.new("Frame")
-    dropdownList.Size = UDim2.new(0, 220, 0, 0)
+    dropdownList.Size = UDim2.new(0, 200, 0, 0)
     dropdownList.Position = UDim2.new(0, targetDropdown.AbsolutePosition.X - mainFrame.AbsolutePosition.X + 10, 0, targetDropdown.AbsolutePosition.Y + targetDropdown.AbsoluteSize.Y - mainFrame.AbsolutePosition.Y + 5)
-    dropdownList.BackgroundColor3 = Color3.fromRGB(25, 15, 15)
+    dropdownList.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
     dropdownList.BorderSizePixel = 0
     dropdownList.Parent = mainFrame
     
@@ -665,16 +525,15 @@ targetDropdown.MouseButton1Click:Connect(function()
     listLayout.Padding = UDim.new(0, 2)
     listLayout.Parent = dropdownList
     
-    -- เพิ่มผู้เล่นทั้งหมดในรายการ
     local playerCount = 0
     for _, otherPlayer in pairs(Players:GetPlayers()) do
         if otherPlayer ~= player then
             playerCount = playerCount + 1
             local playerButton = Instance.new("TextButton")
             playerButton.Size = UDim2.new(1, -10, 0, 30)
-            playerButton.BackgroundColor3 = Color3.fromRGB(35, 20, 20)
-            playerButton.Text = "🎯 " .. otherPlayer.Name
-            playerButton.TextColor3 = Color3.fromRGB(255, 200, 200)
+            playerButton.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+            playerButton.Text = otherPlayer.Name
+            playerButton.TextColor3 = Color3.fromRGB(255, 255, 255)
             playerButton.TextScaled = true
             playerButton.Font = Enum.Font.Gotham
             playerButton.BorderSizePixel = 0
@@ -688,28 +547,27 @@ targetDropdown.MouseButton1Click:Connect(function()
             playerButton.MouseButton1Click:Connect(function()
                 selectedTarget = otherPlayer
                 targetDropdown.Text = otherPlayer.Name
-                targetDropdown.TextColor3 = Color3.fromRGB(255, 100, 100)
+                targetDropdown.TextColor3 = Color3.fromRGB(0, 255, 150)
                 if dropdownList then
                     dropdownList:Destroy()
                 end
                 dropdownOpen = false
-                statusLabel.Text = "เลือกเป้าหมายฆ่า: " .. otherPlayer.Name
-                statusLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
+                statusLabel.Text = "เลือกเป้าหมาย: " .. otherPlayer.Name
+                statusLabel.TextColor3 = Color3.fromRGB(0, 255, 150)
             end)
             
             playerButton.MouseEnter:Connect(function()
-                TweenService:Create(playerButton, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(50, 30, 30)}):Play()
+                TweenService:Create(playerButton, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(50, 50, 60)}):Play()
             end)
             
             playerButton.MouseLeave:Connect(function()
-                TweenService:Create(playerButton, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(35, 20, 20)}):Play()
+                TweenService:Create(playerButton, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(35, 35, 45)}):Play()
             end)
         end
     end
     
-    dropdownList.Size = UDim2.new(0, 220, 0, math.max(playerCount * 32, 32))
+    dropdownList.Size = UDim2.new(0, 200, 0, math.max(playerCount * 32, 32))
     
-    -- ปิดเมนูเมื่อคลิกนอก
     local connection
     connection = UserInputService.InputBegan:Connect(function(input)
         if dropdownOpen and input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -729,50 +587,53 @@ targetDropdown.MouseButton1Click:Connect(function()
     end)
 end)
 
--- 🎚️ ฟังก์ชันสไลเดอร์
-sliderHandle.MouseButton1Down:Connect(function()
-    draggingSlider = true
-end)
-
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        draggingSlider = false
+-- 🔢 ฟังก์ชัน TextBox ความเร็ว
+rateInput.FocusLost:Connect(function(enterPressed)
+    if enterPressed then
+        local input = tonumber(rateInput.Text)
+        if input and input >= 0.1 and input <= 2.0 then
+            spamRate = input
+            rateInput.TextColor3 = Color3.fromRGB(0, 255, 150)
+            statusLabel.Text = "ตั้งความเร็ว: " .. string.format("%.1f วิน.", spamRate)
+            statusLabel.TextColor3 = Color3.fromRGB(0, 255, 150)
+        else
+            rateInput.TextColor3 = Color3.fromRGB(255, 100, 100)
+            statusLabel.Text = "สถานะ: ความเร็วต้องอยู่ระหว่าง 0.1-2.0 วิน."
+            statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+            rateInput.Text = tostring(spamRate)
+        end
     end
 end)
 
-UserInputService.InputChanged:Connect(function(input)
-    if draggingSlider and input.UserInputType == Enum.UserInputType.MouseMovement then
-        local mouse = player:GetMouse()
-        local sliderPos = rateSlider.AbsolutePosition
-        local sliderSize = rateSlider.AbsoluteSize
-        
-        local relativeX = math.clamp((mouse.X - sliderPos.X) / sliderSize.X, 0, 1)
-        sliderHandle.Position = UDim2.new(relativeX, -6, 0, 0)
-        
-        -- แปลงเป็นความเร็วสแปม (0.1 ถึง 2.0 วินาที)
-        spamRate = 0.1 + (relativeX * 1.9)
-        rateValueLabel.Text = string.format("%.1fวิน.", spamRate)
-        rateValueLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+-- 🗑️ ล้างหน่วยความจำเมื่อ GUI ถูกทำลาย
+screenGui.AncestryChanged:Connect(function()
+    if not screenGui.Parent then
+        isRunning = false
+        isKillAll = false
+        if spamConnection then
+            spamConnection:Disconnect()
+            spamConnection = nil
+        end
     end
 end)
 
--- 💀 แจ้งเตือนต้อนรับ (TOUx1 Edition)
+-- 💬 แจ้งเตือนต้อนรับ
 local notify = Instance.new("TextLabel")
-notify.Size = UDim2.new(0, 350, 0, 50)
-notify.Position = UDim2.new(0.5, -175, 0, 20)
-notify.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-notify.Text = "💀 อ่อร่าฆ่า script by: TOUx1 v1.3 ใช้งานแล้ว! 💀"
+notify.Size = UDim2.new(0, 300, 0, 40)
+notify.Position = UDim2.new(0.5, -150, 0, 20)
+notify.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+notify.Text = "🇹🇭 โปรแกรมสแปมรีโมท v1.3 ภาษาไทย ใช้งานแล้ว! 💥"
 notify.TextColor3 = Color3.fromRGB(255, 255, 255)
 notify.TextScaled = true
 notify.Font = Enum.Font.GothamBold
 notify.Parent = screenGui
 
 local notifyCorner = Instance.new("UICorner")
-notifyCorner.CornerRadius = UDim.new(0, 10)
+notifyCorner.CornerRadius = UDim.new(0, 8)
 notifyCorner.Parent = notify
 
-TweenService:Create(notify, TweenInfo.new(0.6), {Position = UDim2.new(1, 25, 0, 20)}):Play()
-game:GetService("Debris"):AddItem(notify, 5)
+TweenService:Create(notify, TweenInfo.new(0.5), {Position = UDim2.new(1, 20, 0, 20)}):Play()
+game:GetService("Debris"):AddItem(notify, 4)
 
-print("💀 AURA KILL SCRIPT v1.3 by: TOUx1 - PART 2/2 (MASS KILL) LOADED! 💀")
-print("🇹🇭 พร้อมฆ่าทุกคนในเซิร์ฟเวอร์! กด 'ฆ่าทุกคน' หรือ '🚫 ปิดทั้งหมด' เลย! 🏴‍☠️")
+print("🇹� Thailand wino444's Auto-Target Spammer v1.3 - PART 2/2 (FUNCTIONS) LOADED! 🇹🇭")
+print("🎯 พร้อมใช้งานแล้ว! เลือกผู้เล่นหรือกด 'อ่อาฆ่าทุกคน' แล้วระเบิดความมันส์! 🏴‍☠️")
