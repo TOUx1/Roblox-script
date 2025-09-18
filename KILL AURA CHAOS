@@ -275,23 +275,53 @@ TweenService:Create(mainFrame, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.Ea
 print("🇹🇭 wino444's Auto-Target Spammer v1.3 - PART 1/2 (GUI) LOADED! 🇹🇭")
 print("📝 รอ PART 2 เพื่อเริ่มใช้งาน...")
 --[[
-    🔥🔥 wino444's AUTO-TARGET SPAMMER v1.3 - PART 2/2 🇹🇭🔥🔥
-    💀 ฟังก์ชันหลัก + Event Handlers + Remote Spam + โหมดอ่อาฆ่าทุกคน 💀
-    📝 วางต่อจาก PART 1 ทันที!
+    🔥🔥 wino444's AUTO-TARGET SPAMMER v1.3.2 - PART 2/2 🇹🇭🔥🔥
+    💀 แก้ไขการยิงรีโมท + สแกนใน Communication.Events + ดีบั๊ก 💀
+    📝 วางต่อจาก PART 1/2 (v1.3) ทันที!
 ]]
 
--- 🧠 ฟังก์ชันหลัก
+-- 🧠 ตัวแปรเพิ่มเติม
+local remoteToUse = nil -- 🆕 ตัวแปรเก็บ Remote ที่จะใช้
+local remoteScanComplete = false -- 🆕 สถานะการสแกน Remote
+
+-- 🔍 ฟังก์ชันสแกน Remote Events ใน Communication.Events
+local function scanRemotes()
+    local foundRemotes = {}
+    local eventsFolder = ReplicatedStorage:FindFirstChild("Communication") and
+                        ReplicatedStorage.Communication:FindFirstChild("Events")
+    
+    if eventsFolder then
+        for _, obj in pairs(eventsFolder:GetChildren()) do
+            if obj:IsA("RemoteEvent") then
+                table.insert(foundRemotes, {Name = obj.Name, Path = "ReplicatedStorage.Communication.Events." .. obj.Name})
+            end
+        end
+    end
+    
+    if #foundRemotes > 0 then
+        remoteToUse = foundRemotes[1].Name -- เลือก Remote แรกที่เจอ
+        statusLabel.Text = "พบ Remote: " .. remoteToUse
+        statusLabel.TextColor3 = Color3.fromRGB(0, 255, 150)
+        print("🔍 พบ Remote Events ใน Communication.Events: ")
+        for _, remote in pairs(foundRemotes) do
+            print(" - " .. remote.Path)
+        end
+    else
+        statusLabel.Text = "สถานะ: ไม่พบ Remote Event ใน Communication.Events!"
+        statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        print("🚨 ไม่พบ Remote Event ใน ReplicatedStorage.Communication.Events!")
+    end
+    remoteScanComplete = true
+end
 
 -- 🎯 หาเป้าหมายที่เลือก
 local function getTargetPlayer()
+    if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
+        return nil, "ตัวละครของผู้เล่นไม่พร้อม"
+    end
+    
     if isKillAll then
-        -- โหมด "อ่อาฆ่าทุกคน": หาคนที่ใกล้ที่สุด
-        local character = player.Character
-        if not character or not character:FindFirstChild("HumanoidRootPart") then
-            return nil
-        end
-        
-        local myPos = character.HumanoidRootPart.Position
+        local myPos = player.Character.HumanoidRootPart.Position
         local nearestPlayer = nil
         local shortestDistance = math.huge
         
@@ -304,27 +334,27 @@ local function getTargetPlayer()
                 end
             end
         end
-        
-        return nearestPlayer
+        return nearestPlayer, nearestPlayer and "โหมดอ่อาฆ่าทุกคน" or "ไม่มีเป้าหมายใกล้เคียง"
     elseif selectedTarget and selectedTarget.Parent then
-        -- โหมดปกติ: ใช้เป้าหมายที่เลือก
-        return selectedTarget
+        return selectedTarget, "เป้าหมายที่เลือก"
     end
-    return nil
+    return nil, "ไม่มีเป้าหมาย"
 end
 
 -- 🎯 ยิงรีโมทใส่เป้าหมาย
 local function fireRemoteAtTarget(targetPlayer)
     if not targetPlayer or not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("Humanoid") then
-        return false, "เป้าหมายไม่พร้อม"
+        return false, "เป้าหมายไม่มี Humanoid"
     end
     
-    local success, error = pcall(function()
-        local remote = ReplicatedStorage:FindFirstChild("Communication") and
-                      ReplicatedStorage.Communication:FindFirstChild("Events") and
-                      ReplicatedStorage.Communication.Events:FindFirstChild("AttackRemote") -- 🆕 ระบุชื่อ Remote
+    if not remoteToUse or not remoteScanComplete then
+        return false, "ยังไม่พบ Remote"
+    end
+    
+    local success, errorMsg = pcall(function()
+        local remote = ReplicatedStorage.Communication.Events:FindFirstChild(remoteToUse)
         if not remote then
-            error("ไม่พบ AttackRemote!")
+            error("ไม่พบ Remote: " .. remoteToUse)
         end
         
         local args = {
@@ -334,7 +364,12 @@ local function fireRemoteAtTarget(targetPlayer)
         remote:FireServer(unpack(args))
     end)
     
-    return success, error
+    if success then
+        print("🔥 ยิงรีโมทสำเร็จที่ " .. targetPlayer.Name .. " ด้วย Remote: " .. remoteToUse)
+    else
+        print("🚨 การยิงรีโมทล้มเหลว: " .. tostring(errorMsg))
+    end
+    return success, errorMsg
 end
 
 -- 🔄 ลูปสแปม
@@ -351,7 +386,7 @@ local function startSpamLoop()
             return
         end
         
-        local targetPlayer = getTargetPlayer()
+        local targetPlayer, targetStatus = getTargetPlayer()
         if targetPlayer then
             local success, errorMsg = fireRemoteAtTarget(targetPlayer)
             if success then
@@ -368,11 +403,11 @@ local function startSpamLoop()
         else
             targetDropdown.Text = isKillAll and "ไม่มีเป้าหมายใกล้เคียง" or "ไม่มีเป้าหมาย"
             targetDropdown.TextColor3 = Color3.fromRGB(255, 150, 0)
-            statusLabel.Text = "สถานะ: ไม่พบเป้าหมายที่เหมาะสม"
+            statusLabel.Text = "สถานะ: " .. targetStatus
             statusLabel.TextColor3 = Color3.fromRGB(255, 150, 0)
         end
         
-        wait(spamRate) -- 🆕 ใช้ความเร็วจาก TextBox
+        wait(spamRate + math.random(0.01, 0.05)) -- ความหน่วงสุ่ม
     end)
 end
 
@@ -387,7 +422,7 @@ toggleButton.MouseButton1Click:Connect(function()
     end
     
     isRunning = not isRunning
-    isKillAll = false -- 🆕 ปิดโหมดอ่อาฆ่าทุกคนเมื่อใช้ปุ่มปกติ
+    isKillAll = false
     
     if isRunning then
         toggleButton.Text = "⏸️ หยุดชั่วคราว"
@@ -407,10 +442,10 @@ toggleButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- 🆕 อ่อาฆ่าทุกคน
+-- อ่อาฆ่าทุกคน
 killAllButton.MouseButton1Click:Connect(function()
     isRunning = not isRunning
-    isKillAll = isRunning -- 🆕 เปิดโหมดอ่อาฆ่าทุกคน
+    isKillAll = isRunning
     
     if isRunning then
         killAllButton.Text = "⏸️ หยุดอ่อาฆ่า"
@@ -449,9 +484,9 @@ stopButton.MouseButton1Click:Connect(function()
     targetDropdown.TextColor3 = selectedTarget and Color3.fromRGB(0, 255, 150) or Color3.fromRGB(150, 150, 150)
 end)
 
--- 🎯 ซ่อน/แสดง
+-- ซ่อน/แสดง
 minimizeButton.MouseButton1Click:Connect(function()
-    if animating then return end -- 🆕 ป้องกันการกดซ้ำ
+    if animating then return end
     animating = true
     guiVisible = not guiVisible
     
@@ -463,7 +498,6 @@ minimizeButton.MouseButton1Click:Connect(function()
         }):Play()
         minimizeButton.Text = "−"
         minimizeButton.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
-        
         for _, frame in pairs(contentToHide) do
             frame.Visible = true
         end
@@ -473,13 +507,12 @@ minimizeButton.MouseButton1Click:Connect(function()
         }):Play()
         minimizeButton.Text = "+"
         minimizeButton.BackgroundColor3 = Color3.fromRGB(255, 100, 0)
-        
         for _, frame in pairs(contentToHide) do
             frame.Visible = false
         end
     end
     
-    wait(0.3) -- รอแอนิเมชันเสร็จ
+    wait(0.3)
     animating = false
 end)
 
@@ -617,23 +650,27 @@ screenGui.AncestryChanged:Connect(function()
     end
 end)
 
--- 💬 แจ้งเตือนต้อนรับ
-local notify = Instance.new("TextLabel")
-notify.Size = UDim2.new(0, 300, 0, 40)
-notify.Position = UDim2.new(0.5, -150, 0, 20)
-notify.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
-notify.Text = "🇹🇭 โปรแกรมสแปมรีโมท v1.3 ภาษาไทย ใช้งานแล้ว! 💥"
-notify.TextColor3 = Color3.fromRGB(255, 255, 255)
-notify.TextScaled = true
-notify.Font = Enum.Font.GothamBold
-notify.Parent = screenGui
+-- 💬 เริ่มสแกน Remote และแจ้งเตือนต้อนรับ
+spawn(function()
+    scanRemotes()
+    
+    local notify = Instance.new("TextLabel")
+    notify.Size = UDim2.new(0, 300, 0, 40)
+    notify.Position = UDim2.new(0.5, -150, 0, 20)
+    notify.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+    notify.Text = "🇹🇭 โปรแกรมสแปมรีโมท v1.3.2 ภาษาไทย ใช้งานแล้ว! 💥"
+    notify.TextColor3 = Color3.fromRGB(255, 255, 255)
+    notify.TextScaled = true
+    notify.Font = Enum.Font.GothamBold
+    notify.Parent = screenGui
+    
+    local notifyCorner = Instance.new("UICorner")
+    notifyCorner.CornerRadius = UDim.new(0, 8)
+    notifyCorner.Parent = notify
+    
+    TweenService:Create(notify, TweenInfo.new(0.5), {Position = UDim2.new(1, 20, 0, 20)}):Play()
+    game:GetService("Debris"):AddItem(notify, 4)
+end)
 
-local notifyCorner = Instance.new("UICorner")
-notifyCorner.CornerRadius = UDim.new(0, 8)
-notifyCorner.Parent = notify
-
-TweenService:Create(notify, TweenInfo.new(0.5), {Position = UDim2.new(1, 20, 0, 20)}):Play()
-game:GetService("Debris"):AddItem(notify, 4)
-
-print("🇹� Thailand wino444's Auto-Target Spammer v1.3 - PART 2/2 (FUNCTIONS) LOADED! 🇹🇭")
-print("🎯 พร้อมใช้งานแล้ว! เลือกผู้เล่นหรือกด 'อ่อาฆ่าทุกคน' แล้วระเบิดความมันส์! 🏴‍☠️")
+print("🇹🇭 wino444's Auto-Target Spammer v1.3.2 - PART 2/2 (FUNCTIONS) LOADED! 🇹🇭")
+print("🎯 พร้อมใช้งานแล้ว! ตรวจสอบ Remote ใน Output และเลือกเป้าหมายหรือกด 'อ่อาฆ่าทุกคน'! 🏴‍☠️")
