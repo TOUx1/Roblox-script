@@ -1,18 +1,20 @@
--- 🌑 DETECT HACKING v2.1 - SMART DETECTION 🔰 [PART 1/2]
+-- 🌑 DETECT HACKING v2.2 - AVATAR + COPY 🔰 [PART 1/3]
+-- Services + Main Frame Setup
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
+local Debris = game:GetService("Debris")
 local LocalPlayer = Players.LocalPlayer
 
--- ค่าปรับแต่งใหม่ (ฉลาดขึ้น!)
-local SPEED_THRESHOLD = 35          -- เพิ่มจาก 22 เป็น 35 (ปล่อยให้วิ่งเร็วหน่อย)
-local JUMP_HEIGHT_THRESHOLD = 80    -- เพิ่มจาก 50 เป็น 80 (กระโดดสูงหน่อยได้)
-local GROUND_DISTANCE_THRESHOLD = 15 -- เพิ่มจาก 10 เป็น 15 (ขึ้นต้นไม้ได้)
-local FLY_SECONDS_THRESHOLD = 8     -- เพิ่มจาก 4 เป็น 8 วินาที (ต้องลอยนานจริงๆ)
-local UPDATE_RATE = 0.15            -- ช้าลงหน่อย (ลด False Positive)
-local MIN_CONFIRMATION_TIME = 1.5   -- ต้องสงสัยนาน 1.5 วินาทีถึงจะขึ้น GUI
+-- Configuration
+local SPEED_THRESHOLD = 35
+local JUMP_HEIGHT_THRESHOLD = 80
+local GROUND_DISTANCE_THRESHOLD = 15
+local FLY_SECONDS_THRESHOLD = 8
+local UPDATE_RATE = 0.15
+local MIN_CONFIRMATION_TIME = 1.5
 
--- สร้าง GUI (เหมือนเดิม แต่แก้ Text Overflow)
+-- Create ScreenGui
 local playerGui = LocalPlayer:WaitForChild("PlayerGui")
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "DetectHackingGUI"
@@ -22,7 +24,7 @@ screenGui.Parent = playerGui
 -- Main Frame
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
-mainFrame.Size = UDim2.fromOffset(400, 480)  -- ใหญ่ขึ้นนิดนึง
+mainFrame.Size = UDim2.fromOffset(420, 500)
 mainFrame.Position = UDim2.new(0.02, 0, 0.12, 0)
 mainFrame.BackgroundColor3 = Color3.fromRGB(15, 5, 5)
 mainFrame.BorderSizePixel = 0
@@ -74,13 +76,13 @@ titleStroke.Thickness = 2
 titleStroke.Parent = titleBar
 
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, -100, 1, 0)
+title.Size = UDim2.new(1, -120, 1, 0)
 title.Position = UDim2.new(0, 15, 0, 0)
 title.BackgroundTransparency = 1
-title.Text = "🔰 SMART HACK DETECTOR v2.1 💀"
+title.Text = "🔰 HACK DETECTOR v2.2 - AVATAR SYSTEM 💀"
 title.TextColor3 = Color3.fromRGB(255, 100, 100)
 title.Font = Enum.Font.GothamBold
-title.TextSize = 20
+title.TextSize = 18
 title.TextXAlignment = Enum.TextXAlignment.Left
 title.Parent = titleBar
 
@@ -105,9 +107,9 @@ toggleStroke.Color = Color3.fromRGB(255, 0, 0)
 toggleStroke.Thickness = 2
 toggleStroke.Parent = toggleBtn
 
--- Container สำหรับ List
+-- List Container
 local listFrame = Instance.new("Frame")
-listFrame.Size = UDim2.new(1, -20, 1, -130)  -- ใหญ่ขึ้น
+listFrame.Size = UDim2.new(1, -20, 1, -140)
 listFrame.Position = UDim2.new(0, 10, 0, 60)
 listFrame.BackgroundTransparency = 1
 listFrame.Parent = mainFrame
@@ -126,7 +128,6 @@ scrollbar.BackgroundColor3 = Color3.fromRGB(25, 0, 0)
 scrollbar.BorderSizePixel = 0
 scrollbar.BackgroundTransparency = 0.8
 scrollbar.Parent = listFrame
-scrollbar.ScrollBarImageTransparency = 0.3
 
 local scrollCorner = Instance.new("UICorner")
 scrollCorner.CornerRadius = UDim.new(0, 8)
@@ -134,8 +135,8 @@ scrollCorner.Parent = scrollbar
 
 -- Bottom Area
 local bottom = Instance.new("Frame")
-bottom.Size = UDim2.new(1, -20, 0, 60)  -- สูงขึ้น
-bottom.Position = UDim2.new(0, 10, 1, -80)
+bottom.Size = UDim2.new(1, -20, 0, 65)
+bottom.Position = UDim2.new(0, 10, 1, -85)
 bottom.BackgroundColor3 = Color3.fromRGB(30, 0, 0)
 bottom.BorderSizePixel = 0
 bottom.Parent = mainFrame
@@ -149,27 +150,27 @@ bottomStroke.Color = Color3.fromRGB(200, 0, 0)
 bottomStroke.Thickness = 2
 bottomStroke.Parent = bottom
 
--- Info Label (ยาวขึ้น)
+-- Info Label
 local infoLabel = Instance.new("TextLabel")
-infoLabel.Size = UDim2.new(1, -120, 1, 0)
+infoLabel.Size = UDim2.new(1, -150, 1, 0)
 infoLabel.Position = UDim2.new(0, 10, 0, 0)
 infoLabel.BackgroundTransparency = 1
-infoLabel.Text = "No suspicious players detected 🔍"
+infoLabel.Text = "No confirmed hackers detected 🔍"
 infoLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 infoLabel.Font = Enum.Font.Gotham
 infoLabel.TextSize = 14
 infoLabel.TextXAlignment = Enum.TextXAlignment.Left
 infoLabel.TextYAlignment = Enum.TextYAlignment.Center
-infoLabel.TextWrapped = true  -- แก้ Text Overflow!
+infoLabel.TextWrapped = true
 infoLabel.Parent = bottom
 
 -- Look Button
 local lookBtn = Instance.new("TextButton")
-lookBtn.Size = UDim2.new(0, 100, 0, 40)
-lookBtn.Position = UDim2.new(1, -110, 0, 10)
+lookBtn.Size = UDim2.new(0, 70, 0, 40)
+lookBtn.Position = UDim2.new(1, -150, 0, 12)
 lookBtn.Text = "LOOK 👁️"
 lookBtn.Font = Enum.Font.GothamBold
-lookBtn.TextSize = 16
+lookBtn.TextSize = 12
 lookBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 lookBtn.BackgroundColor3 = Color3.fromRGB(100, 0, 0)
 lookBtn.BorderSizePixel = 0
@@ -184,21 +185,51 @@ lookStroke.Color = Color3.fromRGB(255, 100, 100)
 lookStroke.Thickness = 2
 lookStroke.Parent = lookBtn
 
+-- Copy All Button
+local copyAllBtn = Instance.new("TextButton")
+copyAllBtn.Size = UDim2.new(0, 70, 0, 40)
+copyAllBtn.Position = UDim2.new(1, -75, 0, 12)
+copyAllBtn.Text = "COPY 📋"
+copyAllBtn.Font = Enum.Font.GothamBold
+copyAllBtn.TextSize = 12
+copyAllBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+copyAllBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 0)
+copyAllBtn.BorderSizePixel = 0
+copyAllBtn.Parent = bottom
+
+local copyCorner = Instance.new("UICorner")
+copyCorner.CornerRadius = UDim.new(0, 8)
+copyCorner.Parent = copyAllBtn
+
+local copyStroke = Instance.new("UIStroke")
+copyStroke.Color = Color3.fromRGB(0, 255, 0)
+copyStroke.Thickness = 2
+copyStroke.Parent = copyAllBtn
+
 -- State Variables
 local suspicious = {}
 local selectedPlayer = nil
 local cameraFollowing = false
 local originalCameraSubject = workspace.CurrentCamera and workspace.CurrentCamera.CameraSubject
+local miniToggle = nil
 
--- [จบส่วนที่ 1 - รอส่วนที่ 2]
-print("📜 PART 1/2 - SMART DETECTION โหลดแล้ว!")
--- 🌑 DETECT HACKING v2.1 - SMART DETECTION 🔰 [PART 2/2]
+-- [จบส่วนที่ 1/3 - รอส่วนที่ 2]
+print("📜 PART 1/3 - GUI Setup โหลดแล้ว! รอ PART 2...")
+-- 🌑 DETECT HACKING v2.2 - AVATAR + COPY 🔰 [PART 2/3]
+-- Functions + Avatar System
 
--- SMART DETECTION STATE (เพิ่ม Confirmation Timer)
-local state = {}
-local confirmationTimers = {}  -- [player] = time since first suspicion
+-- Copy Function
+local function copyToClipboard(text)
+    if setclipboard then
+        setclipboard(text)
+        return true
+    else
+        warn("❌ ไม่รองรับ Copy Function! ใช้ Exploiter ที่รองรับ setclipboard")
+        return false
+    end
+end
 
--- Particle Effect (เหมือนเดิม)
+-- Particle Effect
 local function createWarningEffect(frame)
     local particles = Instance.new("Frame")
     particles.Size = UDim2.new(1, 20, 1, 20)
@@ -235,10 +266,69 @@ local function createWarningEffect(frame)
     end)
 end
 
--- Create Entry (แก้ Text Size + Wrapped)
+-- Load Player Avatar
+local function loadPlayerAvatar(plr, parentFrame)
+    local avatarFrame = Instance.new("Frame")
+    avatarFrame.Size = UDim2.new(0, 50, 0, 50)
+    avatarFrame.Position = UDim2.new(0, 5, 0.1, 0)
+    avatarFrame.BackgroundColor3 = Color3.fromRGB(50, 0, 0)
+    avatarFrame.BorderSizePixel = 0
+    avatarFrame.Parent = parentFrame
+
+    local avatarCorner = Instance.new("UICorner")
+    avatarCorner.CornerRadius = UDim.new(0, 25)
+    avatarCorner.Parent = avatarFrame
+
+    local avatarStroke = Instance.new("UIStroke")
+    avatarStroke.Color = Color3.fromRGB(255, 0, 0)
+    avatarStroke.Thickness = 2
+    avatarStroke.Transparency = 0.5
+    avatarStroke.Parent = avatarFrame
+
+    local avatarImage = Instance.new("ImageLabel")
+    avatarImage.Size = UDim2.new(1, -4, 1, -4)
+    avatarImage.Position = UDim2.new(0, 2, 0, 2)
+    avatarImage.BackgroundTransparency = 1
+    avatarImage.Image = "rbxthumb://type=AvatarHeadShot&id=" .. plr.UserId .. "&w=150&h=150"
+    avatarImage.Parent = avatarFrame
+
+    local imageCorner = Instance.new("UICorner")
+    imageCorner.CornerRadius = UDim.new(0, 23)
+    imageCorner.Parent = avatarImage
+
+    local glowTween = TweenService:Create(
+        avatarStroke,
+        TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
+        {Transparency = 0.2}
+    )
+    glowTween:Play()
+
+    avatarFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            TweenService:Create(avatarStroke, TweenInfo.new(0.2), {
+                Thickness = 3,
+                Color = Color3.fromRGB(255, 255, 0)
+            }):Play()
+        end
+    end)
+
+    avatarFrame.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            TweenService:Create(avatarStroke, TweenInfo.new(0.2), {
+                Thickness = 2,
+                Color = Color3.fromRGB(255, 0, 0),
+                Transparency = 0.5
+            }):Play()
+        end
+    end)
+
+    return avatarFrame
+end
+
+-- Create Entry Function
 local function createEntry(plr)
     local f = Instance.new("Frame")
-    f.Size = UDim2.new(1, -10, 0, 70)  -- สูงขึ้น
+    f.Size = UDim2.new(1, -10, 0, 80)
     f.BackgroundColor3 = Color3.fromRGB(25, 5, 5)
     f.BorderSizePixel = 0
     f.Parent = scrollbar
@@ -252,81 +342,115 @@ local function createEntry(plr)
     fStroke.Thickness = 1
     fStroke.Parent = f
 
-    -- Name Label
+    local avatarFrame = loadPlayerAvatar(plr, f)
+
     local nameLabel = Instance.new("TextLabel")
-    nameLabel.Size = UDim2.new(0.55, -10, 0.4, 0)
-    nameLabel.Position = UDim2.new(0, 15, 0, 5)
+    nameLabel.Size = UDim2.new(0.45, -15, 0.4, 0)
+    nameLabel.Position = UDim2.new(0, 65, 0, 5)
     nameLabel.BackgroundTransparency = 1
     nameLabel.Font = Enum.Font.GothamBold
-    nameLabel.TextSize = 16  -- เล็กลง
+    nameLabel.TextSize = 16
     nameLabel.TextColor3 = Color3.fromRGB(255, 150, 150)
     nameLabel.TextXAlignment = Enum.TextXAlignment.Left
-    nameLabel.TextWrapped = true  -- แก้ Overflow
+    nameLabel.TextWrapped = true
     nameLabel.Parent = f
 
-    -- Tag Label
     local tagLabel = Instance.new("TextLabel")
-    tagLabel.Size = UDim2.new(0.4, -10, 0.4, 0)
-    tagLabel.Position = UDim2.new(0.55, 0, 0, 5)
+    tagLabel.Size = UDim2.new(0.35, -15, 0.4, 0)
+    tagLabel.Position = UDim2.new(0, 65, 0, 25)
     tagLabel.BackgroundTransparency = 1
     tagLabel.Font = Enum.Font.GothamBold
-    tagLabel.TextSize = 13
+    tagLabel.TextSize = 12
     tagLabel.TextColor3 = Color3.fromRGB(255, 255, 100)
     tagLabel.TextXAlignment = Enum.TextXAlignment.Right
     tagLabel.Parent = f
 
-    -- Reasons Label (เล็กลง + Wrapped)
     local reasons = Instance.new("TextLabel")
-    reasons.Size = UDim2.new(1, -20, 0.6, 0)  -- ใหญ่ขึ้น
-    reasons.Position = UDim2.new(0, 15, 0.4, 0)
+    reasons.Size = UDim2.new(0.75, -20, 0.6, 0)
+    reasons.Position = UDim2.new(0, 65, 0.4, 0)
     reasons.BackgroundTransparency = 1
     reasons.Font = Enum.Font.Gotham
-    reasons.TextSize = 11  -- เล็กลง
+    reasons.TextSize = 11
     reasons.TextColor3 = Color3.fromRGB(255, 100, 100)
     reasons.TextXAlignment = Enum.TextXAlignment.Left
     reasons.TextYAlignment = Enum.TextYAlignment.Top
-    reasons.TextWrapped = true  -- แก้ Overflow!
+    reasons.TextWrapped = true
     reasons.Parent = f
 
-    -- Select Button
     local selectBtn = Instance.new("TextButton")
-    selectBtn.Size = UDim2.new(0, 60, 0, 30)
-    selectBtn.Position = UDim2.new(1, -70, 0.2, 0)
-    selectBtn.Text = "SELECT ⚡"
+    selectBtn.Size = UDim2.new(0, 45, 0, 25)
+    selectBtn.Position = UDim2.new(1, -95, 0.1, 0)
+    selectBtn.Text = "SEL ⚡"
     selectBtn.Font = Enum.Font.GothamBold
-    selectBtn.TextSize = 11
+    selectBtn.TextSize = 10
     selectBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     selectBtn.BackgroundColor3 = Color3.fromRGB(80, 0, 0)
     selectBtn.BorderSizePixel = 0
     selectBtn.Parent = f
 
     local selectCorner = Instance.new("UICorner")
-    selectCorner.CornerRadius = UDim.new(0, 6)
+    selectCorner.CornerRadius = UDim.new(0, 5)
     selectCorner.Parent = selectBtn
 
-    local selectStroke = Instance.new("UIStroke")
-    selectStroke.Color = Color3.fromRGB(255, 200, 0)
-    selectStroke.Thickness = 1.5
-    selectStroke.Parent = selectBtn
+    local copyBtn = Instance.new("TextButton")
+    copyBtn.Size = UDim2.new(0, 45, 0, 25)
+    copyBtn.Position = UDim2.new(1, -95, 0.45, 0)
+    copyBtn.Text = "COPY 📋"
+    copyBtn.Font = Enum.Font.GothamBold
+    copyBtn.TextSize = 10
+    copyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    copyBtn.BackgroundColor3 = Color3.fromRGB(0, 80, 0)
+    copyBtn.BorderSizePixel = 0
+    copyBtn.Parent = f
 
-    -- Hover Effects (เหมือนเดิม)
-    selectBtn.MouseEnter:Connect(function()
-        TweenService:Create(selectBtn, TweenInfo.new(0.2), {
-            BackgroundColor3 = Color3.fromRGB(120, 0, 0),
-            Size = UDim2.new(0, 65, 0, 32)
-        }):Play()
-    end)
+    local copyEntryCorner = Instance.new("UICorner")
+    copyEntryCorner.CornerRadius = UDim.new(0, 5)
+    copyEntryCorner.Parent = copyBtn
 
-    selectBtn.MouseLeave:Connect(function()
-        TweenService:Create(selectBtn, TweenInfo.new(0.2), {
-            BackgroundColor3 = Color3.fromRGB(80, 0, 0),
-            Size = UDim2.new(0, 60, 0, 30)
-        }):Play()
+    local copyEntryStroke = Instance.new("UIStroke")
+    copyEntryStroke.Color = Color3.fromRGB(0, 255, 0)
+    copyEntryStroke.Thickness = 1.5
+    copyEntryStroke.Parent = copyBtn
+
+    copyBtn.MouseButton1Click:Connect(function()
+        local success = copyToClipboard(plr.Name)
+        if success then
+            TweenService:Create(copyBtn, TweenInfo.new(0.2), {
+                BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+            }):Play()
+            copyBtn.Text = "COPIED! ✅"
+            wait(1)
+            TweenService:Create(copyBtn, TweenInfo.new(0.2), {
+                BackgroundColor3 = Color3.fromRGB(0, 80, 0)
+            }):Play()
+            copyBtn.Text = "COPY 📋"
+            
+            local flash = Instance.new("Frame")
+            flash.Size = UDim2.new(1, 0, 1, 0)
+            flash.Position = UDim2.new(0, 0, 0, 0)
+            flash.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+            flash.BackgroundTransparency = 1
+            flash.Parent = screenGui
+            
+            TweenService:Create(flash, TweenInfo.new(0.1), {BackgroundTransparency = 0.8}):Play()
+            TweenService:Create(flash, TweenInfo.new(0.2), {BackgroundTransparency = 1}):Play()
+            Debris:AddItem(flash, 0.3)
+        else
+            TweenService:Create(copyBtn, TweenInfo.new(0.2), {
+                BackgroundColor3 = Color3.fromRGB(100, 0, 0)
+            }):Play()
+            copyBtn.Text = "ERROR ❌"
+            wait(1)
+            TweenService:Create(copyBtn, TweenInfo.new(0.2), {
+                BackgroundColor3 = Color3.fromRGB(0, 80, 0)
+            }):Play()
+            copyBtn.Text = "COPY 📋"
+        end
     end)
 
     selectBtn.MouseButton1Click:Connect(function()
         selectedPlayer = plr
-        infoLabel.Text = ("🔥 Selected: %s (CONFIRMED HACKER!)"):format(plr.Name)
+        infoLabel.Text = ("🔥 Selected: %s (HACKER CONFIRMED!) 👤%s"):format(plr.Name, plr.UserId)
         
         for _, v in pairs(scrollbar:GetChildren()) do
             if v:IsA("Frame") then
@@ -349,6 +473,8 @@ local function createEntry(plr)
         tagLabel = tagLabel,
         reasonsLabel = reasons,
         selectBtn = selectBtn,
+        copyBtn = copyBtn,
+        avatarFrame = avatarFrame
     }
 end
 
@@ -360,7 +486,7 @@ local function refreshCanvas()
             total = total + v.AbsoluteSize.Y + uiList.Padding.Offset
         end
     end
-    scrollbar.CanvasSize = UDim2.new(0, 0, 0, math.max(total, 200))  -- Minimum height
+    scrollbar.CanvasSize = UDim2.new(0, 0, 0, math.max(total, 200))
 end
 
 local function removeEntry(plr)
@@ -369,10 +495,9 @@ local function removeEntry(plr)
             BackgroundTransparency = 1,
             Size = UDim2.new(1, 0, 0, 0)
         }):Play()
-        game:GetService("Debris"):AddItem(suspicious[plr].gui.frame, 0.5)
+        Debris:AddItem(suspicious[plr].gui.frame, 0.5)
     end
     suspicious[plr] = nil
-    confirmationTimers[plr] = nil
     if selectedPlayer == plr then
         selectedPlayer = nil
         infoLabel.Text = "No confirmed hackers 🔍"
@@ -380,23 +505,48 @@ local function removeEntry(plr)
     refreshCanvas()
 end
 
--- SMART SUSPICION SYSTEM (ต้องยืนยันนาน 1.5 วินาที)
+-- [จบส่วนที่ 2/3 - รอส่วนที่ 3]
+print("📜 PART 2/3 - Functions + Avatar โหลดแล้ว! รอ PART 3...")
+-- 🌑 DETECT HACKING v2.2 - AVATAR + COPY 🔰 [PART 3/3]
+-- Detection Logic + UI Events
+
+-- Detection State
+local state = {}
+local confirmationTimers = {}
+
+-- Ground Detection
+local function distanceToGround(rootPart)
+    local origin = rootPart.Position
+    local params = RaycastParams.new()
+    params.FilterDescendantsInstances = {rootPart.Parent}
+    params.FilterType = Enum.RaycastFilterType.Blacklist
+    local result = workspace:Raycast(origin, Vector3.new(0, -200, 0), params)
+    if result and result.Position then
+        local distance = (origin - result.Position).Magnitude
+        local hitPart = result.Instance
+        if hitPart and (hitPart.Name:lower():find("tree") or hitPart.Name:lower():find("wood") or 
+                        hitPart.Size.Y < 5) then
+            return 0
+        end
+        return distance
+    else
+        return math.huge
+    end
+end
+
 local function setSuspicion(plr, reason)
     local currentTime = tick()
     
-    -- เริ่มนับเวลา Confirmation
     if not confirmationTimers[plr] then
         confirmationTimers[plr] = currentTime
     end
     
     local suspicionTime = currentTime - confirmationTimers[plr]
     
-    -- ยังไม่ถึงเวลา 1.5 วินาที = ไม่แสดงใน GUI
     if suspicionTime < MIN_CONFIRMATION_TIME then
         return false
     end
     
-    -- ถึงเวลาแล้ว = แสดงใน GUI
     local rec = suspicious[plr]
     if not rec then
         rec = {
@@ -410,7 +560,7 @@ local function setSuspicion(plr, reason)
     rec.reasons[reason] = true
 
     local displayName = plr.DisplayName or plr.Name
-    rec.gui.nameLabel.Text = "💀 " .. displayName .. "  (" .. plr.Name .. ")"
+    rec.gui.nameLabel.Text = "💀 " .. displayName .. "\n(ID: " .. plr.UserId .. ")"
     
     local reasonText = {}
     for k, _ in pairs(rec.reasons) do
@@ -440,7 +590,6 @@ local function clearReason(plr, reason)
     end
     
     if not any then
-        -- ถ้าไม่มี Reason แล้ว รอ 3 วินาทีแล้วค่อยลบ (ป้องกัน Blink)
         spawn(function()
             wait(3)
             if not suspicious[plr] or not next(suspicious[plr].reasons) then
@@ -457,29 +606,7 @@ local function clearReason(plr, reason)
     end
 end
 
--- SMART GROUND DETECTION (ไม่นับต้นไม้!)
-local function distanceToGround(rootPart)
-    local origin = rootPart.Position
-    local params = RaycastParams.new()
-    params.FilterDescendantsInstances = {rootPart.Parent}
-    params.FilterType = Enum.RaycastFilterType.Blacklist
-    local result = workspace:Raycast(origin, Vector3.new(0, -200, 0), params)
-    if result and result.Position then
-        local distance = (origin - result.Position).Magnitude
-        -- เช็คว่าเจอ "พื้น" จริงหรือแค่ต้นไม้
-        local hitPart = result.Instance
-        if hitPart and (hitPart.Name:lower():find("tree") or hitPart.Name:lower():find("wood") or 
-                        hitPart.Size.Y < 5) then
-            -- เจอต้นไม้หรือวัตถุเล็ก = ไม่นับเป็น Fly
-            return 0
-        end
-        return distance
-    else
-        return math.huge
-    end
-end
-
--- Main Detection Loop (SMART VERSION)
+-- Main Detection Loop
 spawn(function()
     while true do
         local players = Players:GetPlayers()
@@ -503,32 +630,29 @@ spawn(function()
                     end
                     local st = state[plr]
 
-                    -- SPEED CHECK (ต้องเกิน 3 ครั้งติดต่อกัน)
                     local vel = hrp.Velocity
                     local horizSpeed = Vector3.new(vel.X, 0, vel.Z).Magnitude
                     if horizSpeed > SPEED_THRESHOLD then
                         st.speedViolations = (st.speedViolations or 0) + 1
-                        if st.speedViolations >= 3 then  -- ต้องเกิน 3 ครั้ง
-                            setSuspicion(plr, "🚀 CONFIRMED SPEED HACK: " .. math.floor(horizSpeed) .. " studs/s")
+                        if st.speedViolations >= 3 then
+                            setSuspicion(plr, "🚀 SPEED HACK: " .. math.floor(horizSpeed) .. " studs/s")
                         end
                     else
                         st.speedViolations = 0
-                        clearReason(plr, "🚀 CONFIRMED SPEED HACK: " .. math.floor(horizSpeed) .. " studs/s")
+                        clearReason(plr, "🚀 SPEED HACK: " .. math.floor(horizSpeed) .. " studs/s")
                     end
 
-                    -- GROUND DISTANCE CHECK (ไม่นับต้นไม้ + ต้องลอยนาน)
                     local dist = distanceToGround(hrp)
-                    if dist > GROUND_DISTANCE_THRESHOLD and dist < 100 then  -- ไม่นับลอยไกลเกิน
+                    if dist > GROUND_DISTANCE_THRESHOLD and dist < 100 then
                         st.groundDistanceTimer = (st.groundDistanceTimer or 0) + UPDATE_RATE
                         if st.groundDistanceTimer >= FLY_SECONDS_THRESHOLD then
-                            setSuspicion(plr, "🛸 CONFIRMED FLY HACK: " .. math.floor(dist) .. " studs")
+                            setSuspicion(plr, "🛸 FLY HACK: " .. math.floor(dist) .. " studs")
                         end
                     else
                         st.groundDistanceTimer = 0
-                        clearReason(plr, "🛸 CONFIRMED FLY HACK: " .. math.floor(dist) .. " studs")
+                        clearReason(plr, "🛸 FLY HACK: " .. math.floor(dist) .. " studs")
                     end
 
-                    -- JUMP HEIGHT CHECK (ต้องกระโดดสูงเกิน 2 ครั้ง)
                     if humanoid.FloorMaterial == Enum.Material.Air then
                         if not st.inAir then
                             st.inAir = true
@@ -545,12 +669,12 @@ spawn(function()
                             local jumpHeight = st.maxY - (st.jumpStartY or st.maxY)
                             if jumpHeight >= JUMP_HEIGHT_THRESHOLD then
                                 st.jumpViolations = (st.jumpViolations or 0) + 1
-                                if st.jumpViolations >= 2 then  -- ต้องเกิน 2 ครั้ง
-                                    setSuspicion(plr, "🦘 CONFIRMED JUMP HACK: " .. math.floor(jumpHeight) .. " studs")
+                                if st.jumpViolations >= 2 then
+                                    setSuspicion(plr, "🦘 JUMP HACK: " .. math.floor(jumpHeight) .. " studs")
                                 end
                             else
                                 st.jumpViolations = 0
-                                clearReason(plr, "🦘 CONFIRMED JUMP HACK: " .. math.floor(jumpHeight) .. " studs")
+                                clearReason(plr, "🦘 JUMP HACK: " .. math.floor(jumpHeight) .. " studs")
                             end
                         end
                         st.inAir = false
@@ -563,14 +687,12 @@ spawn(function()
                         confirmedHackers = confirmedHackers + 1
                     end
                 else
-                    -- Cleanup
                     if state[plr] then
                         state[plr] = nil
                     end
                     removeEntry(plr)
                 end
             else
-                -- Player left
                 if state[plr] then
                     state[plr] = nil
                 end
@@ -578,16 +700,14 @@ spawn(function()
             end
         end
 
-        -- Update Info Label
         if confirmedHackers == 0 then
             TweenService:Create(infoLabel, TweenInfo.new(0.5), {TextColor3 = Color3.fromRGB(150, 150, 150)}):Play()
             infoLabel.Text = "No confirmed hackers detected 🔍\n(Waiting for confirmation...)"
         else
             TweenService:Create(infoLabel, TweenInfo.new(0.3), {TextColor3 = Color3.fromRGB(255, 100, 100)}):Play()
-            infoLabel.Text = ("🔥 CONFIRMED HACKERS: %d players! 💀\n(Smart detection active)"):format(confirmedHackers)
+            infoLabel.Text = ("🔥 CONFIRMED HACKERS: %d players! 💀\n👤 Click COPY to get names!"):format(confirmedHackers)
         end
 
-        -- Cleanup disconnected players
         for plr, _ in pairs(suspicious) do
             if not table.find(Players:GetPlayers(), plr) then
                 removeEntry(plr)
@@ -598,7 +718,52 @@ spawn(function()
     end
 end)
 
--- Camera Follow (เหมือนเดิม)
+-- Copy All Button Logic
+local hackerNames = ""
+copyAllBtn.MouseButton1Click:Connect(function()
+    hackerNames = ""
+    local count = 0
+    
+    for plr, _ in pairs(suspicious) do
+        if plr and plr.Name then
+            hackerNames = hackerNames .. plr.Name .. " (" .. plr.UserId .. ")\n"
+            count = count + 1
+        end
+    end
+    
+    if count == 0 then
+        infoLabel.Text = "ไม่มีแฮกเกอร์ให้คัดลอก! 😈"
+        return
+    end
+    
+    local success = copyToClipboard(hackerNames)
+    if success then
+        TweenService:Create(copyAllBtn, TweenInfo.new(0.2), {
+            BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+        }):Play()
+        copyAllBtn.Text = "COPIED! ✅"
+        infoLabel.Text = ("📋 Copied %d hacker names!\n(Click individual COPY for single names)"):format(count)
+        
+        wait(1.5)
+        TweenService:Create(copyAllBtn, TweenInfo.new(0.2), {
+            BackgroundColor3 = Color3.fromRGB(0, 100, 0)
+        }):Play()
+        copyAllBtn.Text = "COPY 📋"
+    else
+        TweenService:Create(copyAllBtn, TweenInfo.new(0.2), {
+            BackgroundColor3 = Color3.fromRGB(100, 0, 0)
+        }):Play()
+        copyAllBtn.Text = "ERROR ❌"
+        infoLabel.Text = "❌ Copy failed! Check your exploit."
+        wait(1.5)
+        TweenService:Create(copyAllBtn, TweenInfo.new(0.2), {
+            BackgroundColor3 = Color3.fromRGB(0, 100, 0)
+        }):Play()
+        copyAllBtn.Text = "COPY 📋"
+    end
+end)
+
+-- Camera Follow
 local camera = workspace.CurrentCamera
 local previousCameraSubject = camera.CameraSubject
 
@@ -632,11 +797,10 @@ lookBtn.MouseButton1Click:Connect(function()
     if selectedPlayer and selectedPlayer.Character and selectedPlayer.Character.Parent then
         startFollowing(selectedPlayer)
     else
-        -- Find first confirmed hacker
         for plr, rec in pairs(suspicious) do
             selectedPlayer = plr
             startFollowing(plr)
-            infoLabel.Text = ("🔥 Tracking: %s (HACKER CONFIRMED!)"):format(plr.Name)
+            infoLabel.Text = ("🔥 Tracking: %s (UserID: %s)"):format(plr.Name, plr.UserId)
             break
         end
         if not cameraFollowing then
@@ -645,21 +809,71 @@ lookBtn.MouseButton1Click:Connect(function()
     end
 end)
 
-lookBtn.MouseEnter:Connect(function()
-    TweenService:Create(lookBtn, TweenInfo.new(0.2), {
-        BackgroundColor3 = Color3.fromRGB(150, 0, 0),
-        Size = UDim2.new(0, 105, 0, 42)
-    }):Play()
-end)
+-- Mini Toggle System
+local function createMiniToggle()
+    if miniToggle then return end
+    
+    miniToggle = Instance.new("TextButton")
+    miniToggle.Name = "MiniDetectToggle"
+    miniToggle.Size = UDim2.new(0, 70, 0, 30)
+    miniToggle.Position = UDim2.new(0, 10, 0, 10)
+    miniToggle.Text = "แสดง 👁️"
+    miniToggle.Font = Enum.Font.GothamBold
+    miniToggle.TextSize = 12
+    miniToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    miniToggle.BackgroundColor3 = Color3.fromRGB(50, 0, 0)
+    miniToggle.BorderSizePixel = 0
+    miniToggle.Parent = screenGui
+    miniToggle.Active = true
+    miniToggle.Draggable = true
 
-lookBtn.MouseLeave:Connect(function()
-    TweenService:Create(lookBtn, TweenInfo.new(0.2), {
-        BackgroundColor3 = Color3.fromRGB(100, 0, 0),
-        Size = UDim2.new(0, 100, 0, 40)
-    }):Play()
-end)
+    local miniCorner = Instance.new("UICorner")
+    miniCorner.CornerRadius = UDim.new(0, 8)
+    miniCorner.Parent = miniToggle
 
--- Toggle Button Logic
+    local miniStroke = Instance.new("UIStroke")
+    miniStroke.Color = Color3.fromRGB(255, 0, 0)
+    miniStroke.Thickness = 2
+    miniStroke.Parent = miniToggle
+
+    miniToggle.MouseEnter:Connect(function()
+        TweenService:Create(miniToggle, TweenInfo.new(0.2), {
+            BackgroundColor3 = Color3.fromRGB(80, 0, 0),
+            Size = UDim2.new(0, 75, 0, 32)
+        }):Play()
+        TweenService:Create(miniStroke, TweenInfo.new(0.2), {Thickness = 3}):Play()
+    end)
+
+    miniToggle.MouseLeave:Connect(function()
+        TweenService:Create(miniToggle, TweenInfo.new(0.2), {
+            BackgroundColor3 = Color3.fromRGB(50, 0, 0),
+            Size = UDim2.new(0, 70, 0, 30)
+        }):Play()
+        TweenService:Create(miniStroke, TweenInfo.new(0.2), {Thickness = 2}):Play()
+    end)
+
+    miniToggle.MouseButton1Click:Connect(function()
+        mainFrame.Visible = true
+        toggleBtn.Text = "ซ่อน 🔒"
+        miniToggle:Destroy()
+        miniToggle = nil
+    end)
+
+    spawn(function()
+        while miniToggle and miniToggle.Parent do
+            TweenService:Create(miniStroke, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                Transparency = 0.2
+            }):Play()
+            wait(1.5)
+            TweenService:Create(miniStroke, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                Transparency = 0.5
+            }):Play()
+            wait(1.5)
+        end
+    end)
+end
+
+-- Toggle Logic
 local hidden = false
 toggleBtn.MouseButton1Click:Connect(function()
     hidden = not hidden
@@ -667,38 +881,57 @@ toggleBtn.MouseButton1Click:Connect(function()
     toggleBtn.Text = hidden and "แสดง 👁️" or "ซ่อน 🔒"
     
     if hidden then
-        if not playerGui:FindFirstChild("DetectShowBtn") then
-            local showBtn = Instance.new("TextButton")
-            showBtn.Name = "DetectShowBtn"
-            showBtn.Size = UDim2.new(0, 90, 0, 35)
-            showBtn.Position = UDim2.new(0, 10, 0.12, 0)
-            showBtn.Text = "🔰 DETECT"
-            showBtn.Font = Enum.Font.GothamBold
-            showBtn.TextSize = 14
-            showBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-            showBtn.BackgroundColor3 = Color3.fromRGB(50, 0, 0)
-            showBtn.BorderSizePixel = 0
-            showBtn.Parent = playerGui
-            
-            local showCorner = Instance.new("UICorner")
-            showCorner.CornerRadius = UDim.new(0, 8)
-            showCorner.Parent = showBtn
-            
-            local showStroke = Instance.new("UIStroke")
-            showStroke.Color = Color3.fromRGB(255, 0, 0)
-            showStroke.Thickness = 2
-            showStroke.Parent = showBtn
-            
-            showBtn.MouseButton1Click:Connect(function()
-                hidden = false
-                mainFrame.Visible = true
-                showBtn:Destroy()
-            end)
-        end
+        createMiniToggle()
     else
-        local b = playerGui:FindFirstChild("DetectShowBtn")
-        if b then b:Destroy() end
+        if miniToggle then
+            miniToggle:Destroy()
+            miniToggle = nil
+        end
     end
+end)
+
+toggleBtn.MouseEnter:Connect(function()
+    TweenService:Create(toggleBtn, TweenInfo.new(0.2), {
+        BackgroundColor3 = Color3.fromRGB(120, 0, 0),
+        Size = UDim2.new(0, 95, 0, 38)
+    }):Play()
+end)
+
+toggleBtn.MouseLeave:Connect(function()
+    TweenService:Create(toggleBtn, TweenInfo.new(0.2), {
+        BackgroundColor3 = Color3.fromRGB(80, 0, 0),
+        Size = UDim2.new(0, 90, 0, 35)
+    }):Play()
+end)
+
+-- Look Button Effects
+lookBtn.MouseEnter:Connect(function()
+    TweenService:Create(lookBtn, TweenInfo.new(0.2), {
+        BackgroundColor3 = Color3.fromRGB(150, 0, 0),
+        Size = UDim2.new(0, 75, 0, 42)
+    }):Play()
+end)
+
+lookBtn.MouseLeave:Connect(function()
+    TweenService:Create(lookBtn, TweenInfo.new(0.2), {
+        BackgroundColor3 = Color3.fromRGB(100, 0, 0),
+        Size = UDim2.new(0, 70, 0, 40)
+    }):Play()
+end)
+
+-- Copy All Button Effects
+copyAllBtn.MouseEnter:Connect(function()
+    TweenService:Create(copyAllBtn, TweenInfo.new(0.2), {
+        BackgroundColor3 = Color3.fromRGB(0, 150, 0),
+        Size = UDim2.new(0, 75, 0, 42)
+    }):Play()
+end)
+
+copyAllBtn.MouseLeave:Connect(function()
+    TweenService:Create(copyAllBtn, TweenInfo.new(0.2), {
+        BackgroundColor3 = Color3.fromRGB(0, 100, 0),
+        Size = UDim2.new(0, 70, 0, 40)
+    }):Play()
 end)
 
 -- Cleanup
@@ -709,8 +942,11 @@ Players.PlayerRemoving:Connect(function(plr)
     removeEntry(plr)
 end)
 
+-- Initial Setup
 refreshCanvas()
 wait(1)
-print("🌑 SMART HACK DETECTOR v2.1 พร้อมใช้งาน!")
-print("🧠 ระบบอัจฉริยะ: ไม่ False Positive จากต้นไม้แล้ว!")
-print("⏱️ ต้องสงสัยนาน 1.5 วินาทีถึงจะขึ้น GUI!")
+print("🌑 HACK DETECTOR v2.2 พร้อมล่าแล้ว!")
+print("📜 PART 3/3 โหลดเสร็จ! GUI สุดเท่พร้อมใช้งาน!")
+print("👤 Avatar System: แสดงรูป Hacker!")
+print("📋 Copy System: คัดลอกชื่อ 1 คลิก!")
+print("🎮 Mini Toggle: ปุ่มลอยลากได้!")
