@@ -1,10 +1,10 @@
--- 🌑 ADVANCED TOOL GUI v2.0 - DARK HUNTER EDITION 🔥 [PART 1/2]
+-- 🌑 BOOMBOX | TOUx1🎉 v2.1 - BUG FIX EDITION 🔥 [PART 1/2]
 local player = game:GetService("Players").LocalPlayer
 local TweenService = game:GetService("TweenService")
 local SoundService = game:GetService("SoundService")
 
 local gui = Instance.new("ScreenGui")
-gui.Name = "AdvancedToolGUI"
+gui.Name = "BOOMBOX_TOUx1"  -- ชื่อใหม่!
 gui.IgnoreGuiInset = true
 gui.ResetOnSpawn = false
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
@@ -30,16 +30,18 @@ clickSound.SoundId = "rbxassetid://131961136"
 clickSound.Volume = 0.2
 clickSound.RollOffMode = Enum.RollOffMode.Linear
 
--- 🎮 Toggle Button สุดเท่
+-- 🎮 Toggle Button สุดเท่ (แก้บั๊ก + ลากได้!)
 local toggleBtn = Instance.new("TextButton")
-toggleBtn.Size = UDim2.new(0, 80, 0, 40)
-toggleBtn.Position = UDim2.new(0.5, -40, 0.5, -20)
-toggleBtn.Text = "🛠️ TOOLS"
+toggleBtn.Size = UDim2.new(0, 80, 0, 40)  -- ขนาดคงที่!
+toggleBtn.Position = UDim2.new(0, 10, 0, 10)  -- มุมซ้ายบน (ลากได้)
+toggleBtn.Text = "🎉 TOUx1"
 toggleBtn.BackgroundColor3 = theme.accent
 toggleBtn.TextColor3 = theme.text
 toggleBtn.TextScaled = true
 toggleBtn.Font = Enum.Font.GothamBold
 toggleBtn.Parent = gui
+toggleBtn.Active = true  -- เปิดใช้งานลาก
+toggleBtn.Draggable = true  -- ลากได้! 🎮
 
 local toggleCorner = Instance.new("UICorner")
 toggleCorner.CornerRadius = UDim.new(0, 12)
@@ -51,7 +53,10 @@ toggleStroke.Thickness = 3
 toggleStroke.Transparency = 0.3
 toggleStroke.Parent = toggleBtn
 
--- Pulse Animation
+-- แก้บั๊ก: เก็บขนาดเริ่มต้นไว้ (ไม่ให้ใหญ่ขึ้น)
+local originalToggleSize = toggleBtn.Size
+
+-- Pulse Animation (ไม่กระทบขนาด)
 local pulseInfo = TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
 local pulseTween = TweenService:Create(toggleStroke, pulseInfo, {Transparency = 0.7})
 pulseTween:Play()
@@ -88,7 +93,7 @@ gradient.Color = ColorSequence.new{
 gradient.Rotation = 45
 gradient.Parent = frame
 
--- Title Bar
+-- Title Bar (ชื่อใหม่!)
 local titleBar = Instance.new("Frame")
 titleBar.Size = UDim2.new(1, 0, 0, 45)
 titleBar.Position = UDim2.new(0, 0, 0, 0)
@@ -109,7 +114,7 @@ local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(1, -100, 1, 0)
 titleLabel.Position = UDim2.new(0, 15, 0, 0)
 titleLabel.BackgroundTransparency = 1
-titleLabel.Text = "🔥 ADVANCED TOOLS v2.0 💀"
+titleLabel.Text = "🎉 BOOMBOX | TOUx1 🎉"  -- ชื่อใหม่!
 titleLabel.TextColor3 = theme.accent
 titleLabel.TextScaled = true
 titleLabel.Font = Enum.Font.GothamBold
@@ -212,8 +217,7 @@ for i, name in ipairs(tabs) do
     button.MouseEnter:Connect(function()
         if i ~= currentTab then
             TweenService:Create(button, TweenInfo.new(0.2), {
-                BackgroundColor3 = Color3.fromRGB(90, 0, 0),
-                Size = UDim2.new(1/#tabs * 0.9, 5, 1, 0)
+                BackgroundColor3 = Color3.fromRGB(90, 0, 0)
             }):Play()
         end
     end)
@@ -221,8 +225,7 @@ for i, name in ipairs(tabs) do
     button.MouseLeave:Connect(function()
         if i ~= currentTab then
             TweenService:Create(button, TweenInfo.new(0.2), {
-                BackgroundColor3 = Color3.fromRGB(70, 0, 0),
-                Size = UDim2.new(1/#tabs * 0.9, 0, 1, 0)
+                BackgroundColor3 = Color3.fromRGB(70, 0, 0)
             }):Play()
         end
     end)
@@ -240,7 +243,7 @@ contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
 contentLayout.Padding = UDim.new(0, 10)
 contentLayout.Parent = contentFrame
 
--- Tab Frames Setup
+-- Tab Frames
 local dupeFrame = Instance.new("ScrollingFrame")
 dupeFrame.Name = "Dupe"
 dupeFrame.Size = UDim2.new(1, 0, 1, 0)
@@ -272,9 +275,9 @@ settingsFrame.Parent = contentFrame
 tabFrames["Settings ⚙️"] = settingsFrame
 
 -- [จบส่วนที่ 1/2 - รอส่วนที่ 2]
-print("📜 PART 1/2 - GUI Structure โหลดแล้ว! รอ PART 2...")
--- 🌑 ADVANCED TOOL GUI v2.0 - DARK HUNTER EDITION 🔥 [PART 2/2]
--- Content + Logic + Effects
+print("📜 PART 1/2 - BUG FIX + DRAGGABLE โหลดแล้ว! รอ PART 2...")
+-- 🌑 BOOMBOX | TOUx1🎉 v2.1 - BUG FIX EDITION 🔥 [PART 2/2]
+-- Content + Logic (แก้บั๊กขนาดปุ่ม)
 
 -- ✨ Dupe Tab Content
 local dupeTitle = Instance.new("TextLabel")
@@ -408,7 +411,7 @@ playStroke.Color = Color3.fromRGB(255, 0, 0)
 playStroke.Thickness = 3
 playStroke.Parent = playButton
 
--- ⚙️ Settings Tab Content
+-- ⚙️ Settings Tab
 local settingsTitle = Instance.new("TextLabel")
 settingsTitle.Size = UDim2.new(1, 0, 0, 30)
 settingsTitle.BackgroundTransparency = 1
@@ -461,7 +464,7 @@ end
 
 createParticles(frame)
 
--- Toggle Function
+-- Toggle Function (แก้บั๊กขนาด)
 local function toggleFrame()
     clickSound:Play()
     if frame.Visible then
@@ -471,7 +474,8 @@ local function toggleFrame()
             task.wait(0.02)
         end
         frame.Visible = false
-        toggleBtn.Text = "🛠️ TOOLS"
+        toggleBtn.Text = "🎉 TOUx1"  -- ชื่อปุ่มเมื่อปิด
+        toggleBtn.Size = originalToggleSize  -- คืนขนาดเดิม!
         TweenService:Create(toggleBtn, TweenInfo.new(0.3), {BackgroundColor3 = theme.accent}):Play()
     else
         frame.Visible = true
@@ -481,7 +485,8 @@ local function toggleFrame()
             frame.BackgroundTransparency = 1 - (i * 0.1)
             task.wait(0.02)
         end
-        toggleBtn.Text = "❌ CLOSE"
+        toggleBtn.Text = "❌ CLOSE"  -- ชื่อปุ่มเมื่อเปิด
+        toggleBtn.Size = originalToggleSize  -- คงขนาด!
         TweenService:Create(toggleBtn, TweenInfo.new(0.3), {BackgroundColor3 = theme.danger}):Play()
     end
 end
@@ -494,31 +499,57 @@ closeBtn.MouseButton1Click:Connect(function()
     toggleFrame()
 end)
 
--- Button Hover Effects
-local function addHoverEffect(button, hoverColor, normalColor)
+-- แก้บั๊ก Hover Effect (ไม่เปลี่ยนขนาด!)
+local function addSafeHoverEffect(button, hoverColor, normalColor)
+    local originalSize = button.Size  -- เก็บขนาดเดิม
+    
     button.MouseEnter:Connect(function()
         TweenService:Create(button, TweenInfo.new(0.2), {
-            BackgroundColor3 = hoverColor,
-            Size = button.Size + UDim2.new(0, 5, 0, 3)
+            BackgroundColor3 = hoverColor
         }):Play()
     end)
     
     button.MouseLeave:Connect(function()
         TweenService:Create(button, TweenInfo.new(0.2), {
-            BackgroundColor3 = normalColor,
-            Size = button.Size
+            BackgroundColor3 = normalColor
         }):Play()
     end)
 end
 
-addHoverEffect(dupeButton, Color3.fromRGB(255, 200, 0), theme.accent)
-addHoverEffect(playButton, Color3.fromRGB(255, 200, 0), theme.accent)
-addHoverEffect(stealButton, Color3.fromRGB(255, 50, 50), theme.danger)
-addHoverEffect(dropButton, Color3.fromRGB(255, 50, 50), theme.danger)
-addHoverEffect(toggleBtn, Color3.fromRGB(255, 200, 0), theme.accent)
-addHoverEffect(closeBtn, Color3.fromRGB(255, 50, 50), theme.danger)
+-- Apply Safe Hover Effects (แก้บั๊ก!)
+addSafeHoverEffect(dupeButton, Color3.fromRGB(255, 200, 0), theme.accent)
+addSafeHoverEffect(playButton, Color3.fromRGB(255, 200, 0), theme.accent)
+addSafeHoverEffect(stealButton, Color3.fromRGB(255, 50, 50), theme.danger)
+addSafeHoverEffect(dropButton, Color3.fromRGB(255, 50, 50), theme.danger)
 
--- Dupe Logic
+-- Toggle Button Safe Hover (แก้บั๊ก!)
+toggleBtn.MouseEnter:Connect(function()
+    TweenService:Create(toggleBtn, TweenInfo.new(0.2), {
+        BackgroundColor3 = Color3.fromRGB(255, 200, 0)
+    }):Play()
+end)
+
+toggleBtn.MouseLeave:Connect(function()
+    local targetColor = frame.Visible and theme.danger or theme.accent
+    TweenService:Create(toggleBtn, TweenInfo.new(0.2), {
+        BackgroundColor3 = targetColor
+    }):Play()
+end)
+
+-- Close Button Safe Hover
+closeBtn.MouseEnter:Connect(function()
+    TweenService:Create(closeBtn, TweenInfo.new(0.2), {
+        BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+    }):Play()
+end)
+
+closeBtn.MouseLeave:Connect(function()
+    TweenService:Create(closeBtn, TweenInfo.new(0.2), {
+        BackgroundColor3 = theme.danger
+    }):Play()
+end)
+
+-- Dupe Logic (เหมือนเดิม)
 dupeButton.MouseButton1Click:Connect(function()
     clickSound:Play()
     local amount = tonumber(amountBox.Text)
@@ -719,37 +750,8 @@ idBox.FocusLost:Connect(function()
     TweenService:Create(idBox, TweenInfo.new(0.2), {BackgroundColor3 = theme.background}):Play()
 end)
 
--- Toggle Effects
-toggleBtn.MouseEnter:Connect(function()
-    TweenService:Create(toggleBtn, TweenInfo.new(0.2), {
-        Size = UDim2.new(0, 85, 0, 42),
-        BackgroundColor3 = Color3.fromRGB(255, 200, 0)
-    }):Play()
-end)
-
-toggleBtn.MouseLeave:Connect(function()
-    TweenService:Create(toggleBtn, TweenInfo.new(0.2), {
-        Size = UDim2.new(0, 80, 0, 40),
-        BackgroundColor3 = theme.accent
-    }):Play()
-end)
-
-closeBtn.MouseEnter:Connect(function()
-    TweenService:Create(closeBtn, TweenInfo.new(0.2), {
-        Size = UDim2.new(0, 38, 0, 38),
-        BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-    }):Play()
-end)
-
-closeBtn.MouseLeave:Connect(function()
-    TweenService:Create(closeBtn, TweenInfo.new(0.2), {
-        Size = UDim2.new(0, 35, 0, 35),
-        BackgroundColor3 = theme.danger
-    }):Play()
-end)
-
 -- Welcome Message
-print("🌑 ADVANCED TOOL GUI v2.0 พร้อมล่าแล้ว!")
-print("📜 PART 2/2 โหลดเสร็จ! GUI สุดเท่พร้อมใช้งาน!")
-print("🔥 ธีมแดง-ดำ + Particle Effects!")
-print("🛠️ กดปุ่ม TOOLS เพื่อเปิด GUI!")
+print("🎉 BOOMBOX | TOUx1🎉 v2.1 พร้อมล่าแล้ว!")
+print("📜 PART 2/2 โหลดเสร็จ! GUI แก้บั๊กแล้ว!")
+print("🔧 แก้: ปุ่มไม่ใหญ่ขึ้น + ลากได้ + ชื่อใหม่!")
+print("🛠️ ลากปุ่ม TOUx1 ไปตรงที่ต้องการได้!")
