@@ -22,7 +22,7 @@ local theme = {
 -- 🌐 Language System (ใหม่!)
 local currentLanguage = "ไทย"  -- เริ่มต้นเป็นไทย
 local languages = {
-    ไทย = {
+    ["ไทย"] = {  -- แก้ไข: เพิ่มเครื่องหมายคำพูดเพื่อให้เป็นสตริง
         toggle = "🎉 TOUx1",
         close = "❌ ปิด",
         title = "🎉 BOOMBOX | TOUx1 🎉",
@@ -48,7 +48,7 @@ local languages = {
         errorID = "ใส่ ID ที่ถูกต้อง!",
         noHackers = "ไม่มีแฮกเกอร์ให้คัดลอก! 😈"
     },
-    English = {
+    ["English"] = {  -- แก้ไข: เพิ่มเครื่องหมายคำพูดเพื่อให้เป็นสตริง
         toggle = "🎉 TOUx1",
         close = "❌ Close",
         title = "🎉 BOOMBOX | TOUx1 🎉",
