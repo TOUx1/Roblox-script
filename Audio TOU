@@ -1,4 +1,4 @@
--- 🌑 BOOMBOX | TOUx1🎉 v2.2 - MULTI LANGUAGE 🔥 [PART 1/3]
+-- 🌑 BOOMBOX | TOUx1🎉 v2.2 - MULTI LANGUAGE 🔥 [PART 1/2]
 local player = game:GetService("Players").LocalPlayer
 local TweenService = game:GetService("TweenService")
 local SoundService = game:GetService("SoundService")
@@ -10,7 +10,7 @@ gui.ResetOnSpawn = false
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 gui.Parent = player:WaitForChild("PlayerGui")
 
--- 🎨 Theme
+-- 🎨 Dark Red-Gold Theme
 local theme = {
     background = Color3.fromRGB(25, 0, 0),
     accent = Color3.fromRGB(255, 150, 0),
@@ -19,8 +19,8 @@ local theme = {
     success = Color3.fromRGB(0, 150, 0)
 }
 
--- 🌐 Language System
-local currentLanguage = "ไทย"
+-- 🌐 Language System (ใหม่!)
+local currentLanguage = "ไทย"  -- เริ่มต้นเป็นไทย
 local languages = {
     ไทย = {
         toggle = "🎉 TOUx1",
@@ -45,7 +45,8 @@ local languages = {
         statusDropped = "📦 วาง Tool แล้ว!",
         statusPlaying = "🎶 กำลังเล่น Audio ID:",
         errorAmount = "ใส่จำนวนที่ถูกต้อง!",
-        errorID = "ใส่ ID ที่ถูกต้อง!"
+        errorID = "ใส่ ID ที่ถูกต้อง!",
+        noHackers = "ไม่มีแฮกเกอร์ให้คัดลอก! 😈"
     },
     English = {
         toggle = "🎉 TOUx1",
@@ -70,36 +71,73 @@ local languages = {
         statusDropped = "📦 Tool Dropped!",
         statusPlaying = "🎶 Playing Audio ID:",
         errorAmount = "Enter valid amount!",
-        errorID = "Enter valid ID!"
+        errorID = "Enter valid ID!",
+        noHackers = "No hackers to copy! 😈"
     }
 }
 
+-- ฟังก์ชันเปลี่ยนภาษา (ใหม่!)
 local function setLanguage(lang)
     currentLanguage = lang
     
-    if titleLabel then titleLabel.Text = languages[lang].title end
-    if dupeTitle then dupeTitle.Text = languages[lang].dupeTitle end
-    if amountBox then amountBox.PlaceholderText = languages[lang].amountPlaceholder end
-    if dupeButton then dupeButton.Text = languages[lang].startDupe end
-    if stealButton then stealButton.Text = languages[lang].stealTool end
-    if dropButton then dropButton.Text = languages[lang].dropTool end
-    if massTitle then massTitle.Text = languages[lang].massPlayTitle end
-    if idBox then idBox.PlaceholderText = languages[lang].idPlaceholder end
-    if playButton then playButton.Text = languages[lang].massPlayAudio end
-    if settingsTitle then settingsTitle.Text = languages[lang].settingsTitle end
-    if statusLabel then statusLabel.Text = languages[lang].statusReady end
+    -- เปลี่ยนข้อความทั้งหมด
+    if titleLabel then
+        titleLabel.Text = languages[lang].title
+    end
+    
+    if dupeTitle then
+        dupeTitle.Text = languages[lang].dupeTitle
+    end
+    
+    if amountBox then
+        amountBox.PlaceholderText = languages[lang].amountPlaceholder
+    end
+    
+    if dupeButton then
+        dupeButton.Text = languages[lang].startDupe
+    end
+    
+    if stealButton then
+        stealButton.Text = languages[lang].stealTool
+    end
+    
+    if dropButton then
+        dropButton.Text = languages[lang].dropTool
+    end
+    
+    if massTitle then
+        massTitle.Text = languages[lang].massPlayTitle
+    end
+    
+    if idBox then
+        idBox.PlaceholderText = languages[lang].idPlaceholder
+    end
+    
+    if playButton then
+        playButton.Text = languages[lang].massPlayAudio
+    end
+    
+    if settingsTitle then
+        settingsTitle.Text = languages[lang].settingsTitle
+    end
+    
+    if statusLabel then
+        statusLabel.Text = languages[lang].statusReady
+    end
     
     print("🌐 เปลี่ยนภาษาเป็น: " .. (lang == "ไทย" and "ไทย" or "English"))
 end
 
--- 🔊 Sounds
+-- 🔊 Sound Effects
 local openSound = Instance.new("Sound", gui)
 openSound.SoundId = "rbxassetid://131961136"
 openSound.Volume = 0.3
+openSound.RollOffMode = Enum.RollOffMode.Linear
 
 local clickSound = Instance.new("Sound", gui)
 clickSound.SoundId = "rbxassetid://131961136"
 clickSound.Volume = 0.2
+clickSound.RollOffMode = Enum.RollOffMode.Linear
 
 -- 🎮 Toggle Button
 local toggleBtn = Instance.new("TextButton")
@@ -125,7 +163,9 @@ toggleStroke.Transparency = 0.3
 toggleStroke.Parent = toggleBtn
 
 local originalToggleSize = toggleBtn.Size
-local pulseTween = TweenService:Create(toggleStroke, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {Transparency = 0.7})
+
+local pulseInfo = TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
+local pulseTween = TweenService:Create(toggleStroke, pulseInfo, {Transparency = 0.7})
 pulseTween:Play()
 
 -- Main Frame
@@ -151,7 +191,11 @@ frameStroke.Transparency = 0.4
 frameStroke.Parent = frame
 
 local gradient = Instance.new("UIGradient")
-gradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(40, 0, 0)), ColorSequenceKeypoint.new(0.5, Color3.fromRGB(20, 0, 0)), ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 0, 0))}
+gradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(40, 0, 0)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(20, 0, 0)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 0, 0))
+}
 gradient.Rotation = 45
 gradient.Parent = frame
 
@@ -203,11 +247,6 @@ closeStroke.Color = Color3.fromRGB(255, 0, 0)
 closeStroke.Thickness = 2
 closeStroke.Parent = closeBtn
 
--- [จบส่วนที่ 1/3 - รอส่วนที่ 2]
-print("📜 PART 1/3 - GUI + LANGUAGE SETUP โหลดแล้ว!")
--- 🌑 BOOMBOX | TOUx1🎉 v2.2 - MULTI LANGUAGE 🔥 [PART 2/3]
--- Tab System + Content
-
 -- Tab System
 local tabs = {languages[currentLanguage].dupeTab, languages[currentLanguage].massPlayTab, languages[currentLanguage].settingsTab}
 local tabFrames = {}
@@ -225,7 +264,10 @@ tabCorner.CornerRadius = UDim.new(0, 10)
 tabCorner.Parent = tabContainer
 
 local tabGradient = Instance.new("UIGradient")
-tabGradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(60, 0, 0)), ColorSequenceKeypoint.new(1, Color3.fromRGB(45, 0, 0))}
+tabGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(60, 0, 0)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(45, 0, 0))
+}
 tabGradient.Rotation = 90
 tabGradient.Parent = tabContainer
 
@@ -235,6 +277,7 @@ tabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 tabLayout.Padding = UDim.new(0, 5)
 tabLayout.Parent = tabContainer
 
+-- Tab Buttons (รองรับการเปลี่ยนภาษา)
 for i, tabName in ipairs(tabs) do
     local button = Instance.new("TextButton")
     button.Name = "Tab" .. i
@@ -279,13 +322,17 @@ for i, tabName in ipairs(tabs) do
 
     button.MouseEnter:Connect(function()
         if i ~= currentTab then
-            TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(90, 0, 0)}):Play()
+            TweenService:Create(button, TweenInfo.new(0.2), {
+                BackgroundColor3 = Color3.fromRGB(90, 0, 0)
+            }):Play()
         end
     end)
 
     button.MouseLeave:Connect(function()
         if i ~= currentTab then
-            TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(70, 0, 0)}):Play()
+            TweenService:Create(button, TweenInfo.new(0.2), {
+                BackgroundColor3 = Color3.fromRGB(70, 0, 0)
+            }):Play()
         end
     end)
 end
@@ -333,7 +380,12 @@ settingsFrame.Visible = false
 settingsFrame.Parent = contentFrame
 tabFrames["Tab3"] = settingsFrame
 
--- ✨ Dupe Content
+-- [จบส่วนที่ 1/2 - รอส่วนที่ 2]
+print("📜 PART 1/2 - MULTI LANGUAGE SYSTEM โหลดแล้ว! รอ PART 2...")
+-- 🌑 BOOMBOX | TOUx1🎉 v2.2 - MULTI LANGUAGE 🔥 [PART 2/2]
+-- Content + Language Toggle + Logic
+
+-- ✨ Dupe Tab Content
 local dupeTitle = Instance.new("TextLabel")
 dupeTitle.Size = UDim2.new(1, 0, 0, 30)
 dupeTitle.BackgroundTransparency = 1
@@ -363,11 +415,6 @@ local amountStroke = Instance.new("UIStroke")
 amountStroke.Color = theme.accent
 amountStroke.Thickness = 2
 amountStroke.Parent = amountBox
-
--- [จบส่วนที่ 2/3 - รอส่วนที่ 3]
-print("📜 PART 2/3 - TABS + CONTENT โหลดแล้ว!")
--- 🌑 BOOMBOX | TOUx1🎉 v2.2 - MULTI LANGUAGE 🔥 [PART 3/3]
--- Buttons + Logic + Language Toggle
 
 local dupeButton = Instance.new("TextButton")
 dupeButton.Text = languages[currentLanguage].startDupe
@@ -419,7 +466,7 @@ local dropCorner = Instance.new("UICorner")
 dropCorner.CornerRadius = UDim.new(0, 8)
 dropCorner.Parent = dropButton
 
--- 🎵 MassPlay Content
+-- 🎵 MassPlay Tab Content
 local massTitle = Instance.new("TextLabel")
 massTitle.Size = UDim2.new(1, 0, 0, 30)
 massTitle.BackgroundTransparency = 1
@@ -470,7 +517,7 @@ playStroke.Color = Color3.fromRGB(255, 0, 0)
 playStroke.Thickness = 3
 playStroke.Parent = playButton
 
--- ⚙️ Settings + Language Toggle
+-- ⚙️ Settings Tab + Language Toggle (ใหม่!)
 local settingsTitle = Instance.new("TextLabel")
 settingsTitle.Size = UDim2.new(1, 0, 0, 30)
 settingsTitle.BackgroundTransparency = 1
@@ -490,6 +537,7 @@ statusLabel.TextScaled = true
 statusLabel.Font = Enum.Font.Gotham
 statusLabel.Parent = settingsFrame
 
+-- 🌐 Language Toggle Buttons (ใหม่!)
 local langContainer = Instance.new("Frame")
 langContainer.Size = UDim2.new(1, -20, 0, 50)
 langContainer.Position = UDim2.new(0, 10, 0, 70)
@@ -551,16 +599,18 @@ englishStroke.Color = currentLanguage == "English" and theme.accent or Color3.fr
 englishStroke.Thickness = 2
 englishStroke.Parent = englishBtn
 
--- Language Toggle
+-- Language Toggle Logic (ใหม่!)
 thaiBtn.MouseButton1Click:Connect(function()
     clickSound:Play()
     if currentLanguage ~= "ไทย" then
         setLanguage("ไทย")
+        -- Update Button Colors
         thaiBtn.BackgroundColor3 = theme.accent
         englishBtn.BackgroundColor3 = theme.background
         thaiStroke.Color = theme.accent
         englishStroke.Color = Color3.fromRGB(100, 0, 0)
         
+        -- Update Tab Names
         for i, tabBtn in ipairs(tabContainer:GetChildren()) do
             if tabBtn:IsA("TextButton") then
                 local tabTexts = {languages["ไทย"].dupeTab, languages["ไทย"].massPlayTab, languages["ไทย"].settingsTab}
@@ -568,6 +618,7 @@ thaiBtn.MouseButton1Click:Connect(function()
             end
         end
         
+        -- Success Animation
         TweenService:Create(thaiBtn, TweenInfo.new(0.3), {BackgroundColor3 = theme.success}):Play()
         task.wait(0.3)
         TweenService:Create(thaiBtn, TweenInfo.new(0.3), {BackgroundColor3 = theme.accent}):Play()
@@ -578,11 +629,13 @@ englishBtn.MouseButton1Click:Connect(function()
     clickSound:Play()
     if currentLanguage ~= "English" then
         setLanguage("English")
+        -- Update Button Colors
         englishBtn.BackgroundColor3 = theme.accent
         thaiBtn.BackgroundColor3 = theme.background
         englishStroke.Color = theme.accent
         thaiStroke.Color = Color3.fromRGB(100, 0, 0)
         
+        -- Update Tab Names
         for i, tabBtn in ipairs(tabContainer:GetChildren()) do
             if tabBtn:IsA("TextButton") then
                 local tabTexts = {languages["English"].dupeTab, languages["English"].massPlayTab, languages["English"].settingsTab}
@@ -590,264 +643,12 @@ englishBtn.MouseButton1Click:Connect(function()
             end
         end
         
+        -- Success Animation
         TweenService:Create(englishBtn, TweenInfo.new(0.3), {BackgroundColor3 = theme.success}):Play()
         task.wait(0.3)
         TweenService:Create(englishBtn, TweenInfo.new(0.3), {BackgroundColor3 = theme.accent}):Play()
     end
 end)
-
--- Toggle Function
-local function toggleFrame()
-    clickSound:Play()
-    if frame.Visible then
-        openSound:Play()
-        for i = 1, 10 do
-            frame.BackgroundTransparency = (i * 0.1)
-            task.wait(0.02)
-        end
-        frame.Visible = false
-        toggleBtn.Text = languages[currentLanguage].toggle
-        toggleBtn.Size = originalToggleSize
-        TweenService:Connect(toggleBtn, TweenInfo.new(0.3), {BackgroundColor3 = theme.accent}):Play()
-    else
-        frame.Visible = true
-        frame.BackgroundTransparency = 1
-        openSound:Play()
-        for i = 1, 10 do
-            frame.BackgroundTransparency = 1 - (i * 0.1)
-            task.wait(0.02)
-        end
-        toggleBtn.Text = languages[currentLanguage].close
-        toggleBtn.Size = originalToggleSize
-        TweenService:Create(toggleBtn, TweenInfo.new(0.3), {BackgroundColor3 = theme.danger}):Play()
-    end
-end
-
--- Connect Events
-toggleBtn.MouseButton1Click:Connect(toggleFrame)
-closeBtn.MouseButton1Click:Connect(function() clickSound:Play() toggleFrame() end)
-
--- Safe Hover Effects
-local function addSafeHoverEffect(button, hoverColor, normalColor)
-    button.MouseEnter:Connect(function()
-        TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = hoverColor}):Play()
-    end)
-    button.MouseLeave:Connect(function()
-        TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = normalColor}):Play()
-    end)
-end
-
-addSafeHoverEffect(dupeButton, Color3.fromRGB(255, 200, 0), theme.accent)
-addSafeHoverEffect(playButton, Color3.fromRGB(255, 200, 0), theme.accent)
-addSafeHoverEffect(stealButton, Color3.fromRGB(255, 50, 50), theme.danger)
-addSafeHoverEffect(dropButton, Color3.fromRGB(255, 50, 50), theme.danger)
-
-toggleBtn.MouseEnter:Connect(function()
-    TweenService:Create(toggleBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(255, 200, 0)}):Play()
-end)
-
-toggleBtn.MouseLeave:Connect(function()
-    local targetColor = frame.Visible and theme.danger or theme.accent
-    TweenService:Create(toggleBtn, TweenInfo.new(0.2), {BackgroundColor3 = targetColor}):Play()
-end)
-
-closeBtn.MouseEnter:Connect(function()
-    TweenService:Create(closeBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(255, 50, 50)}):Play()
-end)
-
-closeBtn.MouseLeave:Connect(function()
-    TweenService:Create(closeBtn, TweenInfo.new(0.2), {BackgroundColor3 = theme.danger}):Play()
-end)
-
--- Input Effects
-amountBox.Focused:Connect(function()
-    TweenService:Create(amountBox, TweenInfo.new(0.2), {BackgroundColor3 = theme.accent}):Play()
-end)
-
-amountBox.FocusLost:Connect(function()
-    TweenService:Create(amountBox, TweenInfo.new(0.2), {BackgroundColor3 = theme.background}):Play()
-end)
-
-idBox.Focused:Connect(function()
-    TweenService:Create(idBox, TweenInfo.new(0.2), {BackgroundColor3 = theme.accent}):Play()
-end)
-
-idBox.FocusLost:Connect(function()
-    TweenService:Create(idBox, TweenInfo.new(0.2), {BackgroundColor3 = theme.background}):Play()
-end)
-
--- Dupe Logic (ย่อ)
-dupeButton.MouseButton1Click:Connect(function()
-    clickSound:Play()
-    local amount = tonumber(amountBox.Text)
-    local errorMsg = languages[currentLanguage].errorAmount
-    if not amount or amount <= 0 then 
-        amountBox.Text = errorMsg
-        TweenService:Create(amountBox, TweenInfo.new(0.3), {BackgroundColor3 = theme.danger}):Play()
-        task.wait(1)
-        amountBox.Text = ""
-        TweenService:Create(amountBox, TweenInfo.new(0.3), {BackgroundColor3 = theme.background}):Play()
-        return 
-    end
-
-    local plr = player
-    local character = plr.Character or plr.CharacterAdded:Wait()
-    local spawnCFrame = character.HumanoidRootPart.CFrame
-    local dupingMsg = languages[currentLanguage].statusDuping
-    local completeMsg = languages[currentLanguage].statusDupeComplete
-
-    local progress = Instance.new("Frame")
-    progress.Size = UDim2.new(0, 0, 0, 5)
-    progress.Position = UDim2.new(0, 0, 1, -10)
-    progress.BackgroundColor3 = theme.accent
-    progress.BorderSizePixel = 0
-    progress.Parent = dupeButton
-
-    local progressCorner = Instance.new("UICorner")
-    progressCorner.CornerRadius = UDim.new(1, 0)
-    progressCorner.Parent = progress
-
-    for i = 1, amount do
-        progress.Size = UDim2.new(i/amount, 0, 0, 5)
-        statusLabel.Text = dupingMsg .. " " .. i .. "/" .. amount
-        
-        -- Dupe Logic (ย่อ)
-        for _, tool in ipairs(plr.Backpack:GetChildren()) do
-            if tool:IsA("Tool") then tool.Parent = character end
-        end
-        for _, tool in ipairs(character:GetChildren()) do
-            if tool:IsA("Tool") then tool.Parent = character end
-        end
-
-        local dropPos = Vector3.new(-41.58, 587.77, 405.76)
-        character:WaitForChild("HumanoidRootPart").CFrame = CFrame.new(dropPos)
-        task.wait(0.25)
-
-        for _, tool in ipairs(character:GetChildren()) do
-            if tool:IsA("Tool") and tool.Parent ~= workspace then tool.Parent = workspace end
-        end
-
-        local humanoid = character:FindFirstChildOfClass("Humanoid")
-        if humanoid then humanoid:TakeDamage(9999) else character:BreakJoints() end
-
-        character = plr.CharacterAdded:Wait()
-        repeat task.wait() until character:FindFirstChild("HumanoidRootPart") and character:FindFirstChildOfClass("Humanoid")
-
-        for _, tool in ipairs(plr.Backpack:GetChildren()) do
-            if tool:IsA("Tool") then tool.Parent = character end
-        end
-
-        task.wait(0.15)
-    end
-
-    local tools = {}
-    for _, tool in ipairs(workspace:GetChildren()) do
-        if tool:IsA("Tool") and tool:FindFirstChild("Handle") then table.insert(tools, tool) end
-    end
-
-    for _, tool in ipairs(tools) do
-        local handle = tool:FindFirstChild("Handle")
-        if handle and character:FindFirstChild("HumanoidRootPart") then
-            local oldCFrame = character.HumanoidRootPart.CFrame
-            character.HumanoidRootPart.CFrame = handle.CFrame + Vector3.new(0, 3, 0)
-            task.wait(0.1)
-            character.HumanoidRootPart.CFrame = oldCFrame
-            task.wait(0.05)
-        end
-    end
-
-    if character:FindFirstChild("HumanoidRootPart") then
-        character.HumanoidRootPart.CFrame = spawnCFrame
-    end
-
-    progress:Destroy()
-    statusLabel.Text = completeMsg .. " (" .. #tools .. " tools)"
-    TweenService:Create(dupeButton, TweenInfo.new(0.3), {BackgroundColor3 = theme.success}):Play()
-    task.wait(2)
-    TweenService:Create(dupeButton, TweenInfo.new(0.3), {BackgroundColor3 = theme.accent}):Play()
-end)
-
--- Steal Logic (ย่อ)
-stealButton.MouseButton1Click:Connect(function()
-    clickSound:Play()
-    local char = player.Character or player.CharacterAdded:Wait()
-    local stolenMsg = languages[currentLanguage].statusStolen
-
-    for _, tool in ipairs(workspace:GetChildren()) do
-        if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
-            local handle = tool.Handle
-            local oldCFrame = char:WaitForChild("HumanoidRootPart").CFrame
-            char.HumanoidRootPart.CFrame = handle.CFrame + Vector3.new(0, 2, 0)
-            task.wait(0.15)
-            char.HumanoidRootPart.CFrame = oldCFrame
-            task.wait(0.05)
-        end
-    end
-
-    for _, tool in ipairs(char:GetChildren()) do
-        if tool:IsA("Tool") then tool.Parent = workspace break end
-    end
-    
-    statusLabel.Text = stolenMsg
-    TweenService:Create(stealButton, TweenInfo.new(0.3), {BackgroundColor3 = theme.success}):Play()
-    task.wait(1)
-    TweenService:Create(stealButton, TweenInfo.new(0.3), {BackgroundColor3 = theme.danger}):Play()
-end)
-
--- Drop Logic (ย่อ)
-dropButton.MouseButton1Click:Connect(function()
-    clickSound:Play()
-    local char = player.Character or player.CharacterAdded:Wait()
-    local droppedMsg = languages[currentLanguage].statusDropped
-
-    for _, tool in ipairs(char:GetChildren()) do
-        if tool:IsA("Tool") then tool.Parent = workspace break end
-    end
-    
-    statusLabel.Text = droppedMsg
-    TweenService:Create(dropButton, TweenInfo.new(0.3), {BackgroundColor3 = theme.success}):Play()
-    task.wait(1)
-    TweenService:Create(dropButton, TweenInfo.new(0.3), {BackgroundColor3 = theme.danger}):Play()
-end)
-
--- MassPlay Logic (ย่อ)
-playButton.MouseButton1Click:Connect(function()
-    clickSound:Play()
-    local id = tonumber(idBox.Text)
-    local errorMsg = languages[currentLanguage].errorID
-    local playingMsg = languages[currentLanguage].statusPlaying
-    
-    if not id then 
-        idBox.Text = errorMsg
-        TweenService:Create(idBox, TweenInfo.new(0.3), {BackgroundColor3 = theme.danger}):Play()
-        task.wait(1)
-        idBox.Text = ""
-        TweenService:Create(idBox, TweenInfo.new(0.3), {BackgroundColor3 = theme.background}):Play()
-        return 
-    end
-
-    for _, tool in pairs(player.Backpack:GetChildren()) do
-        if tool:IsA("Tool") and tool:FindFirstChildWhichIsA("RemoteEvent", true) then
-            tool.Parent = player.Character
-        end
-    end
-    
-    for _, tool in pairs(player.Character:GetChildren()) do
-        local remote = tool:FindFirstChildWhichIsA("RemoteEvent", true)
-        if remote then pcall(function() remote:FireServer("PlaySong", id) end) end
-    end
-    
-    statusLabel.Text = playingMsg .. " " .. id
-    TweenService:Create(playButton, TweenInfo.new(0.3), {BackgroundColor3 = theme.success}):Play()
-    task.wait(2)
-    TweenService:Create(playButton, TweenInfo.new(0.3), {BackgroundColor3 = theme.accent}):Play()
-end)
-
--- Input Effects
-amountBox.Focused:Connect(function() TweenService:Create(amountBox, TweenInfo.new(0.2), {BackgroundColor3 = theme.accent}):Play() end)
-amountBox.FocusLost:Connect(function() TweenService:Create(amountBox, TweenInfo.new(0.2), {BackgroundColor3 = theme.background}):Play() end)
-idBox.Focused:Connect(function() TweenService:Create(idBox, TweenInfo.new(0.2), {BackgroundColor3 = theme.accent}):Play() end)
-idBox.FocusLost:Connect(function() TweenService:Create(idBox, TweenInfo.new(0.2), {BackgroundColor3 = theme.background}):Play() end)
 
 -- Particle Effect
 local function createParticles(parent)
@@ -887,7 +688,10 @@ local function toggleFrame()
     clickSound:Play()
     if frame.Visible then
         openSound:Play()
-        for i = 1, 10 do frame.BackgroundTransparency = (i * 0.1) task.wait(0.02) end
+        for i = 1, 10 do
+            frame.BackgroundTransparency = (i * 0.1)
+            task.wait(0.02)
+        end
         frame.Visible = false
         toggleBtn.Text = languages[currentLanguage].toggle
         toggleBtn.Size = originalToggleSize
@@ -896,16 +700,10 @@ local function toggleFrame()
         frame.Visible = true
         frame.BackgroundTransparency = 1
         openSound:Play()
-        for i = 1, 10 do frame.BackgroundTransparency = 1 - (i * 0.1) task.wait(0.02) end
-        frame.Visible = false
-        toggleBtn.Text = languages[currentLanguage].toggle
-        toggleBtn.Size = originalToggleSize
-        TweenService:Create(toggleBtn, TweenInfo.new(0.3), {BackgroundColor3 = theme.accent}):Play()
-    else
-        frame.Visible = true
-        frame.BackgroundTransparency = 1
-        openSound:Play()
-        for i = 1, 10 do frame.BackgroundTransparency = 1 - (i * 0.1) task.wait(0.02) end
+        for i = 1, 10 do
+            frame.BackgroundTransparency = 1 - (i * 0.1)
+            task.wait(0.02)
+        end
         toggleBtn.Text = languages[currentLanguage].close
         toggleBtn.Size = originalToggleSize
         TweenService:Create(toggleBtn, TweenInfo.new(0.3), {BackgroundColor3 = theme.danger}):Play()
@@ -914,10 +712,271 @@ end
 
 -- Connect Events
 toggleBtn.MouseButton1Click:Connect(toggleFrame)
-closeBtn.MouseButton1Click:Connect(function() clickSound:Play() toggleFrame() end)
 
--- Welcome
+closeBtn.MouseButton1Click:Connect(function()
+    clickSound:Play()
+    toggleFrame()
+end)
+
+-- Safe Hover Effects
+local function addSafeHoverEffect(button, hoverColor, normalColor)
+    local originalSize = button.Size
+    
+    button.MouseEnter:Connect(function()
+        TweenService:Create(button, TweenInfo.new(0.2), {
+            BackgroundColor3 = hoverColor
+        }):Play()
+    end)
+    
+    button.MouseLeave:Connect(function()
+        TweenService:Create(button, TweenInfo.new(0.2), {
+            BackgroundColor3 = normalColor
+        }):Play()
+    end)
+end
+
+addSafeHoverEffect(dupeButton, Color3.fromRGB(255, 200, 0), theme.accent)
+addSafeHoverEffect(playButton, Color3.fromRGB(255, 200, 0), theme.accent)
+addSafeHoverEffect(stealButton, Color3.fromRGB(255, 50, 50), theme.danger)
+addSafeHoverEffect(dropButton, Color3.fromRGB(255, 50, 50), theme.danger)
+
+toggleBtn.MouseEnter:Connect(function()
+    TweenService:Create(toggleBtn, TweenInfo.new(0.2), {
+        BackgroundColor3 = Color3.fromRGB(255, 200, 0)
+    }):Play()
+end)
+
+toggleBtn.MouseLeave:Connect(function()
+    local targetColor = frame.Visible and theme.danger or theme.accent
+    TweenService:Create(toggleBtn, TweenInfo.new(0.2), {
+        BackgroundColor3 = targetColor
+    }):Play()
+end)
+
+closeBtn.MouseEnter:Connect(function()
+    TweenService:Create(closeBtn, TweenInfo.new(0.2), {
+        BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+    }):Play()
+end)
+
+closeBtn.MouseLeave:Connect(function()
+    TweenService:Create(closeBtn, TweenInfo.new(0.2), {
+        BackgroundColor3 = theme.danger
+    }):Play()
+end)
+
+-- Dupe Logic
+dupeButton.MouseButton1Click:Connect(function()
+    clickSound:Play()
+    local amount = tonumber(amountBox.Text)
+    local errorMsg = languages[currentLanguage].errorAmount
+    if not amount or amount <= 0 then 
+        amountBox.Text = errorMsg
+        TweenService:Create(amountBox, TweenInfo.new(0.3), {BackgroundColor3 = theme.danger}):Play()
+        task.wait(1)
+        TweenService:Create(amountBox, TweenInfo.new(0.3), {BackgroundColor3 = theme.background}):Play()
+        amountBox.Text = ""
+        return 
+    end
+
+    local plr = player
+    local character = plr.Character or plr.CharacterAdded:Wait()
+    local spawnCFrame = character.HumanoidRootPart.CFrame
+
+    local progress = Instance.new("Frame")
+    progress.Size = UDim2.new(0, 0, 0, 5)
+    progress.Position = UDim2.new(0, 0, 1, -10)
+    progress.BackgroundColor3 = theme.accent
+    progress.BorderSizePixel = 0
+    progress.Parent = dupeButton
+
+    local progressCorner = Instance.new("UICorner")
+    progressCorner.CornerRadius = UDim.new(1, 0)
+    progressCorner.Parent = progress
+
+    local dupingMsg = languages[currentLanguage].statusDuping
+    local completeMsg = languages[currentLanguage].statusDupeComplete
+    
+    for i = 1, amount do
+        progress.Size = UDim2.new(i/amount, 0, 0, 5)
+        statusLabel.Text = dupingMsg .. " " .. i .. "/" .. amount
+        
+        for _, tool in ipairs(plr.Backpack:GetChildren()) do
+            if tool:IsA("Tool") then
+                tool.Parent = character
+            end
+        end
+
+        for _, tool in ipairs(character:GetChildren()) do
+            if tool:IsA("Tool") then
+                tool.Parent = character
+            end
+        end
+
+        local dropPos = Vector3.new(-41.58, 587.77, 405.76)
+        character:WaitForChild("HumanoidRootPart").CFrame = CFrame.new(dropPos)
+
+        task.wait(0.25)
+
+        for _, tool in ipairs(character:GetChildren()) do
+            if tool:IsA("Tool") and tool.Parent ~= workspace then
+                tool.Parent = workspace
+            end
+        end
+
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid:TakeDamage(9999)
+        else
+            character:BreakJoints()
+        end
+
+        character = plr.CharacterAdded:Wait()
+        repeat task.wait() until character:FindFirstChild("HumanoidRootPart") and character:FindFirstChildOfClass("Humanoid")
+
+        for _, tool in ipairs(plr.Backpack:GetChildren()) do
+            if tool:IsA("Tool") then
+                tool.Parent = character
+            end
+        end
+
+        task.wait(0.15)
+    end
+
+    local tools = {}
+    for _, tool in ipairs(workspace:GetChildren()) do
+        if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
+            table.insert(tools, tool)
+        end
+    end
+
+    for _, tool in ipairs(tools) do
+        local handle = tool:FindFirstChild("Handle")
+        if handle and character:FindFirstChild("HumanoidRootPart") then
+            local oldCFrame = character.HumanoidRootPart.CFrame
+            character.HumanoidRootPart.CFrame = handle.CFrame + Vector3.new(0, 3, 0)
+            task.wait(0.1)
+            character.HumanoidRootPart.CFrame = oldCFrame
+            task.wait(0.05)
+        end
+    end
+
+    if character:FindFirstChild("HumanoidRootPart") then
+        character.HumanoidRootPart.CFrame = spawnCFrame
+    end
+
+    progress:Destroy()
+    statusLabel.Text = completeMsg .. " (" .. #tools .. " tools)"
+    TweenService:Create(dupeButton, TweenInfo.new(0.3), {BackgroundColor3 = theme.success}):Play()
+    task.wait(2)
+    TweenService:Create(dupeButton, TweenInfo.new(0.3), {BackgroundColor3 = theme.accent}):Play()
+end)
+
+-- Steal Logic
+stealButton.MouseButton1Click:Connect(function()
+    clickSound:Play()
+    local char = player.Character or player.CharacterAdded:Wait()
+    local stolenMsg = languages[currentLanguage].statusStolen
+
+    for _, tool in ipairs(workspace:GetChildren()) do
+        if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
+            local handle = tool.Handle
+            local oldCFrame = char:WaitForChild("HumanoidRootPart").CFrame
+            char.HumanoidRootPart.CFrame = handle.CFrame + Vector3.new(0, 2, 0)
+            task.wait(0.15)
+            char.HumanoidRootPart.CFrame = oldCFrame
+            task.wait(0.05)
+        end
+    end
+
+    for _, tool in ipairs(char:GetChildren()) do
+        if tool:IsA("Tool") then
+            tool.Parent = workspace
+            break
+        end
+    end
+    
+    statusLabel.Text = stolenMsg
+    TweenService:Create(stealButton, TweenInfo.new(0.3), {BackgroundColor3 = theme.success}):Play()
+    task.wait(1)
+    TweenService:Create(stealButton, TweenInfo.new(0.3), {BackgroundColor3 = theme.danger}):Play()
+end)
+
+-- Drop Logic
+dropButton.MouseButton1Click:Connect(function()
+    clickSound:Play()
+    local char = player.Character or player.CharacterAdded:Wait()
+    local droppedMsg = languages[currentLanguage].statusDropped
+
+    for _, tool in ipairs(char:GetChildren()) do
+        if tool:IsA("Tool") then
+            tool.Parent = workspace
+            break
+        end
+    end
+    
+    statusLabel.Text = droppedMsg
+    TweenService:Create(dropButton, TweenInfo.new(0.3), {BackgroundColor3 = theme.success}):Play()
+    task.wait(1)
+    TweenService:Create(dropButton, TweenInfo.new(0.3), {BackgroundColor3 = theme.danger}):Play()
+end)
+
+-- MassPlay Logic
+playButton.MouseButton1Click:Connect(function()
+    clickSound:Play()
+    local id = tonumber(idBox.Text)
+    local errorMsg = languages[currentLanguage].errorID
+    local playingMsg = languages[currentLanguage].statusPlaying
+    
+    if not id then 
+        idBox.Text = errorMsg
+        TweenService:Create(idBox, TweenInfo.new(0.3), {BackgroundColor3 = theme.danger}):Play()
+        task.wait(1)
+        TweenService:Create(idBox, TweenInfo.new(0.3), {BackgroundColor3 = theme.background}):Play()
+        idBox.Text = ""
+        return 
+    end
+
+    for _, tool in pairs(player.Backpack:GetChildren()) do
+        if tool:IsA("Tool") and tool:FindFirstChildWhichIsA("RemoteEvent", true) then
+            tool.Parent = player.Character
+        end
+    end
+    
+    for _, tool in pairs(player.Character:GetChildren()) do
+        local remote = tool:FindFirstChildWhichIsA("RemoteEvent", true)
+        if remote then
+            pcall(function()
+                remote:FireServer("PlaySong", id)
+            end)
+        end
+    end
+    
+    statusLabel.Text = playingMsg .. " " .. id
+    TweenService:Create(playButton, TweenInfo.new(0.3), {BackgroundColor3 = theme.success}):Play()
+    task.wait(2)
+    TweenService:Create(playButton, TweenInfo.new(0.3), {BackgroundColor3 = theme.accent}):Play()
+end)
+
+-- Input Effects
+amountBox.Focused:Connect(function()
+    TweenService:Create(amountBox, TweenInfo.new(0.2), {BackgroundColor3 = theme.accent}):Play()
+end)
+
+amountBox.FocusLost:Connect(function()
+    TweenService:Create(amountBox, TweenInfo.new(0.2), {BackgroundColor3 = theme.background}):Play()
+end)
+
+idBox.Focused:Connect(function()
+    TweenService:Create(idBox, TweenInfo.new(0.2), {BackgroundColor3 = theme.accent}):Play()
+end)
+
+idBox.FocusLost:Connect(function()
+    TweenService:Create(idBox, TweenInfo.new(0.2), {BackgroundColor3 = theme.background}):Play()
+end)
+
+-- Welcome Message
 print("🎉 BOOMBOX | TOUx1🎉 v2.2 พร้อมล่าแล้ว!")
-print("📜 PART 3/3 โหลดเสร็จ! Multi-Language ใช้งานได้!")
-print("🌐 Settings Tab: ไทย/English Toggle พร้อม!")
-🚀 ขั้นตอนการรัน 📝
+print("📜 PART 2/2 โหลดเสร็จ! Multi-Language พร้อมใช้งาน!")
+print("🌐 Tab Settings: ปุ่ม ไทย/English Toggle!")
+print("🇹🇭🇺🇸 เปลี่ยนภาษาได้ทั้ง GUI อัตโนมัติ!")
