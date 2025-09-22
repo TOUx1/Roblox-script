@@ -1,0 +1,214 @@
+-- LocalScript: Language chooser GUI (โครตเท่ระเบิด)
+-- วางเป็น LocalScript ใน StarterGui หรือที่ Client จะรัน
+
+local Players = game:GetService("Players")
+local StarterGui = game:GetService("StarterGui")
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- ถ้ามีหน้าตาที่ชื่อเดียวกันอยู่แล้ว ให้ลบทิ้งก่อน
+local existing = playerGui:FindFirstChild("LangChooserGUI")
+if existing then existing:Destroy() end
+
+-- URLs ที่ผู้ใช้ให้มา
+local url_th = "https://raw.githubusercontent.com/TOUx1/Roblox-script/refs/heads/main/AUDlO%20THAILAND"
+local url_en = "https://raw.githubusercontent.com/TOUx1/Roblox-script/refs/heads/main/Audi0%20English"
+
+-- สร้าง ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "LangChooserGUI"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+-- background blur (optional) - ใช้ UIGradient + Frame เพื่อความเท่
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "Main"
+mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+mainFrame.Size = UDim2.new(0, 420, 0, 160)
+mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+mainFrame.BackgroundColor3 = Color3.fromRGB(18,18,18)
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = screenGui
+mainFrame.ClipsDescendants = true
+mainFrame.BackgroundTransparency = 0
+
+-- rounded corners
+local corner = Instance.new("UICorner", mainFrame)
+corner.CornerRadius = UDim.new(0, 12)
+
+-- glow / outline
+local outline = Instance.new("Frame")
+outline.Name = "Outline"
+outline.AnchorPoint = Vector2.new(0.5,0.5)
+outline.Size = UDim2.new(1, 6, 1, 6)
+outline.Position = UDim2.new(0.5,0.5,0.5,0.5)
+outline.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+outline.BackgroundTransparency = 0.94
+outline.BorderSizePixel = 0
+outline.ZIndex = mainFrame.ZIndex - 1
+outline.Parent = mainFrame
+
+local title = Instance.new("TextLabel", mainFrame)
+title.Size = UDim2.new(1, -24, 0, 40)
+title.Position = UDim2.new(0, 12, 0, 8)
+title.BackgroundTransparency = 1
+title.Text = "เลือกภาษา / Choose language"
+title.Font = Enum.Font.GothamBold
+title.TextSize = 20
+title.TextColor3 = Color3.fromRGB(240,240,240)
+title.TextXAlignment = Enum.TextXAlignment.Left
+
+-- subtitle / hint
+local subtitle = Instance.new("TextLabel", mainFrame)
+subtitle.Size = UDim2.new(1, -24, 0, 20)
+subtitle.Position = UDim2.new(0, 12, 0, 42)
+subtitle.BackgroundTransparency = 1
+subtitle.Text = "กดแล้ว GUI จะหายและสคริปต์จะถูกรัน (Press a button to run script)"
+subtitle.Font = Enum.Font.Gotham
+subtitle.TextSize = 14
+subtitle.TextColor3 = Color3.fromRGB(170,170,170)
+subtitle.TextXAlignment = Enum.TextXAlignment.Left
+
+-- container for buttons
+local btnContainer = Instance.new("Frame", mainFrame)
+btnContainer.Size = UDim2.new(1, -24, 0, 70)
+btnContainer.Position = UDim2.new(0, 12, 0, 70)
+btnContainer.BackgroundTransparency = 1
+
+-- function to create a nice button
+local function makeButton(parent, pos, size, text)
+    local btn = Instance.new("TextButton")
+    btn.Parent = parent
+    btn.Size = size
+    btn.Position = pos
+    btn.AutoButtonColor = true
+    btn.BackgroundColor3 = Color3.fromRGB(40,40,40)
+    btn.BorderSizePixel = 0
+    btn.Font = Enum.Font.GothamBold
+    btn.Text = text
+    btn.TextSize = 18
+    btn.TextColor3 = Color3.fromRGB(250,250,250)
+    btn.ZIndex = 5
+
+    local uic = Instance.new("UICorner", btn)
+    uic.CornerRadius = UDim.new(0,10)
+
+    -- hover effect
+    btn.MouseEnter:Connect(function()
+        btn:TweenSizeAndPosition(btn.Size + UDim2.new(0,6,0,6), btn.Position - UDim2.new(0,3,0,3), "Out", "Quad", 0.12, true)
+    end)
+    btn.MouseLeave:Connect(function()
+        btn:TweenSizeAndPosition(btn.Size - UDim2.new(0,6,0,6), btn.Position + UDim2.new(0,3,0,3), "Out", "Quad", 0.12, true)
+    end)
+
+    return btn
+end
+
+-- สร้างปุ่มสองอัน
+local btnThai = makeButton(btnContainer, UDim2.new(0, 0, 0, 0), UDim2.new(0.48, 0, 1, 0), "ภาษาไทย 🇹🇭")
+local btnEng  = makeButton(btnContainer, UDim2.new(0.52, 0, 0, 0), UDim2.new(0.48, 0, 1, 0), "English 🇰🇵")
+
+-- function to run remote script safely
+local function runUrl(url)
+    -- ลองโหลดและรันด้วย pcall
+    local ok, res = pcall(function()
+        local httpGet = game.HttpGet or function(g, u) return game:HttpGet(u) end
+        -- บาง environment อาจไม่มี HttpGet, แต่ปกติใช้ game:HttpGet
+        local code = game:HttpGet(url)
+        local fn = loadstring(code)
+        if typeof(fn) == "function" then
+            fn()
+        else
+            error("loadstring returned non-function")
+        end
+    end)
+    return ok, res
+end
+
+-- ในบางเครื่อง, การเรียก Notification อาจช่วยแจ้งผล (ไม่บังคับ)
+local function notify(title, text)
+    pcall(function()
+        StarterGui:SetCore("SendNotification", {
+            Title = title;
+            Text = text;
+            Duration = 4;
+        })
+    end)
+end
+
+-- เมื่อกดปุ่ม ให้รัน script และลบ GUI
+local function onChoose(url)
+    -- ปิดการกดซ้ำ
+    btnThai.Active = false
+    btnEng.Active = false
+
+    -- แจ้งผู้ใช้ก่อน
+    notify("Running script", "กำลังดาวน์โหลดสคริปต์...")
+
+    local ok, err = runUrl(url)
+    if ok then
+        notify("Success", "สคริปต์ถูกรันเรียบร้อย")
+    else
+        notify("Failed", "ไม่สามารถรันสคริปต์: "..tostring(err))
+        warn("Failed to run remote script:", err)
+    end
+
+    -- ทำลาย GUI ทันที (ไม่แสดงอีก)
+    if screenGui and screenGui.Parent then
+        screenGui:Destroy()
+    end
+end
+
+btnThai.MouseButton1Click:Connect(function()
+    onChoose(url_th)
+end)
+
+btnEng.MouseButton1Click:Connect(function()
+    onChoose(url_en)
+end)
+
+-- ทำให้ลากได้ (draggable)
+local dragging, dragInput, dragStart, startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+mainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    elseif input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+mainFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if dragging and input == dragInput then
+        update(input)
+    end
+end)
+
+-- เคลียร์ตัวแปรหลังใช้ (ถ้าอยากให้ GUI หายเมื่อ respawn ก็ Destroy มันแล้วสร้างใหม่ตามต้องการ)
