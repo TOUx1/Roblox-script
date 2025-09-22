@@ -283,7 +283,7 @@ print("📜 PART 1/2 - BUG FIX + DRAGGABLE โหลดแล้ว! รอ PART
 local dupeTitle = Instance.new("TextLabel")
 dupeTitle.Size = UDim2.new(1, 0, 0, 30)
 dupeTitle.BackgroundTransparency = 1
-dupeTitle.Text = "💎 DUPE TOOLS"
+dupeTitle.Text = "💎 ดูปลำโพง"
 dupeTitle.TextColor3 = theme.accent
 dupeTitle.TextScaled = true
 dupeTitle.Font = Enum.Font.GothamBold
@@ -311,7 +311,7 @@ amountStroke.Thickness = 2
 amountStroke.Parent = amountBox
 
 local dupeButton = Instance.new("TextButton")
-dupeButton.Text = "🚀 START DUPE"
+dupeButton.Text = "🚀 เริ่มดูป"
 dupeButton.Size = UDim2.new(1, -20, 0, 50)
 dupeButton.Position = UDim2.new(0, 10, 0, 90)
 dupeButton.TextScaled = true
@@ -331,7 +331,7 @@ dupeStroke.Thickness = 3
 dupeStroke.Parent = dupeButton
 
 local stealButton = Instance.new("TextButton")
-stealButton.Text = "🕵️ STEAL TOOL"
+stealButton.Text = "🕵️ หยิบลำโพง"
 stealButton.Size = UDim2.new(0.48, -10, 0, 45)
 stealButton.Position = UDim2.new(0, 10, 0, 150)
 stealButton.TextScaled = true
@@ -346,7 +346,7 @@ stealCorner.CornerRadius = UDim.new(0, 8)
 stealCorner.Parent = stealButton
 
 local dropButton = Instance.new("TextButton")
-dropButton.Text = "📦 DROP TOOL"
+dropButton.Text = "📦 ทิ้งลำโพง"
 dropButton.Size = UDim2.new(0.48, -10, 0, 45)
 dropButton.Position = UDim2.new(0.52, 0, 0, 150)
 dropButton.TextScaled = true
@@ -364,7 +364,7 @@ dropCorner.Parent = dropButton
 local massTitle = Instance.new("TextLabel")
 massTitle.Size = UDim2.new(1, 0, 0, 30)
 massTitle.BackgroundTransparency = 1
-massTitle.Text = "🎵 MASS PLAY"
+massTitle.Text = "🎵 เล่นเพลง"
 massTitle.TextColor3 = theme.accent
 massTitle.TextScaled = true
 massTitle.Font = Enum.Font.GothamBold
@@ -392,7 +392,7 @@ idStroke.Thickness = 2
 idStroke.Parent = idBox
 
 local playButton = Instance.new("TextButton")
-playButton.Text = "🎶 MASS PLAY AUDIO"
+playButton.Text = "🎶 เล่นเพลง"
 playButton.Size = UDim2.new(1, -20, 0, 50)
 playButton.Position = UDim2.new(0, 10, 0, 90)
 playButton.TextScaled = true
@@ -415,7 +415,7 @@ playStroke.Parent = playButton
 local settingsTitle = Instance.new("TextLabel")
 settingsTitle.Size = UDim2.new(1, 0, 0, 30)
 settingsTitle.BackgroundTransparency = 1
-settingsTitle.Text = "⚙️ SETTINGS"
+settingsTitle.Text = "⚙️ ตั้งค่า"
 settingsTitle.TextColor3 = theme.accent
 settingsTitle.TextScaled = true
 settingsTitle.Font = Enum.Font.GothamBold
@@ -675,7 +675,7 @@ stealButton.MouseButton1Click:Connect(function()
         end
     end
     
-    statusLabel.Text = "🕵️ Tools Stolen!"
+    statusLabel.Text = "🕵️ หยิบลำโพง!"
     TweenService:Create(stealButton, TweenInfo.new(0.3), {BackgroundColor3 = theme.success}):Play()
     task.wait(1)
     TweenService:Create(stealButton, TweenInfo.new(0.3), {BackgroundColor3 = theme.danger}):Play()
@@ -693,7 +693,7 @@ dropButton.MouseButton1Click:Connect(function()
         end
     end
     
-    statusLabel.Text = "📦 Tool Dropped!"
+    statusLabel.Text = "📦 ทิ้งลำโพง!"
     TweenService:Create(dropButton, TweenInfo.new(0.3), {BackgroundColor3 = theme.success}):Play()
     task.wait(1)
     TweenService:Create(dropButton, TweenInfo.new(0.3), {BackgroundColor3 = theme.danger}):Play()
