@@ -1,0 +1,606 @@
+-- 🌟 สคริปต์ GUI ยกน้ำหนัก, วาร์ป, ปรับแต่ง, และเลือกเครื่องมือสุดเท่ 🌟
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+-- ⚙️ ตัวแปรควบคุม
+local isToggled = false -- สำหรับยกน้ำหนัก
+local isWarped = false -- สำหรับสถานะวาร์ป
+local originalPosition = nil -- เก็บตำแหน่งเดิมก่อนวาร์ป
+local loopConnection = nil -- สำหรับลูปยกน้ำหนัก
+local lockConnection = nil -- สำหรับล็อคตัวละคร
+local statLoopConnection = nil -- สำหรับลูปปรับความเร็ว/กระโดด
+local safePosition = Vector3.new(-790152.44, 196142.62, 442828.31) -- ตำแหน่งปลอดภัย
+local speedValue = 16 -- ความเร็วเริ่มต้น
+local jumpValue = 50 -- กระโดดเริ่มต้น
+local selectedTool = "Weight" -- เครื่องมือที่เลือก (เริ่มต้น Weight)
+
+-- 🔍 ฟังก์ชันหาเครื่องมือ
+local function findTool(toolName)
+    local tool = player.Backpack:FindFirstChild(toolName)
+    if tool then return tool end
+    if character then
+        tool = character:FindFirstChild(toolName)
+        if tool then return tool end
+    end
+    warn("⚠️ ไม่พบ " .. toolName .. " ใน Backpack หรือ Character!")
+    return nil
+end
+
+-- 🖼️ สร้าง GUI หลัก
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "WeightLiftingGUI"
+screenGui.ResetOnSpawn = false -- GUI ไม่หายเมื่อตาย
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 350, 0, 300)
+frame.Position = UDim2.new(0.5, -175, 0.5, -150)
+frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+frame.BorderSizePixel = 2
+frame.BorderColor3 = Color3.fromRGB(255, 255, 0)
+frame.Active = true -- ทำให้ลากได้
+frame.Draggable = true
+frame.Parent = screenGui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 10)
+corner.Parent = frame
+
+-- 📜 ข้อความหัวข้อ
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, 0, 0, 50)
+titleLabel.Position = UDim2.new(0, 0, 0, 10)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "ยกน้ำหนัก ภาษาไทย | TOU 🏋️‍♂️"
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.TextScaled = true
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.Parent = frame
+
+-- 📢 ข้อความแจ้งสถานะ
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Size = UDim2.new(1, 0, 0, 30)
+statusLabel.Position = UDim2.new(0, 0, 0, 60)
+statusLabel.BackgroundTransparency = 1
+statusLabel.Text = "พร้อมใช้งาน 🚀"
+statusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+statusLabel.TextScaled = true
+statusLabel.Font = Enum.Font.Gotham
+statusLabel.Parent = frame
+
+-- 🗂️ สร้างระบบช่อง (Tabs)
+local tabFrame = Instance.new("Frame")
+tabFrame.Size = UDim2.new(1, 0, 0, 30)
+tabFrame.Position = UDim2.new(0, 0, 0, 100)
+tabFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+tabFrame.Parent = frame
+local tabCorner = Instance.new("UICorner")
+tabCorner.CornerRadius = UDim.new(0, 8)
+tabCorner.Parent = tabFrame
+
+-- 🔘 ปุ่มช่อง "อ้อโต้ฟาม"
+local farmTabButton = Instance.new("TextButton")
+farmTabButton.Size = UDim2.new(0.5, 0, 1, 0)
+farmTabButton.Position = UDim2.new(0, 0, 0, 0)
+farmTabButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+farmTabButton.Text = "อ้อโต้ฟาม 🌾"
+farmTabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+farmTabButton.TextScaled = true
+farmTabButton.Font = Enum.Font.Gotham
+farmTabButton.Parent = tabFrame
+local farmTabCorner = Instance.new("UICorner")
+farmTabCorner.CornerRadius = UDim.new(0, 8)
+farmTabCorner.Parent = farmTabButton
+
+-- 🔘 ปุ่มช่อง "ผู้เล่น"
+local playerTabButton = Instance.new("TextButton")
+playerTabButton.Size = UDim2.new(0.5, 0, 1, 0)
+playerTabButton.Position = UDim2.new(0.5, 0, 0, 0)
+playerTabButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+playerTabButton.Text = "ผู้เล่น 👤"
+playerTabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+playerTabButton.TextScaled = true
+playerTabButton.Font = Enum.Font.Gotham
+playerTabButton.Parent = tabFrame
+local playerTabCorner = Instance.new("UICorner")
+playerTabCorner.CornerRadius = UDim.new(0, 8)
+playerTabCorner.Parent = playerTabButton
+
+-- 🗂️ เนื้อหาช่อง "อ้อโต้ฟาม"
+local farmTab = Instance.new("Frame")
+farmTab.Size = UDim2.new(1, 0, 0, 150)
+farmTab.Position = UDim2.new(0, 0, 0, 130)
+farmTab.BackgroundTransparency = 1
+farmTab.Parent = frame
+
+-- 🔘 ปุ่มเปิด/ปิด (ยกน้ำหนัก)
+local toggleButton = Instance.new("TextButton")
+toggleButton.Size = UDim2.new(0, 100, 0, 40)
+toggleButton.Position = UDim2.new(0.25, -50, 0, 20)
+toggleButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+toggleButton.Text = "เปิด 🚀"
+toggleButton.TextColor3 = Color3.fromRGB(0, 255, 0)
+toggleButton.TextScaled = true
+toggleButton.Font = Enum.Font.Gotham
+toggleButton.Parent = farmTab
+local buttonCorner = Instance.new("UICorner")
+buttonCorner.CornerRadius = UDim.new(0, 8)
+buttonCorner.Parent = toggleButton
+
+-- 📜 ข้อความ "วาปไปจุดปลอดภัย"
+local warpLabel = Instance.new("TextLabel")
+warpLabel.Size = UDim2.new(1, 0, 0, 30)
+warpLabel.Position = UDim2.new(0, 0, 0, 70)
+warpLabel.BackgroundTransparency = 1
+warpLabel.Text = "วาปไปจุดปลอดภัย 🌌"
+warpLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+warpLabel.TextScaled = true
+warpLabel.Font = Enum.Font.Gotham
+warpLabel.Parent = farmTab
+
+-- 🔘 ปุ่มวาป/กลับ
+local warpButton = Instance.new("TextButton")
+warpButton.Size = UDim2.new(0, 100, 0, 40)
+warpButton.Position = UDim2.new(0.75, -50, 0, 20)
+warpButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+warpButton.Text = "วาป 🌌"
+warpButton.TextColor3 = Color3.fromRGB(0, 255, 255)
+warpButton.TextScaled = true
+warpButton.Font = Enum.Font.Gotham
+warpButton.Parent = farmTab
+local warpButtonCorner = Instance.new("UICorner")
+warpButtonCorner.CornerRadius = UDim.new(0, 8)
+warpButtonCorner.Parent = warpButton
+
+-- 🗂️ เนื้อหาช่อง "ผู้เล่น"
+local playerTab = Instance.new("Frame")
+playerTab.Size = UDim2.new(1, 0, 0, 150)
+playerTab.Position = UDim2.new(0, 0, 0, 130)
+playerTab.BackgroundTransparency = 1
+playerTab.Visible = false
+playerTab.Parent = frame
+
+-- 📜 ข้อความ "ปรับความเร็ว"
+local speedLabel = Instance.new("TextLabel")
+speedLabel.Size = UDim2.new(0.5, 0, 0, 30)
+speedLabel.Position = UDim2.new(0, 10, 0, 20)
+speedLabel.BackgroundTransparency = 1
+speedLabel.Text = "ปรับความเร็ว 🏃‍♂️"
+speedLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedLabel.TextScaled = true
+speedLabel.Font = Enum.Font.Gotham
+speedLabel.Parent = playerTab
+
+-- ✍️ ช่องกรอกความเร็ว
+local speedInput = Instance.new("TextBox")
+speedInput.Size = UDim2.new(0.4, 0, 0, 30)
+speedInput.Position = UDim2.new(0.5, -10, 0, 20)
+speedInput.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+speedInput.Text = tostring(speedValue)
+speedInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedInput.TextScaled = true
+speedInput.Font = Enum.Font.Gotham
+speedInput.Parent = playerTab
+local speedInputCorner = Instance.new("UICorner")
+speedInputCorner.CornerRadius = UDim.new(0, 8)
+speedInputCorner.Parent = speedInput
+
+-- 📜 ข้อความ "ปรับกระโดด"
+local jumpLabel = Instance.new("TextLabel")
+jumpLabel.Size = UDim2.new(0.5, 0, 0, 30)
+jumpLabel.Position = UDim2.new(0, 10, 0, 60)
+jumpLabel.BackgroundTransparency = 1
+jumpLabel.Text = "ปรับกระโดด 🦘"
+jumpLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+jumpLabel.TextScaled = true
+jumpLabel.Font = Enum.Font.Gotham
+jumpLabel.Parent = playerTab
+
+-- ✍️ ช่องกรอกกระโดด
+local jumpInput = Instance.new("TextBox")
+jumpInput.Size = UDim2.new(0.4, 0, 0, 30)
+jumpInput.Position = UDim2.new(0.5, -10, 0, 60)
+jumpInput.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+jumpInput.Text = tostring(jumpValue)
+jumpInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+jumpInput.TextScaled = true
+jumpInput.Font = Enum.Font.Gotham
+jumpInput.Parent = playerTab
+local jumpInputCorner = Instance.new("UICorner")
+jumpInputCorner.CornerRadius = UDim.new(0, 8)
+jumpInputCorner.Parent = jumpInput
+
+-- 🖼️ สร้าง UI เลือกเครื่องมือ
+local toolSelectGui = Instance.new("ScreenGui")
+toolSelectGui.Name = "ToolSelectGUI"
+toolSelectGui.ResetOnSpawn = false
+toolSelectGui.Parent = player:WaitForChild("PlayerGui")
+
+local toolSelectFrame = Instance.new("Frame")
+toolSelectFrame.Size = UDim2.new(0, 200, 0, 150)
+toolSelectFrame.Position = UDim2.new(0.5, -100, 0.5, -75)
+toolSelectFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+toolSelectFrame.BorderSizePixel = 2
+toolSelectFrame.BorderColor3 = Color3.fromRGB(255, 255, 0)
+toolSelectFrame.Visible = false
+toolSelectFrame.Parent = toolSelectGui
+local toolSelectCorner = Instance.new("UICorner")
+toolSelectCorner.CornerRadius = UDim.new(0, 10)
+toolSelectCorner.Parent = toolSelectFrame
+
+-- 📜 ข้อความ "จะอ้อโต้อันไหน"
+local toolSelectLabel = Instance.new("TextLabel")
+toolSelectLabel.Size = UDim2.new(1, 0, 0, 40)
+toolSelectLabel.Position = UDim2.new(0, 0, 0, 10)
+toolSelectLabel.BackgroundTransparency = 1
+toolSelectLabel.Text = "จะอ้อโต้อันไหน? 🛠️"
+toolSelectLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+toolSelectLabel.TextScaled = true
+toolSelectLabel.Font = Enum.Font.GothamBold
+toolSelectLabel.Parent = toolSelectFrame
+
+-- 🔘 ปุ่มเลือก Weight
+local weightButton = Instance.new("TextButton")
+weightButton.Size = UDim2.new(0, 80, 0, 30)
+weightButton.Position = UDim2.new(0.5, -90, 0, 60)
+weightButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+weightButton.Text = "Weight 🏋️‍♂️"
+weightButton.TextColor3 = Color3.fromRGB(0, 255, 0)
+weightButton.TextScaled = true
+weightButton.Font = Enum.Font.Gotham
+weightButton.Parent = toolSelectFrame
+local weightButtonCorner = Instance.new("UICorner")
+weightButtonCorner.CornerRadius = UDim.new(0, 8)
+weightButtonCorner.Parent = weightButton
+
+-- 🔘 ปุ่มเลือก Pushups
+local pushupsButton = Instance.new("TextButton")
+pushupsButton.Size = UDim2.new(0, 80, 0, 30)
+pushupsButton.Position = UDim2.new(0.5, 10, 0, 60)
+pushupsButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+pushupsButton.Text = "Pushups 💪"
+pushupsButton.TextColor3 = Color3.fromRGB(0, 255, 0)
+pushupsButton.TextScaled = true
+pushupsButton.Font = Enum.Font.Gotham
+pushupsButton.Parent = toolSelectFrame
+local pushupsButtonCorner = Instance.new("UICorner")
+pushupsButtonCorner.CornerRadius = UDim.new(0, 8)
+pushupsButtonCorner.Parent = pushupsButton
+
+-- 🔘 ปุ่มเอาออก
+local unequipButton = Instance.new("TextButton")
+unequipButton.Size = UDim2.new(0, 100, 0, 30)
+unequipButton.Position = UDim2.new(0.5, -50, 0, 100)
+unequipButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+unequipButton.Text = "เอาออก 🛑"
+unequipButton.TextColor3 = Color3.fromRGB(255, 0, 0)
+unequipButton.TextScaled = true
+unequipButton.Font = Enum.Font.Gotham
+unequipButton.Parent = toolSelectFrame
+local unequipButtonCorner = Instance.new("UICorner")
+unequipButtonCorner.CornerRadius = UDim.new(0, 8)
+unequipButtonCorner.Parent = unequipButton
+
+-- 🎮 ฟังก์ชันยกน้ำหนัก (ยิง RemoteEvent)
+local function autoLift()
+    local tool = findTool(selectedTool)
+    if not tool then
+        statusLabel.Text = "⚠️ ไม่พบ " .. selectedTool .. "!"
+        statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+        toolSelectFrame.Visible = false
+        return
+    end
+
+    if not character or not character:FindFirstChild("Humanoid") then
+        statusLabel.Text = "⚠️ ไม่พบตัวละคร!"
+        statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+        toolSelectFrame.Visible = false
+        return
+    end
+
+    if tool.Parent ~= character then
+        local humanoid = character:FindFirstChild("Humanoid")
+        if humanoid then
+            local success, err = pcall(function()
+                humanoid:EquipTool(tool)
+            end)
+            if not success then
+                statusLabel.Text = "⚠️ ไม่สามารถถือ " .. selectedTool .. " ได้!"
+                statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+                warn("⚠️ Error equipping " .. selectedTool .. ": " .. tostring(err))
+                toolSelectFrame.Visible = false
+                return
+            end
+        else
+            statusLabel.Text = "⚠️ ไม่พบ Humanoid!"
+            statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+            toolSelectFrame.Visible = false
+            return
+        end
+    end
+
+    local muscleEvent = player:WaitForChild("muscleEvent", 5)
+    if not muscleEvent then
+        statusLabel.Text = "⚠️ ไม่พบ muscleEvent!"
+        statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+        warn("⚠️ ไม่พบ muscleEvent ใน Player!")
+        toolSelectFrame.Visible = false
+        return
+    end
+
+    statusLabel.Text = "กำลังใช้ " .. selectedTool .. "... 💪"
+    statusLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+
+    local args = {"rep"}
+    loopConnection = RunService.Heartbeat:Connect(function()
+        if isToggled and character and character:FindFirstChild("Humanoid") then
+            local success, err = pcall(function()
+                muscleEvent:FireServer(unpack(args))
+            end)
+            if not success then
+                statusLabel.Text = "⚠️ ล้มเหลวในการยิง RemoteEvent!"
+                statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+                warn("⚠️ Error firing muscleEvent: " .. tostring(err))
+                loopConnection:Disconnect()
+            end
+            task.wait(0.1)
+        else
+            loopConnection:Disconnect()
+            statusLabel.Text = "หยุดการทำงาน 🛑"
+            statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+        end
+    end)
+end
+
+-- 🔒 ฟังก์ชันล็อคตัวละคร
+local function lockCharacter()
+    if character and character:FindFirstChild("HumanoidRootPart") then
+        local humanoidRootPart = character.HumanoidRootPart
+        humanoidRootPart.Anchored = true
+        lockConnection = RunService.Heartbeat:Connect(function()
+            if isWarped and character and character:FindFirstChild("HumanoidRootPart") then
+                humanoidRootPart.CFrame = CFrame.new(safePosition)
+            else
+                lockConnection:Disconnect()
+                humanoidRootPart.Anchored = false
+            end
+        end)
+    end
+end
+
+-- 🌌 ฟังก์ชันวาร์ปและกลับ
+local function toggleWarp()
+    if not character or not character:FindFirstChild("HumanoidRootPart") then
+        statusLabel.Text = "⚠️ ไม่พบตัวละคร!"
+        statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+        return
+    end
+
+    local humanoidRootPart = character.HumanoidRootPart
+    isWarped = not isWarped
+    if isWarped then
+        originalPosition = humanoidRootPart.Position
+        humanoidRootPart.CFrame = CFrame.new(safePosition)
+        warpButton.Text = "กลับ 🔙"
+        warpButton.TextColor3 = Color3.fromRGB(255, 165, 0)
+        statusLabel.Text = "วาร์ปไปจุดปลอดภัย 🌌"
+        statusLabel.TextColor3 = Color3.fromRGB(0, 255, 255)
+        lockCharacter()
+    else
+        if originalPosition then
+            humanoidRootPart.CFrame = CFrame.new(originalPosition)
+        end
+        warpButton.Text = "วาป 🌌"
+        warpButton.TextColor3 = Color3.fromRGB(0, 255, 255)
+        statusLabel.Text = "กลับไปตำแหน่งเดิม 🔙"
+        statusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        if lockConnection then
+            lockConnection:Disconnect()
+            humanoidRootPart.Anchored = false
+        end
+    end
+end
+
+-- 🏃‍♂️ ฟังก์ชันปรับความเร็วและกระโดด
+local function updateStats()
+    if statLoopConnection then
+        statLoopConnection:Disconnect()
+    end
+    statLoopConnection = RunService.Heartbeat:Connect(function()
+        if character and character:FindFirstChild("Humanoid") then
+            local humanoid = character.Humanoid
+            local success, err = pcall(function()
+                humanoid.WalkSpeed = speedValue
+                humanoid.JumpPower = jumpValue
+            end)
+            if not success then
+                statusLabel.Text = "⚠️ ล้มเหลวในการปรับความเร็ว/กระโดด!"
+                statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+                warn("⚠️ Error updating stats: " .. tostring(err))
+                statLoopConnection:Disconnect()
+            end
+        end
+    end)
+end
+
+-- ✍️ การจัดการช่องกรอกความเร็ว
+speedInput.FocusLost:Connect(function(enterPressed)
+    if enterPressed then
+        local input = tonumber(speedInput.Text)
+        if input and input >= 0 then
+            speedValue = input
+            statusLabel.Text = "ปรับความเร็วเป็น " .. input .. " 🏃‍♂️"
+            statusLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+            updateStats()
+        else
+            statusLabel.Text = "⚠️ กรุณากรอกตัวเลขที่ถูกต้อง!"
+            statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+            speedInput.Text = tostring(speedValue)
+        end
+    end
+end)
+
+-- ✍️ การจัดการช่องกรอกกระโดด
+jumpInput.FocusLost:Connect(function(enterPressed)
+    if enterPressed then
+        local input = tonumber(jumpInput.Text)
+        if input and input >= 0 then
+            jumpValue = input
+            statusLabel.Text = "ปรับกระโดดเป็น " .. input .. " 🦘"
+            statusLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+            updateStats()
+        else
+            statusLabel.Text = "⚠️ กรุณากรอกตัวเลขที่ถูกต้อง!"
+            statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+            jumpInput.Text = tostring(jumpValue)
+        end
+    end
+end)
+
+-- 🔄 การจัดการปุ่มเลือกเครื่องมือ
+weightButton.MouseButton1Click:Connect(function()
+    selectedTool = "Weight"
+    toolSelectFrame.Visible = false
+    autoLift()
+end)
+
+pushupsButton.MouseButton1Click:Connect(function()
+    selectedTool = "Pushups"
+    toolSelectFrame.Visible = false
+    autoLift()
+end)
+
+unequipButton.MouseButton1Click:Connect(function()
+    selectedTool = "Weight"
+    if character and character:FindFirstChild("Humanoid") then
+        local humanoid = character.Humanoid
+        local success, err = pcall(function()
+            humanoid:UnequipTools()
+            local weightTool = findTool("Weight")
+            if weightTool then
+                humanoid:EquipTool(weightTool)
+            end
+        end)
+        if not success then
+            statusLabel.Text = "⚠️ ไม่สามารถถือ Weight ได้!"
+            statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+            warn("⚠️ Error equipping Weight: " .. tostring(err))
+        end
+    end
+    toolSelectFrame.Visible = false
+    autoLift()
+end)
+
+-- 🔄 การจัดการปุ่มยกน้ำหนัก
+toggleButton.MouseButton1Click:Connect(function()
+    isToggled = not isToggled
+    if isToggled then
+        toggleButton.Text = "ปิด 🛑"
+        toggleButton.TextColor3 = Color3.fromRGB(255, 0, 0)
+        toolSelectFrame.Visible = true -- แสดง UI เลือกเครื่องมือ
+    else
+        toggleButton.Text = "เปิด 🚀"
+        toggleButton.TextColor3 = Color3.fromRGB(0, 255, 0)
+        if loopConnection then
+            loopConnection:Disconnect()
+        end
+        toolSelectFrame.Visible = false
+        statusLabel.Text = "หยุดการทำงาน 🛑"
+        statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+        if character and character:FindFirstChild("Humanoid") then
+            local humanoid = character.Humanoid
+            pcall(function()
+                humanoid:UnequipTools()
+            end)
+        end
+    end
+end)
+
+-- 🔄 การจัดการปุ่มวาร์ป
+warpButton.MouseButton1Click:Connect(toggleWarp)
+
+-- 🔄 การจัดการช่อง (Tabs)
+farmTabButton.MouseButton1Click:Connect(function()
+    farmTab.Visible = true
+    playerTab.Visible = false
+    farmTabButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+    playerTabButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+end)
+
+playerTabButton.MouseButton1Click:Connect(function()
+    farmTab.Visible = false
+    playerTab.Visible = true
+    farmTabButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    playerTabButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+end)
+
+-- 🔄 รีเซ็ตเมื่อตัวละครเกิดใหม่
+player.CharacterAdded:Connect(function(newChar)
+    character = newChar
+    if isToggled then
+        wait(2)
+        autoLift()
+    end
+    if isWarped then
+        wait(2)
+        if character and character:FindFirstChild("HumanoidRootPart") then
+            character.HumanoidRootPart.CFrame = CFrame.new(safePosition)
+            lockCharacter()
+        end
+    end
+    updateStats()
+end)
+
+-- 🖱️ เอฟเฟกต์ Hover
+toggleButton.MouseEnter:Connect(function()
+    toggleButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+end)
+toggleButton.MouseLeave:Connect(function()
+    toggleButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+end)
+
+warpButton.MouseEnter:Connect(function()
+    warpButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+end)
+warpButton.MouseLeave:Connect(function()
+    warpButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+end)
+
+farmTabButton.MouseEnter:Connect(function()
+    farmTabButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+end)
+farmTabButton.MouseLeave:Connect(function()
+    farmTabButton.BackgroundColor3 = farmTab.Visible and Color3.fromRGB(70, 70, 70) or Color3.fromRGB(50, 50, 50)
+end)
+
+playerTabButton.MouseEnter:Connect(function()
+    playerTabButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+end)
+playerTabButton.MouseLeave:Connect(function()
+    playerTabButton.BackgroundColor3 = playerTab.Visible and Color3.fromRGB(70, 70, 70) or Color3.fromRGB(50, 50, 50)
+end)
+
+weightButton.MouseEnter:Connect(function()
+    weightButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+end)
+weightButton.MouseLeave:Connect(function()
+    weightButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+end)
+
+pushupsButton.MouseEnter:Connect(function()
+    pushupsButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+end)
+pushupsButton.MouseLeave:Connect(function()
+    pushupsButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+end)
+
+unequipButton.MouseEnter:Connect(function()
+    unequipButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+end)
+unequipButton.MouseLeave:Connect(function()
+    unequipButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+end)
+
+print("🎉 GUI ยกน้ำหนัก, วาร์ป, ปรับแต่ง, และเลือกเครื่องมือพร้อมใช้งาน! 🚀🌌")
