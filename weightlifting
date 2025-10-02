@@ -18,17 +18,22 @@ local selectedTool = "Weight"
 
 -- 🔍 ฟังก์ชันหา Tool
 local function findTool(toolName)
-    local tool = player.Backpack:WaitForChild(toolName, 5)
-    if tool then
-        print("✅ พบ " .. toolName .. " ใน Backpack")
-        return tool
-    end
-    if character then
-        tool = character:FindFirstChild(toolName)
+    local timeout = tick() + 10 -- รอสูงสุด 10 วินาที
+    local tool
+    while tick() < timeout do
+        tool = player.Backpack:FindFirstChild(toolName)
         if tool then
-            print("✅ พบ " .. toolName .. " ใน Character")
+            print("✅ พบ " .. toolName .. " ใน Backpack")
             return tool
         end
+        if character then
+            tool = character:FindFirstChild(toolName)
+            if tool then
+                print("✅ พบ " .. toolName .. " ใน Character")
+                return tool
+            end
+        end
+        wait(0.1)
     end
     warn("⚠️ ไม่พบ " .. toolName .. " ใน Backpack หรือ Character!")
     return nil
@@ -285,21 +290,18 @@ for _, btn in ipairs(toolButtons) do
         isToggled = true
         toggleButton.Text = "ปิด 🛑"
         toggleButton.TextColor3 = Color3.fromRGB(255, 0, 0)
-        task.spawn(autoLift) -- รันแบบ asynchronous
+        task.spawn(autoLift)
     end)
 end
 
 -- 🎮 ฟังก์ชันยกน้ำหนัก (ยิง RemoteEvent)
 local function autoLift()
     -- รอจนกว่าตัวละครและ Humanoid พร้อม
-    local timeout = tick() + 5
+    local timeout = tick() + 10
     while not character or not character:FindFirstChild("Humanoid") do
         if tick() > timeout then
             statusLabel.Text = "⚠️ ไม่พบตัวละครหรือ Humanoid!"
             statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-            isToggled = false
-            toggleButton.Text = "เปิด 🚀"
-            toggleButton.TextColor3 = Color3.fromRGB(0, 255, 0)
             return
         end
         wait(0.1)
@@ -310,9 +312,6 @@ local function autoLift()
     if not tool then
         statusLabel.Text = "⚠️ ไม่พบ " .. selectedTool .. "!"
         statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-        isToggled = false
-        toggleButton.Text = "เปิด 🚀"
-        toggleButton.TextColor3 = Color3.fromRGB(0, 255, 0)
         return
     end
 
@@ -325,36 +324,27 @@ local function autoLift()
         statusLabel.Text = "⚠️ ไม่สามารถถือ " .. selectedTool .. " ได้!"
         statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
         warn("⚠️ Error equipping " .. selectedTool .. ": " .. tostring(err))
-        isToggled = false
-        toggleButton.Text = "เปิด 🚀"
-        toggleButton.TextColor3 = Color3.fromRGB(0, 255, 0)
         return
     else
         print("✅ ถือ " .. selectedTool .. " สำเร็จ")
     end
 
     -- รอจนกว่าไอเทมจะอยู่ใน Character
-    timeout = tick() + 5
+    timeout = tick() + 10
     while not character:FindFirstChild(selectedTool) do
         if tick() > timeout then
             statusLabel.Text = "⚠️ ไอเทม " .. selectedTool .. " ไม่ถูกถือ!"
             statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-            isToggled = false
-            toggleButton.Text = "เปิด 🚀"
-            toggleButton.TextColor3 = Color3.fromRGB(0, 255, 0)
             return
         end
         wait(0.1)
     end
 
-    local muscleEvent = player:WaitForChild("muscleEvent", 5)
+    local muscleEvent = player:WaitForChild("muscleEvent", 10)
     if not muscleEvent then
         statusLabel.Text = "⚠️ ไม่พบ muscleEvent!"
         statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
         warn("⚠️ ไม่พบ muscleEvent ใน Player!")
-        isToggled = false
-        toggleButton.Text = "เปิด 🚀"
-        toggleButton.TextColor3 = Color3.fromRGB(0, 255, 0)
         return
     end
 
@@ -362,8 +352,11 @@ local function autoLift()
     statusLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
 
     local args = {"rep"}
+    if loopConnection then
+        loopConnection:Disconnect()
+    end
     loopConnection = RunService.Heartbeat:Connect(function()
-        if isToggled and character and character:FindFirstChild("Humanoid") and character:FindFirstChild(selectedTool) then
+        if isToggled and character and character:FindFirstChild("Humanoid") then
             local success, err = pcall(function()
                 muscleEvent:FireServer(unpack(args))
             end)
@@ -372,18 +365,13 @@ local function autoLift()
                 statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
                 warn("⚠️ Error firing muscleEvent: " .. tostring(err))
                 loopConnection:Disconnect()
-                isToggled = false
-                toggleButton.Text = "เปิด 🚀"
-                toggleButton.TextColor3 = Color3.fromRGB(0, 255, 0)
+                return
             end
             task.wait(0.1)
         else
             loopConnection:Disconnect()
             statusLabel.Text = "หยุดการทำงาน 🛑"
             statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-            isToggled = false
-            toggleButton.Text = "เปิด 🚀"
-            toggleButton.TextColor3 = Color3.fromRGB(0, 255, 0)
         end
     end)
 end
@@ -540,15 +528,22 @@ end)
 -- 🔄 รีเซ็ตเมื่อตัวละครเกิดใหม่
 player.CharacterAdded:Connect(function(newChar)
     character = newChar
-    wait(3)
     if isToggled then
-        task.spawn(autoLift)
+        task.spawn(function()
+            wait(5) -- รอ 5 วินาทีเพื่อให้ตัวละครโหลดสมบูรณ์
+            if isToggled then -- ตรวจสอบว่า isToggled ยังเป็น true
+                autoLift()
+            end
+        end)
     end
     if isWarped then
-        if character and character:FindFirstChild("HumanoidRootPart") then
-            character.HumanoidRootPart.CFrame = CFrame.new(safePosition)
-            lockCharacter()
-        end
+        task.spawn(function()
+            wait(5)
+            if character and character:FindFirstChild("HumanoidRootPart") then
+                character.HumanoidRootPart.CFrame = CFrame.new(safePosition)
+                lockCharacter()
+            end
+        end)
     end
     updateStats()
 end)
