@@ -1,4 +1,4 @@
--- 🌟 สคริปต์ GUI ยกน้ำหนัก, วาร์ป, ปรับแต่งผู้เล่น และเลือกไอเทมสุดเท่ (ฉบับซ่อม) 🌟
+-- 🌟 สคริปต์ GUI ยกน้ำหนัก, วาร์ป, ปรับแต่งผู้เล่น และเลือกไอเทมสุดเท่ (ฉบับรีตัว) 🌟
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
@@ -18,7 +18,7 @@ local selectedTool = "Weight"
 
 -- 🔍 ฟังก์ชันหา Tool
 local function findTool(toolName)
-    local timeout = tick() + 10 -- รอสูงสุด 10 วินาที
+    local timeout = tick() + 10
     local tool
     while tick() < timeout do
         tool = player.Backpack:FindFirstChild(toolName)
@@ -37,6 +37,19 @@ local function findTool(toolName)
     end
     warn("⚠️ ไม่พบ " .. toolName .. " ใน Backpack หรือ Character!")
     return nil
+end
+
+-- 💀 ฟังก์ชันรีตัวละคร
+local function resetCharacter()
+    if character and character:FindFirstChild("Humanoid") then
+        character.Humanoid.Health = 0
+        print("💀 รีตัวละครเรียบร้อย")
+        statusLabel.Text = "กำลังรีตัวละคร... 💀"
+        statusLabel.TextColor3 = Color3.fromRGB(255, 165, 0)
+    else
+        statusLabel.Text = "⚠️ ไม่สามารถรีตัวละครได้!"
+        statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+    end
 end
 
 -- 🖼️ สร้าง GUI หลัก
@@ -290,7 +303,7 @@ for _, btn in ipairs(toolButtons) do
         isToggled = true
         toggleButton.Text = "ปิด 🛑"
         toggleButton.TextColor3 = Color3.fromRGB(255, 0, 0)
-        task.spawn(autoLift)
+        resetCharacter() -- รีตัวเมื่อเลือกไอเทม
     end)
 end
 
@@ -327,17 +340,6 @@ local function autoLift()
         return
     else
         print("✅ ถือ " .. selectedTool .. " สำเร็จ")
-    end
-
-    -- รอจนกว่าไอเทมจะอยู่ใน Character
-    timeout = tick() + 10
-    while not character:FindFirstChild(selectedTool) do
-        if tick() > timeout then
-            statusLabel.Text = "⚠️ ไอเทม " .. selectedTool .. " ไม่ถูกถือ!"
-            statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-            return
-        end
-        wait(0.1)
     end
 
     local muscleEvent = player:WaitForChild("muscleEvent", 10)
@@ -484,6 +486,10 @@ end)
 -- 🔄 การจัดการปุ่มยกน้ำหนัก
 toggleButton.MouseButton1Click:Connect(function()
     if not isToggled then
+        isToggled = true
+        toggleButton.Text = "ปิด 🛑"
+        toggleButton.TextColor3 = Color3.fromRGB(255, 0, 0)
+        resetCharacter() -- รีตัวเมื่อกด "เปิด"
         toolSelectFrame.Visible = true
     else
         isToggled = false
@@ -504,7 +510,7 @@ removeButton.MouseButton1Click:Connect(function()
     isToggled = true
     toggleButton.Text = "ปิด 🛑"
     toggleButton.TextColor3 = Color3.fromRGB(255, 0, 0)
-    task.spawn(autoLift)
+    resetCharacter() -- รีตัวเมื่อเลือก "เอาออก"
 end)
 
 -- 🔄 การจัดการปุ่มวาร์ป
@@ -531,7 +537,7 @@ player.CharacterAdded:Connect(function(newChar)
     if isToggled then
         task.spawn(function()
             wait(5) -- รอ 5 วินาทีเพื่อให้ตัวละครโหลดสมบูรณ์
-            if isToggled then -- ตรวจสอบว่า isToggled ยังเป็น true
+            if isToggled then
                 autoLift()
             end
         end)
