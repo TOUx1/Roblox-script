@@ -18,7 +18,7 @@ local selectedTool = "Weight"
 
 -- 🔍 ฟังก์ชันหา Tool
 local function findTool(toolName)
-    local tool = player.Backpack:FindFirstChild(toolName)
+    local tool = player.Backpack:WaitForChild(toolName, 5)
     if tool then
         print("✅ พบ " .. toolName .. " ใน Backpack")
         return tool
@@ -285,12 +285,27 @@ for _, btn in ipairs(toolButtons) do
         isToggled = true
         toggleButton.Text = "ปิด 🛑"
         toggleButton.TextColor3 = Color3.fromRGB(255, 0, 0)
-        autoLift()
+        task.spawn(autoLift) -- รันแบบ asynchronous
     end)
 end
 
 -- 🎮 ฟังก์ชันยกน้ำหนัก (ยิง RemoteEvent)
 local function autoLift()
+    -- รอจนกว่าตัวละครและ Humanoid พร้อม
+    local timeout = tick() + 5
+    while not character or not character:FindFirstChild("Humanoid") do
+        if tick() > timeout then
+            statusLabel.Text = "⚠️ ไม่พบตัวละครหรือ Humanoid!"
+            statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+            isToggled = false
+            toggleButton.Text = "เปิด 🚀"
+            toggleButton.TextColor3 = Color3.fromRGB(0, 255, 0)
+            return
+        end
+        wait(0.1)
+    end
+
+    local humanoid = character.Humanoid
     local tool = findTool(selectedTool)
     if not tool then
         statusLabel.Text = "⚠️ ไม่พบ " .. selectedTool .. "!"
@@ -301,39 +316,35 @@ local function autoLift()
         return
     end
 
-    if not character or not character:FindFirstChild("Humanoid") then
-        statusLabel.Text = "⚠️ ไม่พบตัวละคร!"
+    -- ล้างไอเทมเก่าและถือไอเทมใหม่
+    local success, err = pcall(function()
+        humanoid:UnequipTools()
+        humanoid:EquipTool(tool)
+    end)
+    if not success then
+        statusLabel.Text = "⚠️ ไม่สามารถถือ " .. selectedTool .. " ได้!"
         statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+        warn("⚠️ Error equipping " .. selectedTool .. ": " .. tostring(err))
         isToggled = false
         toggleButton.Text = "เปิด 🚀"
         toggleButton.TextColor3 = Color3.fromRGB(0, 255, 0)
         return
+    else
+        print("✅ ถือ " .. selectedTool .. " สำเร็จ")
     end
 
-    local humanoid = character:FindFirstChild("Humanoid")
-    if humanoid then
-        local success, err = pcall(function()
-            humanoid:UnequipTools() -- ล้างไอเทมที่ถืออยู่ก่อน
-            humanoid:EquipTool(tool)
-        end)
-        if not success then
-            statusLabel.Text = "⚠️ ไม่สามารถถือ " .. selectedTool .. " ได้!"
+    -- รอจนกว่าไอเทมจะอยู่ใน Character
+    timeout = tick() + 5
+    while not character:FindFirstChild(selectedTool) do
+        if tick() > timeout then
+            statusLabel.Text = "⚠️ ไอเทม " .. selectedTool .. " ไม่ถูกถือ!"
             statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-            warn("⚠️ Error equipping " .. selectedTool .. ": " .. tostring(err))
             isToggled = false
             toggleButton.Text = "เปิด 🚀"
             toggleButton.TextColor3 = Color3.fromRGB(0, 255, 0)
             return
-        else
-            print("✅ ถือ " .. selectedTool .. " สำเร็จ")
         end
-    else
-        statusLabel.Text = "⚠️ ไม่พบ Humanoid!"
-        statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-        isToggled = false
-        toggleButton.Text = "เปิด 🚀"
-        toggleButton.TextColor3 = Color3.fromRGB(0, 255, 0)
-        return
+        wait(0.1)
     end
 
     local muscleEvent = player:WaitForChild("muscleEvent", 5)
@@ -505,7 +516,7 @@ removeButton.MouseButton1Click:Connect(function()
     isToggled = true
     toggleButton.Text = "ปิด 🛑"
     toggleButton.TextColor3 = Color3.fromRGB(255, 0, 0)
-    autoLift()
+    task.spawn(autoLift)
 end)
 
 -- 🔄 การจัดการปุ่มวาร์ป
@@ -529,9 +540,9 @@ end)
 -- 🔄 รีเซ็ตเมื่อตัวละครเกิดใหม่
 player.CharacterAdded:Connect(function(newChar)
     character = newChar
-    wait(3) -- เพิ่มการรอเป็น 3 วินาทีเพื่อให้แน่ใจว่าโหลดสมบูรณ์
+    wait(3)
     if isToggled then
-        autoLift()
+        task.spawn(autoLift)
     end
     if isWarped then
         if character and character:FindFirstChild("HumanoidRootPart") then
