@@ -1,4 +1,4 @@
--- 🌟 สคริปต์ GUI ยกน้ำหนัก, วาร์ป, ปรับแต่ง, และเลือกเครื่องมือสุดเท่ 🌟
+-- 🌟 สคริปต์ GUI ยกน้ำหนัก, วาร์ป, ปรับแต่งผู้เล่น และเลือกไอเทมสุดเท่ 🌟
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
@@ -14,9 +14,9 @@ local statLoopConnection = nil -- สำหรับลูปปรับคว�
 local safePosition = Vector3.new(-790152.44, 196142.62, 442828.31) -- ตำแหน่งปลอดภัย
 local speedValue = 16 -- ความเร็วเริ่มต้น
 local jumpValue = 50 -- กระโดดเริ่มต้น
-local selectedTool = "Weight" -- เครื่องมือที่เลือก (เริ่มต้น Weight)
+local selectedTool = "Weight" -- ไอเทมที่เลือก (เริ่มต้น Weight)
 
--- 🔍 ฟังก์ชันหาเครื่องมือ
+-- 🔍 ฟังก์ชันหา Tool
 local function findTool(toolName)
     local tool = player.Backpack:FindFirstChild(toolName)
     if tool then return tool end
@@ -40,7 +40,7 @@ frame.Position = UDim2.new(0.5, -175, 0.5, -150)
 frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 frame.BorderSizePixel = 2
 frame.BorderColor3 = Color3.fromRGB(255, 255, 0)
-frame.Active = true -- ทำให้ลากได้
+frame.Active = true
 frame.Draggable = true
 frame.Parent = screenGui
 
@@ -70,7 +70,7 @@ statusLabel.TextScaled = true
 statusLabel.Font = Enum.Font.Gotham
 statusLabel.Parent = frame
 
--- 🗂️ สร้างระบบช่อง (Tabs)
+-- 🗂️ สร้างระบบช่อง
 local tabFrame = Instance.new("Frame")
 tabFrame.Size = UDim2.new(1, 0, 0, 30)
 tabFrame.Position = UDim2.new(0, 0, 0, 100)
@@ -212,15 +212,14 @@ local jumpInputCorner = Instance.new("UICorner")
 jumpInputCorner.CornerRadius = UDim.new(0, 8)
 jumpInputCorner.Parent = jumpInput
 
--- 🖼️ สร้าง UI เลือกเครื่องมือ
+-- 🖼️ สร้าง UI เลือกไอเทม
 local toolSelectGui = Instance.new("ScreenGui")
 toolSelectGui.Name = "ToolSelectGUI"
 toolSelectGui.ResetOnSpawn = false
 toolSelectGui.Parent = player:WaitForChild("PlayerGui")
-
 local toolSelectFrame = Instance.new("Frame")
-toolSelectFrame.Size = UDim2.new(0, 200, 0, 150)
-toolSelectFrame.Position = UDim2.new(0.5, -100, 0.5, -75)
+toolSelectFrame.Size = UDim2.new(0, 200, 0, 250)
+toolSelectFrame.Position = UDim2.new(0.5, -100, 0.5, -125)
 toolSelectFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 toolSelectFrame.BorderSizePixel = 2
 toolSelectFrame.BorderColor3 = Color3.fromRGB(255, 255, 0)
@@ -235,53 +234,51 @@ local toolSelectLabel = Instance.new("TextLabel")
 toolSelectLabel.Size = UDim2.new(1, 0, 0, 40)
 toolSelectLabel.Position = UDim2.new(0, 0, 0, 10)
 toolSelectLabel.BackgroundTransparency = 1
-toolSelectLabel.Text = "จะอ้อโต้อันไหน? 🛠️"
+toolSelectLabel.Text = "จะอ้อโต้อันไหน? 🤔"
 toolSelectLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 toolSelectLabel.TextScaled = true
 toolSelectLabel.Font = Enum.Font.GothamBold
 toolSelectLabel.Parent = toolSelectFrame
 
--- 🔘 ปุ่มเลือก Weight
-local weightButton = Instance.new("TextButton")
-weightButton.Size = UDim2.new(0, 80, 0, 30)
-weightButton.Position = UDim2.new(0.5, -90, 0, 60)
-weightButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-weightButton.Text = "Weight 🏋️‍♂️"
-weightButton.TextColor3 = Color3.fromRGB(0, 255, 0)
-weightButton.TextScaled = true
-weightButton.Font = Enum.Font.Gotham
-weightButton.Parent = toolSelectFrame
-local weightButtonCorner = Instance.new("UICorner")
-weightButtonCorner.CornerRadius = UDim.new(0, 8)
-weightButtonCorner.Parent = weightButton
+-- 🔘 ปุ่มเลือกไอเทม
+local toolButtons = {
+    {Name = "Weight", Text = "Weight 🏋️‍♂️", Pos = UDim2.new(0.5, -80, 0, 60)},
+    {Name = "Pushups", Text = "Pushups 💪", Pos = UDim2.new(0.5, -80, 0, 100)},
+    {Name = "Handstands", Text = "Handstands 🤸‍♂️", Pos = UDim2.new(0.5, -80, 0, 140)},
+    {Name = "Situps", Text = "Situps 🧘‍♂️", Pos = UDim2.new(0.5, -80, 0, 180)}
+}
+local removeButton = Instance.new("TextButton")
+removeButton.Size = UDim2.new(0, 160, 0, 40)
+removeButton.Position = UDim2.new(0.5, -80, 0, 220)
+removeButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+removeButton.Text = "เอาออก (กลับ Weight) 🔄"
+removeButton.TextColor3 = Color3.fromRGB(255, 165, 0)
+removeButton.TextScaled = true
+removeButton.Font = Enum.Font.Gotham
+removeButton.Parent = toolSelectFrame
+local removeButtonCorner = Instance.new("UICorner")
+removeButtonCorner.CornerRadius = UDim.new(0, 8)
+removeButtonCorner.Parent = removeButton
 
--- 🔘 ปุ่มเลือก Pushups
-local pushupsButton = Instance.new("TextButton")
-pushupsButton.Size = UDim2.new(0, 80, 0, 30)
-pushupsButton.Position = UDim2.new(0.5, 10, 0, 60)
-pushupsButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-pushupsButton.Text = "Pushups 💪"
-pushupsButton.TextColor3 = Color3.fromRGB(0, 255, 0)
-pushupsButton.TextScaled = true
-pushupsButton.Font = Enum.Font.Gotham
-pushupsButton.Parent = toolSelectFrame
-local pushupsButtonCorner = Instance.new("UICorner")
-pushupsButtonCorner.CornerRadius = UDim.new(0, 8)
-pushupsButtonCorner.Parent = pushupsButton
-
--- 🔘 ปุ่มเอาออก
-local unequipButton = Instance.new("TextButton")
-unequipButton.Size = UDim2.new(0, 100, 0, 30)
-unequipButton.Position = UDim2.new(0.5, -50, 0, 100)
-unequipButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-unequipButton.Text = "เอาออก 🛑"
-unequipButton.TextColor3 = Color3.fromRGB(255, 0, 0)
-unequipButton.TextScaled = true
-unequipButton.Font = Enum.Font.Gotham
-unequipButton.Parent = toolSelectFrame
-local unequipButtonCorner = Instance.new("UICorner")
-unequipButtonCorner.CornerRadius = UDim.new(0, 8)
-unequipButtonCorner.Parent = unequipButton
+for _, btn in ipairs(toolButtons) do
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0, 160, 0, 40)
+    button.Position = btn.Pos
+    button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    button.Text = btn.Text
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.TextScaled = true
+    button.Font = Enum.Font.Gotham
+    button.Parent = toolSelectFrame
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 8)
+    btnCorner.Parent = button
+    button.MouseButton1Click:Connect(function()
+        selectedTool = btn.Name
+        toolSelectFrame.Visible = false
+        autoLift()
+    end)
+end
 
 -- 🎮 ฟังก์ชันยกน้ำหนัก (ยิง RemoteEvent)
 local function autoLift()
@@ -289,14 +286,12 @@ local function autoLift()
     if not tool then
         statusLabel.Text = "⚠️ ไม่พบ " .. selectedTool .. "!"
         statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-        toolSelectFrame.Visible = false
         return
     end
 
     if not character or not character:FindFirstChild("Humanoid") then
         statusLabel.Text = "⚠️ ไม่พบตัวละคร!"
         statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-        toolSelectFrame.Visible = false
         return
     end
 
@@ -310,13 +305,11 @@ local function autoLift()
                 statusLabel.Text = "⚠️ ไม่สามารถถือ " .. selectedTool .. " ได้!"
                 statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
                 warn("⚠️ Error equipping " .. selectedTool .. ": " .. tostring(err))
-                toolSelectFrame.Visible = false
                 return
             end
         else
             statusLabel.Text = "⚠️ ไม่พบ Humanoid!"
             statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-            toolSelectFrame.Visible = false
             return
         end
     end
@@ -326,11 +319,10 @@ local function autoLift()
         statusLabel.Text = "⚠️ ไม่พบ muscleEvent!"
         statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
         warn("⚠️ ไม่พบ muscleEvent ใน Player!")
-        toolSelectFrame.Visible = false
         return
     end
 
-    statusLabel.Text = "กำลังใช้ " .. selectedTool .. "... 💪"
+    statusLabel.Text = "กำลังอ้อโต้ " .. selectedTool .. "... 💪"
     statusLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
 
     local args = {"rep"}
@@ -459,69 +451,33 @@ jumpInput.FocusLost:Connect(function(enterPressed)
     end
 end)
 
--- 🔄 การจัดการปุ่มเลือกเครื่องมือ
-weightButton.MouseButton1Click:Connect(function()
-    selectedTool = "Weight"
-    toolSelectFrame.Visible = false
-    autoLift()
-end)
-
-pushupsButton.MouseButton1Click:Connect(function()
-    selectedTool = "Pushups"
-    toolSelectFrame.Visible = false
-    autoLift()
-end)
-
-unequipButton.MouseButton1Click:Connect(function()
-    selectedTool = "Weight"
-    if character and character:FindFirstChild("Humanoid") then
-        local humanoid = character.Humanoid
-        local success, err = pcall(function()
-            humanoid:UnequipTools()
-            local weightTool = findTool("Weight")
-            if weightTool then
-                humanoid:EquipTool(weightTool)
-            end
-        end)
-        if not success then
-            statusLabel.Text = "⚠️ ไม่สามารถถือ Weight ได้!"
-            statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-            warn("⚠️ Error equipping Weight: " .. tostring(err))
-        end
-    end
-    toolSelectFrame.Visible = false
-    autoLift()
-end)
-
 -- 🔄 การจัดการปุ่มยกน้ำหนัก
 toggleButton.MouseButton1Click:Connect(function()
-    isToggled = not isToggled
-    if isToggled then
-        toggleButton.Text = "ปิด 🛑"
-        toggleButton.TextColor3 = Color3.fromRGB(255, 0, 0)
-        toolSelectFrame.Visible = true -- แสดง UI เลือกเครื่องมือ
+    if not isToggled then
+        toolSelectFrame.Visible = true -- แสดง UI เลือกไอเทม
     else
+        isToggled = false
         toggleButton.Text = "เปิด 🚀"
         toggleButton.TextColor3 = Color3.fromRGB(0, 255, 0)
         if loopConnection then
             loopConnection:Disconnect()
         end
-        toolSelectFrame.Visible = false
         statusLabel.Text = "หยุดการทำงาน 🛑"
         statusLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-        if character and character:FindFirstChild("Humanoid") then
-            local humanoid = character.Humanoid
-            pcall(function()
-                humanoid:UnequipTools()
-            end)
-        end
     end
+end)
+
+-- 🔄 การจัดการปุ่มเอาออก
+removeButton.MouseButton1Click:Connect(function()
+    selectedTool = "Weight"
+    toolSelectFrame.Visible = false
+    autoLift()
 end)
 
 -- 🔄 การจัดการปุ่มวาร์ป
 warpButton.MouseButton1Click:Connect(toggleWarp)
 
--- 🔄 การจัดการช่อง (Tabs)
+-- 🔄 การจัดการช่อง
 farmTabButton.MouseButton1Click:Connect(function()
     farmTab.Visible = true
     playerTab.Visible = false
@@ -582,25 +538,23 @@ playerTabButton.MouseLeave:Connect(function()
     playerTabButton.BackgroundColor3 = playerTab.Visible and Color3.fromRGB(70, 70, 70) or Color3.fromRGB(50, 50, 50)
 end)
 
-weightButton.MouseEnter:Connect(function()
-    weightButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+for _, btn in ipairs(toolButtons) do
+    local button = toolSelectFrame:FindFirstChild(btn.Text)
+    if button then
+        button.MouseEnter:Connect(function()
+            button.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+        end)
+        button.MouseLeave:Connect(function()
+            button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        end)
+    end
+end
+
+removeButton.MouseEnter:Connect(function()
+    removeButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
 end)
-weightButton.MouseLeave:Connect(function()
-    weightButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+removeButton.MouseLeave:Connect(function()
+    removeButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 end)
 
-pushupsButton.MouseEnter:Connect(function()
-    pushupsButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
-end)
-pushupsButton.MouseLeave:Connect(function()
-    pushupsButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-end)
-
-unequipButton.MouseEnter:Connect(function()
-    unequipButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
-end)
-unequipButton.MouseLeave:Connect(function()
-    unequipButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-end)
-
-print("🎉 GUI ยกน้ำหนัก, วาร์ป, ปรับแต่ง, และเลือกเครื่องมือพร้อมใช้งาน! 🚀🌌")
+print("🎉 GUI ยกน้ำหนัก, วาร์ป, ปรับแต่งผู้เล่น, และเลือกไอเทมพร้อมใช้งาน! 🚀🌌")
