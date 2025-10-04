@@ -1,0 +1,57 @@
+-- Esticar Tela (Stretch Screen)
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+
+-- GUI หลัก
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "StretchScreen"
+screenGui.Parent = player:WaitForChild("PlayerGui")
+screenGui.ResetOnSpawn = false
+
+-- ปุ่มเปิด/ปิด
+local stretchButton = Instance.new("TextButton")
+stretchButton.Size = UDim2.new(0,150,0,40)
+stretchButton.Position = UDim2.new(0.5,-75,0.8,0)
+stretchButton.BackgroundColor3 = Color3.fromRGB(0,0,0)
+stretchButton.TextColor3 = Color3.fromRGB(255,255,255)
+stretchButton.Font = Enum.Font.GothamBold
+stretchButton.TextSize = 18
+stretchButton.Text = "เปิด"
+stretchButton.Parent = screenGui
+stretchButton.Draggable = true
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0,12)
+corner.Parent = stretchButton
+
+-- ระบบยืดหน้าจอ
+local stretched = false
+local stretchConnection
+
+local function toggleStretch()
+    local Camera = workspace.CurrentCamera
+    if not stretched then
+        stretchConnection = RunService.RenderStepped:Connect(function()
+            Camera.CFrame = Camera.CFrame * CFrame.new(
+                0,0,0,
+                1,0,0,
+                0,0.65,0,
+                0,0,1
+            )
+        end)
+        stretched = true
+        stretchButton.Text = " โหลดยืดจอ🤑"
+        stretchButton.BackgroundColor3 = Color3.fromRGB(40,120,180)
+    else
+        if stretchConnection then
+            stretchConnection:Disconnect()
+            stretchConnection = nil
+        end
+        stretched = false
+        stretchButton.Text = "Esticar Tela"
+        stretchButton.BackgroundColor3 = Color3.fromRGB(0,0,0)
+    end
+end
+
+stretchButton.MouseButton1Click:Connect(toggleStretch)
