@@ -5,8 +5,8 @@ local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local PathfindingService = game:GetService("PathfindingService")
 local Debris = game:GetService("Debris")
-local Workspace = game:GetService("Workspace")
 local UserInputService = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
 local player = Players.LocalPlayer
 local camera = workspace.CurrentCamera
 
@@ -25,12 +25,14 @@ local entranceWidth = 15
 
 -- เก็บ NPC และปุ่ม
 local npcs = {}
-local punchButton, rotateButton
+local punchButton, joystickFrame
 
 -- สถานะ
 local playing = false
 local followConnection
-local turnDirection = 1 -- 1 = ขวา, -1 = ซ้าย
+local isDraggingJoystick = false
+local joystickOrigin = nil
+local joystickDelta = Vector2.new(0, 0)
 
 -- ฟังก์ชันแจ้งเตือนสุดเท่
 local function notify(message, color)
@@ -93,6 +95,29 @@ local function isPositionValid(position)
     return false
 end
 
+-- ฟังก์ชันสร้างเอฟเฟกต์ต่อย
+local function createPunchEffect(position, hitNPC)
+    local effect = Instance.new("ParticleEmitter")
+    effect.Texture = "rbxassetid://243098098" -- อนุภาคสปาร์ค
+    effect.Color = ColorSequence.new(hitNPC and Color3.fromRGB(255, 0, 0) or Color3.fromRGB(128, 128, 128))
+    effect.Size = NumberSequence.new(0.5)
+    effect.Lifetime = NumberRange.new(0.3, 0.5)
+    effect.Rate = 50
+    effect.Speed = NumberRange.new(5, 10)
+    effect.SpreadAngle = Vector2.new(45, 45)
+
+    local part = Instance.new("Part")
+    part.Size = Vector3.new(0.2, 0.2, 0.2)
+    part.Position = position
+    part.Anchored = true
+    part.CanCollide = false
+    part.Transparency = 1
+    part.Parent = Workspace
+    effect.Parent = part
+
+    Debris:AddItem(part, 0.5)
+end
+
 -- ฟังก์ชันสร้าง NPC
 local function spawnNPC(position)
     local npc = Instance.new("Model")
@@ -108,6 +133,8 @@ local function spawnNPC(position)
 
     local humanoid = Instance.new("Humanoid")
     humanoid.WalkSpeed = 10
+    humanoid.MaxHealth = 100
+    humanoid.Health = 100
     humanoid.Parent = npc
 
     local bodyPosition = Instance.new("BodyPosition")
@@ -257,7 +284,7 @@ local function spawnNPC(position)
             if humanoid.Health > 0 and player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 and canSeeTarget() then
                 shoot(player.Character.HumanoidRootPart.Position)
             end
-            wait(0.1)
+            wait(0.8) -- ยิงช้าลงเป็น 0.8 วินาที
         end
     end)
 
@@ -431,10 +458,14 @@ local function stopPlaying()
         punchButton:Destroy()
         punchButton = nil
     end
-    if rotateButton then
-        rotateButton:Destroy()
-        rotateButton = nil
+    if joystickFrame then
+        joystickFrame:Destroy()
+        joystickFrame = nil
     end
+
+    isDraggingJoystick = false
+    joystickOrigin = nil
+    joystickDelta = Vector2.new(0, 0)
 
     -- ลบพื้น ห้อง และ NPC (ปิดชั่วคราวเพื่อ debug)
     --[[
@@ -453,6 +484,60 @@ local function stopPlaying()
     playing = false
 end
 
+-- ฟังก์ชันต่อย
+local function punch()
+    local character = player.Character
+    if not character or not character:FindFirstChild("HumanoidRootPart") or not character:FindFirstChild("Humanoid") then 
+        notify("❌ ไม่พบตัวละครหรือ Humanoid!", Color3.fromRGB(255, 0, 0))
+        return 
+    end
+    local hrp = character.HumanoidRootPart
+    local humanoid = character.Humanoid
+
+    -- เล่นแอนิเมชัน
+    local animation = Instance.new("Animation")
+    animation.AnimationId = "rbxassetid://204062532"
+    local track = humanoid:LoadAnimation(animation)
+    track:Play()
+
+    -- Raycast เพื่อหา NPC
+    local rayParams = RaycastParams.new()
+    rayParams.FilterDescendantsInstances = {character}
+    rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+    local rayOrigin = hrp.Position
+    local rayDirection = hrp.CFrame.LookVector * 15 -- ลดระยะเป็น 15 studs
+    local result = Workspace:Raycast(rayOrigin, rayDirection, rayParams)
+
+    if result and result.Instance then
+        local hitModel = result.Instance:FindFirstAncestorOfClass("Model")
+        if hitModel and hitModel:FindFirstChild("Humanoid") and hitModel.Name:match("NoobNPC_") then
+            local targetHum = hitModel.Humanoid
+            targetHum:TakeDamage(75)
+            createPunchEffect(result.Position, true)
+            notify("👊 ต่อย NPC! ลด HP 75! 💥", Color3.fromRGB(255, 165, 0))
+        else
+            createPunchEffect(result.Position, false)
+            notify("👊 ต่อยไม่โดน NPC!", Color3.fromRGB(128, 128, 128))
+        end
+    else
+        createPunchEffect(rayOrigin + rayDirection, false)
+        notify("👊 ต่อยไม่โดนอะไรเลย!", Color3.fromRGB(128, 128, 128))
+    end
+
+    animation:Destroy()
+end
+
+-- ฟังก์ชันจัดการ joystick หันทิศ
+local function updateRotation()
+    if not isDraggingJoystick or not joystickDelta then return end
+    local character = player.Character
+    if not character or not character:FindFirstChild("HumanoidRootPart") then return end
+    local hrp = character.HumanoidRootPart
+    local angle = joystickDelta.X * 0.05 -- ความไวการหมุน
+    local rotation = CFrame.Angles(0, angle, 0)
+    hrp.CFrame = hrp.CFrame * rotation
+end
+
 -- สร้าง GUI
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "😈_ExploitGui"
@@ -468,60 +553,7 @@ button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 button.TextColor3 = Color3.fromRGB(255, 255, 255)
 button.Parent = screenGui
 
--- ฟังก์ชันต่อย
-local function punch()
-    local character = player.Character
-    if not character or not character:FindFirstChild("HumanoidRootPart") or not character:FindFirstChild("Humanoid") then return end
-    local hrp = character.HumanoidRootPart
-    local humanoid = character.Humanoid
-
-    -- เล่นแอนิเมชัน
-    local animation = Instance.new("Animation")
-    animation.AnimationId = "rbxassetid://204062532"
-    local track = humanoid:LoadAnimation(animation)
-    track:Play()
-
-    -- Raycast เพื่อหา NPC
-    local rayParams = RaycastParams.new()
-    rayParams.FilterDescendantsInstances = {character}
-    rayParams.FilterType = Enum.RaycastFilterType.Blacklist
-    local rayOrigin = hrp.Position
-    local rayDirection = hrp.CFrame.LookVector * 20
-    local result = Workspace:Raycast(rayOrigin, rayDirection, rayParams)
-
-    if result and result.Instance then
-        local hitModel = result.Instance:FindFirstAncestorOfClass("Model")
-        if hitModel and hitModel:FindFirstChild("Humanoid") and hitModel.Name:match("NoobNPC_") then
-            local targetHum = hitModel.Humanoid
-            targetHum:TakeDamage(75)
-            notify("👊 ต่อย NPC! ลด HP 75! 💥", Color3.fromRGB(255, 165, 0))
-        end
-    end
-
-    animation:Destroy()
-end
-
--- ฟังก์ชันหันทิศ
-local function rotateCharacter()
-    local character = player.Character
-    if not character or not character:FindFirstChild("HumanoidRootPart") then return end
-    local hrp = character.HumanoidRootPart
-    local currentCFrame = hrp.CFrame
-    local rotation = CFrame.Angles(0, math.rad(90 * turnDirection), 0)
-    hrp.CFrame = currentCFrame * rotation
-    turnDirection = -turnDirection -- สลับทิศ
-    notify("↩️ หันทิศตัวละคร! " .. (turnDirection == 1 and "ขวา" or "ซ้าย") .. " 🌪️", Color3.fromRGB(0, 255, 255))
-end
-
--- ฟังก์ชันรอตัวละคร
-local function waitForCharacter()
-    while not (player.Character and player.Character:FindFirstChild("HumanoidRootPart")) do
-        wait(0.1)
-    end
-    return player.Character.HumanoidRootPart
-end
-
--- สร้างปุ่มต่อยและหันทศ
+-- สร้างปุ่มต่อยและ joystick
 local function createButtons()
     punchButton = Instance.new("TextButton")
     punchButton.Size = UDim2.new(0, 80, 0, 80)
@@ -536,19 +568,74 @@ local function createButtons()
     punchButton.Parent = screenGui
     punchButton.MouseButton1Click:Connect(punch)
 
-    rotateButton = Instance.new("TextButton")
-    rotateButton.Size = UDim2.new(0, 80, 0, 80)
-    rotateButton.Position = UDim2.new(0.85, -40, 0.85, -40)
-    rotateButton.Text = "หันทศ ↩️"
-    rotateButton.TextScaled = true
-    rotateButton.BackgroundColor3 = Color3.fromRGB(50, 50, 255)
-    rotateButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    local corner2 = Instance.new("UICorner")
-    corner2.CornerRadius = UDim.new(1, 0)
-    corner2.Parent = rotateButton
-    rotateButton.Parent = screenGui
-    rotateButton.MouseButton1Click:Connect(rotateCharacter)
+    joystickFrame = Instance.new("Frame")
+    joystickFrame.Size = UDim2.new(0, 100, 0, 100)
+    joystickFrame.Position = UDim2.new(0.85, -50, 0.85, -50)
+    joystickFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 255)
+    joystickFrame.BackgroundTransparency = 0.5
+    local joystickCorner = Instance.new("UICorner")
+    joystickCorner.CornerRadius = UDim.new(1, 0)
+    joystickCorner.Parent = joystickFrame
+    joystickFrame.Parent = screenGui
+
+    local thumb = Instance.new("Frame")
+    thumb.Size = UDim2.new(0, 40, 0, 40)
+    thumb.Position = UDim2.new(0.5, -20, 0.5, -20)
+    thumb.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    local thumbCorner = Instance.new("UICorner")
+    thumbCorner.CornerRadius = UDim.new(1, 0)
+    thumbCorner.Parent = thumb
+    thumb.Parent = joystickFrame
+
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if gameProcessed or not playing then return end
+        if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+            local pos = input.Position
+            local joystickPos = joystickFrame.AbsolutePosition
+            local joystickSize = joystickFrame.AbsoluteSize
+            if pos.X >= joystickPos.X and pos.X <= joystickPos.X + joystickSize.X and
+               pos.Y >= joystickPos.Y and pos.Y <= joystickPos.Y + joystickSize.Y then
+                isDraggingJoystick = true
+                joystickOrigin = pos
+                joystickDelta = Vector2.new(0, 0)
+            end
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input, gameProcessed)
+        if gameProcessed or not isDraggingJoystick then return end
+        if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement then
+            local pos = input.Position
+            joystickDelta = (pos - joystickOrigin) / 50
+            joystickDelta = Vector2.new(math.clamp(joystickDelta.X, -1, 1), math.clamp(joystickDelta.Y, -1, 1))
+            thumb.Position = UDim2.new(0.5, -20 + joystickDelta.X * 30, 0.5, -20 + joystickDelta.Y * 30)
+        end
+    end)
+
+    UserInputService.InputEnded:Connect(function(input, gameProcessed)
+        if gameProcessed then return end
+        if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+            isDraggingJoystick = false
+            joystickDelta = Vector2.new(0, 0)
+            thumb.Position = UDim2.new(0.5, -20, 0.5, -20)
+        end
+    end)
 end
+
+-- ฟังก์ชันรอตัวละคร
+local function waitForCharacter()
+    while not (player.Character and player.Character:FindFirstChild("HumanoidRootPart")) do
+        wait(0.1)
+    end
+    return player.Character.HumanoidRootPart
+end
+
+-- อัปเดตการหมุนทุกเฟรม
+RunService.RenderStepped:Connect(function()
+    if playing then
+        updateRotation()
+    end
+end)
 
 -- จัดการเมื่อกด "เล่น"
 button.MouseButton1Click:Connect(function()
@@ -583,7 +670,6 @@ button.MouseButton1Click:Connect(function()
         button.Text = "เลิก 😴"
         playing = true
 
-        -- ตรวจจับเมื่อผู้เล่นตาย
         local character = player.Character
         if character then
             local humanoid = character:FindFirstChild("Humanoid")
@@ -599,7 +685,6 @@ button.MouseButton1Click:Connect(function()
             end
         end
 
-        -- อัปเดตเมื่อตัวละครเกิดใหม่
         player.CharacterAdded:Connect(function(newChar)
             if not playing then return end
             local newHum = newChar:WaitForChild("Humanoid")
