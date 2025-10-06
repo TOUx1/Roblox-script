@@ -25,8 +25,9 @@ local entranceWidth = 15
 
 -- เก็บ NPC, ปุ่ม, และ UI
 local npcs = {}
-local punchButton, runButton, joystickFrame, healthBar, npcCounter
+local punchButton, runButton, joystickFrame, healthBar, npcCounter, deathFrame
 local defaultWalkSpeed = 16
+local diedConnection
 
 -- สถานะ
 local playing = false
@@ -297,6 +298,15 @@ local function spawnNPC(position)
         end
     end)
 
+    -- ตรวจจับเมื่อ NPC ตาย
+    humanoid.Died:Connect(function()
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            local playerHum = player.Character.Humanoid
+            playerHum.Health = math.min(playerHum.Health + 50, playerHum.MaxHealth)
+            notify("🩺 ฆ่า NPC ได้! +50 HP (ปัจจุบัน: " .. playerHum.Health .. "/" .. playerHum.MaxHealth .. ")! 💪", Color3.fromRGB(0, 255, 0))
+        end
+    end)
+
     table.insert(npcs, npc)
     return npc
 end
@@ -479,9 +489,59 @@ for i = 0, columns - 1 do
 end
 notify("🏠 สร้าง " .. roomCount .. " ห้องสุดยิ่งใหญ่! พร้อม " .. npcCount .. " Noob NPCs ลอยได้! 🌟", Color3.fromRGB(0, 255, 0))
 
+-- ฟังก์ชันสร้างแถบดำเมื่อตาย
+local function createDeathScreen()
+    deathFrame = Instance.new("Frame")
+    deathFrame.Size = UDim2.new(1, 0, 0, 100)
+    deathFrame.Position = UDim2.new(0, 0, 1, -100)
+    deathFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    deathFrame.BackgroundTransparency = 0
+    deathFrame.ZIndex = 15
+    deathFrame.Parent = screenGui
+
+    local text = Instance.new("TextLabel")
+    text.Size = UDim2.new(0.7, 0, 1, 0)
+    text.Position = UDim2.new(0.15, 0, 0, 0)
+    text.Text = "ไอขี้แพ้ ไปฝึกมาใหม่"
+    text.TextScaled = true
+    text.TextColor3 = Color3.fromRGB(255, 0, 0)
+    text.BackgroundTransparency = 1
+    text.Font = Enum.Font.SourceSansBold
+    text.ZIndex = 16
+    text.Parent = deathFrame
+
+    local avatar = Instance.new("ImageLabel")
+    avatar.Size = UDim2.new(0, 50, 0, 50)
+    avatar.Position = UDim2.new(0.9, -50, 1, -50)
+    avatar.BackgroundTransparency = 1
+    avatar.ZIndex = 16
+    avatar.Image = Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.AvatarBust, Enum.ThumbnailSize.Size100x100)
+    avatar.Parent = deathFrame
+end
+
+-- ฟังก์ชันทำให้แถบดำจางหาย
+local function fadeDeathScreen()
+    if deathFrame then
+        local tweenInfo = TweenInfo.new(2, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
+        local tween = TweenService:Create(deathFrame, tweenInfo, {BackgroundTransparency = 1})
+        for _, child in ipairs(deathFrame:GetChildren()) do
+            if child:IsA("GuiObject") then
+                TweenService:Create(child, tweenInfo, {ImageTransparency = 1, TextTransparency = 1}):Play()
+            end
+        end
+        tween:Play()
+        wait(2)
+        deathFrame:Destroy()
+        deathFrame = nil
+    end
+end
+
 -- ฟังก์ชันจัดการเมื่อกด "เลิก"
 local function stopPlaying()
-    if not playing then return end
+    if not playing then
+        notify("⚠️ ไม่ได้อยู่ในโหมดเล่น!", Color3.fromRGB(255, 255, 0))
+        return
+    end
 
     camera.CameraType = Enum.CameraType.Custom
     if originalCameraCFrame then
@@ -533,6 +593,7 @@ local function stopPlaying()
     resetNPCs()
 
     playing = false
+    notify("✅ รีเซ็ตโหมดเล่นเรียบร้อย! สามารถกด 'เล่น' ได้อีกครั้ง!", Color3.fromRGB(0, 255, 0))
 end
 
 -- ฟังก์ชันต่อย
@@ -789,6 +850,7 @@ button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 button.TextColor3 = Color3.fromRGB(255, 255, 255)
 button.ZIndex = 10
 button.Parent = screenGui
+notify("✅ สร้างปุ่ม 'เล่น' สำเร็จ!", Color3.fromRGB(0, 255, 0))
 
 -- จัดการเมื่อกด "เล่น"
 button.MouseButton1Click:Connect(function()
@@ -831,29 +893,41 @@ button.MouseButton1Click:Connect(function()
         if character then
             local humanoid = character:FindFirstChild("Humanoid")
             if humanoid then
-                local diedConnection
+                if diedConnection then
+                    diedConnection:Disconnect()
+                end
                 diedConnection = humanoid.Died:Connect(function()
+                    createDeathScreen()
                     stopPlaying()
                     button.Text = "เล่น 😈"
                     if diedConnection then
                         diedConnection:Disconnect()
+                        diedConnection = nil
                     end
                 end)
             end
         end
 
         player.CharacterAdded:Connect(function(newChar)
-            if not playing then return end
+            if not playing then
+                fadeDeathScreen()
+                return
+            end
             local newHum = newChar:WaitForChild("Humanoid")
             defaultWalkSpeed = newHum.WalkSpeed
-            local newDiedConnection
-            newDiedConnection = newHum.Died:Connect(function()
+            if diedConnection then
+                diedConnection:Disconnect()
+            end
+            diedConnection = newHum.Died:Connect(function()
+                createDeathScreen()
                 stopPlaying()
                 button.Text = "เล่น 😈"
-                if newDiedConnection then
-                    newDiedConnection:Disconnect()
+                if diedConnection then
+                    diedConnection:Disconnect()
+                    diedConnection = nil
                 end
             end)
+            fadeDeathScreen()
         end)
     else
         stopPlaying()
