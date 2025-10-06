@@ -25,9 +25,10 @@ local entranceWidth = 15
 
 -- เก็บ NPC, ปุ่ม, และ UI
 local npcs = {}
-local punchButton, runButton, joystickFrame, healthBar, npcCounter, deathFrame
+local punchButton, runButton, joystickFrame, healthBar, npcCounter, deathFrame, settingsButton, settingsFrame
 local defaultWalkSpeed = 16
 local diedConnection
+local notificationsEnabled = true -- สถานะการแจ้งเตือน (ต่อย/วิ่ง)
 
 -- สถานะ
 local playing = false
@@ -45,6 +46,7 @@ screenGui.Parent = player:WaitForChild("PlayerGui")
 
 -- ฟังก์ชันแจ้งเตือนสุดเท่
 local function notify(message, color)
+    if not notificationsEnabled and (message:match("ต่อย") or message:match("วิ่ง")) then return end
     local gui = Instance.new("ScreenGui")
     gui.Parent = player:WaitForChild("PlayerGui")
     gui.DisplayOrder = 15
@@ -511,17 +513,23 @@ local function createDeathScreen()
     text.Parent = deathFrame
 
     local avatar = Instance.new("ImageLabel")
-    avatar.Size = UDim2.new(0, 50, 0, 50)
+    avatar.Size = UDim2.new(0, 100, 0, 100)
     avatar.Position = UDim2.new(0.9, -50, 1, -50)
     avatar.BackgroundTransparency = 1
     avatar.ZIndex = 16
-    avatar.Image = Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.AvatarBust, Enum.ThumbnailSize.Size100x100)
+    avatar.Image = Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.AvatarBust, Enum.ThumbnailSize.Size150x150)
     avatar.Parent = deathFrame
+
+    notify("💀 สร้างแถบดำเมื่อตายสำเร็จ!", Color3.fromRGB(255, 0, 0))
 end
 
 -- ฟังก์ชันทำให้แถบดำจางหาย
 local function fadeDeathScreen()
-    if deathFrame then
+    if not deathFrame then
+        notify("⚠️ ไม่พบแถบดำเพื่อจางหาย!", Color3.fromRGB(255, 255, 0))
+        return
+    end
+    local success, err = pcall(function()
         local tweenInfo = TweenInfo.new(2, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
         local tween = TweenService:Create(deathFrame, tweenInfo, {BackgroundTransparency = 1})
         for _, child in ipairs(deathFrame:GetChildren()) do
@@ -530,9 +538,14 @@ local function fadeDeathScreen()
             end
         end
         tween:Play()
+    end)
+    if success then
         wait(2)
         deathFrame:Destroy()
         deathFrame = nil
+        notify("✅ แถบดำจางหายและถูกลบเรียบร้อย!", Color3.fromRGB(0, 255, 0))
+    else
+        notify("❌ ล้มเหลวในการจางหายแถบดำ: " .. tostring(err), Color3.fromRGB(255, 0, 0))
     end
 end
 
@@ -584,6 +597,14 @@ local function stopPlaying()
     if npcCounter then
         npcCounter:Destroy()
         npcCounter = nil
+    end
+    if settingsFrame then
+        settingsFrame:Destroy()
+        settingsFrame = nil
+    end
+    if settingsButton then
+        settingsButton:Destroy()
+        settingsButton = nil
     end
 
     isDraggingJoystick = false
@@ -643,7 +664,7 @@ local function updateRotation()
     local character = player.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") then return end
     local hrp = character.HumanoidRootPart
-    local angle = joystickDelta.X * 0.05
+    local angle = -joystickDelta.X * 0.05 -- ปรับทิศ: ลากซ้าย = หมุนซ้าย, ลากขวา = หมุนขวา
     local rotation = CFrame.Angles(0, angle, 0)
     hrp.CFrame = hrp.CFrame * rotation
 end
@@ -656,9 +677,64 @@ local function waitForCharacter()
     return player.Character.HumanoidRootPart
 end
 
+-- ฟังก์ชันสร้าง UI ตั้งค่า
+local function createSettingsUI()
+    if settingsFrame then
+        settingsFrame:Destroy()
+        settingsFrame = nil
+        return
+    end
+
+    settingsFrame = Instance.new("Frame")
+    settingsFrame.Size = UDim2.new(0, 200, 0, 100)
+    settingsFrame.Position = UDim2.new(0.85, -40, 0.2, 10)
+    settingsFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    settingsFrame.BackgroundTransparency = 0.3
+    settingsFrame.ZIndex = 12
+    settingsFrame.Parent = screenGui
+
+    local stroke = Instance.new("UIStroke")
+    stroke.Thickness = 2
+    stroke.Color = Color3.fromRGB(255, 255, 255)
+    stroke.Parent = settingsFrame
+
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, 0, 0, 30)
+    title.Position = UDim2.new(0, 0, 0, 0)
+    title.Text = "ตั้งค่า"
+    title.TextScaled = true
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.BackgroundTransparency = 1
+    title.Font = Enum.Font.SourceSansBold
+    title.ZIndex = 13
+    title.Parent = settingsFrame
+
+    local toggleButton = Instance.new("TextButton")
+    toggleButton.Size = UDim2.new(0, 100, 0, 30)
+    toggleButton.Position = UDim2.new(0.5, -50, 0.5, 10)
+    toggleButton.Text = notificationsEnabled and "ปิดแจ้งเตือน" or "เปิดแจ้งเตือน"
+    toggleButton.TextScaled = true
+    toggleButton.BackgroundColor3 = notificationsEnabled and Color3.fromRGB(255, 50, 50) or Color3.fromRGB(50, 255, 50)
+    toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    toggleButton.ZIndex = 13
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 10)
+    corner.Parent = toggleButton
+    toggleButton.Parent = settingsFrame
+
+    toggleButton.MouseButton1Click:Connect(function()
+        notificationsEnabled = not notificationsEnabled
+        toggleButton.Text = notificationsEnabled and "ปิดแจ้งเตือน" or "เปิดแจ้งเตือน"
+        toggleButton.BackgroundColor3 = notificationsEnabled and Color3.fromRGB(255, 50, 50) or Color3.fromRGB(50, 255, 50)
+        notify("🔔 การแจ้งเตือน (ต่อย/วิ่ง): " .. (notificationsEnabled and "เปิด" or "ปิด"), Color3.fromRGB(0, 255, 0))
+    end)
+
+    notify("✅ เปิดเมนูตั้งค่าสำเร็จ!", Color3.fromRGB(0, 255, 0))
+end
+
 -- สร้าง UI และปุ่ม
 local function createButtons()
-    notify("🛠️ กำลังสร้าง UI: ปุ่มต่อย, วิ่ง, Joystick, แถบเลือด, ตัวนับ NPC... 🚀", Color3.fromRGB(0, 255, 0))
+    notify("🛠️ กำลังสร้าง UI: ปุ่มต่อย, วิ่ง, Joystick, แถบเลือด, ตัวนับ NPC, ตั้งค่า... 🚀", Color3.fromRGB(0, 255, 0))
 
     -- ปุ่มต่อย
     punchButton = Instance.new("TextButton")
@@ -801,6 +877,22 @@ local function createButtons()
     npcText.Parent = npcCounter
     npcCounter.Parent = screenGui
     notify("✅ สร้างตัวนับ NPC สำเร็จ!", Color3.fromRGB(0, 255, 0))
+
+    -- ปุ่มตั้งค่า
+    settingsButton = Instance.new("TextButton")
+    settingsButton.Size = UDim2.new(0, 80, 0, 40)
+    settingsButton.Position = UDim2.new(0.85, -40, 0.1, 10)
+    settingsButton.Text = "ตั้งค่า ⚙️"
+    settingsButton.TextScaled = true
+    settingsButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+    settingsButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    settingsButton.ZIndex = 10
+    local settingsCorner = Instance.new("UICorner")
+    settingsCorner.CornerRadius = UDim.new(0, 10)
+    settingsCorner.Parent = settingsButton
+    settingsButton.Parent = screenGui
+    settingsButton.MouseButton1Click:Connect(createSettingsUI)
+    notify("✅ สร้างปุ่มตั้งค่าสำเร็จ!", Color3.fromRGB(0, 255, 0))
 end
 
 -- อัปเดตแถบเลือดและจำนวน NPC
@@ -934,3 +1026,6 @@ button.MouseButton1Click:Connect(function()
         button.Text = "เล่น 😈"
     end
 end)
+🛠️ การเปลี่ยนแปลงและการแก้ไข
+แก้ปัญหาแถบดำไม่จางหาย 😭:
+ใน CharacterAdded, เรียก fadeDeathScreen อย่างถูกต้องเมื่อตัวละครเกิดใหม่
