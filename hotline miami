@@ -1,0 +1,619 @@
+-- LocalScript
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local PathfindingService = game:GetService("PathfindingService")
+local Debris = game:GetService("Debris")
+local Workspace = game:GetService("Workspace")
+local UserInputService = game:GetService("UserInputService")
+local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+
+-- ตำแหน่งเป้าหมาย
+local targetPosition = Vector3.new(51.84, 111.00, -22.78)
+
+-- เก็บตำแหน่งเดิมก่อนวาป
+local originalPosition
+local originalCameraCFrame
+
+-- ขนาดพื้นและห้อง
+local platformSize = Vector3.new(600, 5, 600)
+local roomSize = Vector3.new(50, 20, 50)
+local wallThickness = 2
+local entranceWidth = 15
+
+-- เก็บ NPC และปุ่ม
+local npcs = {}
+local punchButton, rotateButton
+
+-- สถานะ
+local playing = false
+local followConnection
+local turnDirection = 1 -- 1 = ขวา, -1 = ซ้าย
+
+-- ฟังก์ชันแจ้งเตือนสุดเท่
+local function notify(message, color)
+    local gui = Instance.new("ScreenGui")
+    gui.Parent = player:WaitForChild("PlayerGui")
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 350, 0, 60)
+    frame.Position = UDim2.new(0.5, -175, 0.1, 0)
+    frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    frame.BackgroundTransparency = 0.3
+    frame.Parent = gui
+
+    local stroke = Instance.new("UIStroke")
+    stroke.Thickness = 2
+    stroke.Color = color or Color3.fromRGB(255, 0, 0)
+    stroke.Parent = frame
+
+    local gradient = Instance.new("UIGradient")
+    gradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, color or Color3.fromRGB(255, 0, 0)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255))
+    })
+    gradient.Parent = frame
+
+    local text = Instance.new("TextLabel")
+    text.Size = UDim2.new(1, 0, 1, 0)
+    text.Text = message
+    text.TextScaled = true
+    text.TextColor3 = Color3.fromRGB(255, 255, 255)
+    text.BackgroundTransparency = 1
+    text.Font = Enum.Font.SourceSansBold
+    text.Parent = frame
+
+    local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Bounce, Enum.EasingDirection.Out)
+    local tween = TweenService:Create(frame, tweenInfo, {Size = UDim2.new(0, 360, 0, 65)})
+    tween:Play()
+
+    wait(3)
+    local fadeTween = TweenService:Create(frame, TweenInfo.new(0.5), {BackgroundTransparency = 1, Size = UDim2.new(0, 300, 0, 50)})
+    fadeTween:Play()
+    wait(0.5)
+    gui:Destroy()
+end
+
+-- ฟังก์ชันสุ่มทางเข้าหลัก
+local function randomEntrance()
+    local sides = {"front", "back", "left", "right"}
+    return sides[math.random(1, #sides)]
+end
+
+-- ฟังก์ชันตรวจสอบตำแหน่งว่าง
+local function isPositionValid(position)
+    local rayParams = RaycastParams.new()
+    rayParams.FilterDescendantsInstances = {player.Character}
+    rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+    local result = Workspace:Raycast(position + Vector3.new(0, 5, 0), Vector3.new(0, -10, 0), rayParams)
+    if result and result.Instance and result.Instance:IsDescendantOf(Workspace) then
+        return result.Instance.Name == "Platform"
+    end
+    return false
+end
+
+-- ฟังก์ชันสร้าง NPC
+local function spawnNPC(position)
+    local npc = Instance.new("Model")
+    npc.Name = "NoobNPC_" .. #npcs
+    npc.Parent = Workspace
+
+    local root = Instance.new("Part")
+    root.Name = "HumanoidRootPart"
+    root.Size = Vector3.new(2, 2, 1)
+    root.Anchored = false
+    root.Position = position
+    root.Parent = npc
+
+    local humanoid = Instance.new("Humanoid")
+    humanoid.WalkSpeed = 10
+    humanoid.Parent = npc
+
+    local bodyPosition = Instance.new("BodyPosition")
+    bodyPosition.MaxForce = Vector3.new(0, 1e5, 0)
+    bodyPosition.Position = Vector3.new(0, position.Y, 0)
+    bodyPosition.Parent = root
+
+    local torso = Instance.new("Part")
+    torso.Name = "Torso"
+    torso.Size = Vector3.new(2, 2, 1)
+    torso.Position = root.Position + Vector3.new(0, 1, 0)
+    torso.Anchored = false
+    torso.Parent = npc
+
+    local weld = Instance.new("Motor6D")
+    weld.Part0 = root
+    weld.Part1 = torso
+    weld.C0 = CFrame.new(0, 0, 0)
+    weld.Parent = root
+
+    local head = Instance.new("Part")
+    head.Name = "Head"
+    head.Size = Vector3.new(2, 1, 1)
+    head.Position = torso.Position + Vector3.new(0, 2, 0)
+    head.Anchored = false
+    head.Parent = npc
+
+    local headMesh = Instance.new("SpecialMesh")
+    headMesh.MeshType = Enum.MeshType.Head
+    headMesh.Parent = head
+
+    local neck = Instance.new("Motor6D")
+    neck.Part0 = torso
+    neck.Part1 = head
+    neck.C0 = CFrame.new(0, 1.5, 0)
+    neck.Parent = torso
+
+    local function createLimb(name, size, offset)
+        local limb = Instance.new("Part")
+        limb.Name = name
+        limb.Size = size
+        limb.Position = torso.Position + offset
+        limb.Anchored = false
+        limb.Parent = npc
+
+        local motor = Instance.new("Motor6D")
+        motor.Part0 = torso
+        motor.Part1 = limb
+        motor.C0 = CFrame.new(offset)
+        motor.Parent = torso
+    end
+
+    createLimb("LeftArm", Vector3.new(1, 2, 1), Vector3.new(-1.5, 0.5, 0))
+    createLimb("RightArm", Vector3.new(1, 2, 1), Vector3.new(1.5, 0.5, 0))
+    createLimb("LeftLeg", Vector3.new(1, 2, 1), Vector3.new(-0.5, -2, 0))
+    createLimb("RightLeg", Vector3.new(1, 2, 1), Vector3.new(0.5, -2, 0))
+
+    local function canSeeTarget()
+        if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") or not head then return false end
+        local direction = player.Character.HumanoidRootPart.Position - head.Position
+        if direction.Magnitude > 25 then return false end
+
+        local ray = Ray.new(head.Position, direction.Unit * 25)
+        local ignoreList = {npc}
+        local hit, position = Workspace:FindPartOnRayWithIgnoreList(ray, ignoreList)
+
+        if hit and hit:IsDescendantOf(player.Character) then
+            return true
+        end
+        return false
+    end
+
+    local function shoot(targetPos)
+        if humanoid.Health <= 0 then return end
+        local targetHum = player.Character and player.Character:FindFirstChild("Humanoid")
+        if not targetHum or targetHum.Health <= 0 then return end
+        if not canSeeTarget() then return end
+
+        local bullet = Instance.new("Part")
+        bullet.Size = Vector3.new(0.5, 0.5, 0.5)
+        bullet.Shape = Enum.PartType.Ball
+        bullet.Position = head.Position
+        bullet.Anchored = false
+        bullet.CanCollide = false
+        bullet.BrickColor = BrickColor.new("Bright yellow")
+        bullet.Material = Enum.Material.Neon
+        bullet.Parent = Workspace
+
+        local dir = (targetPos - head.Position).Unit
+        local bodyVelocity = Instance.new("BodyVelocity")
+        bodyVelocity.Velocity = dir * 50
+        bodyVelocity.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+        bodyVelocity.Parent = bullet
+
+        local conn
+        conn = bullet.Touched:Connect(function(hit)
+            if hit and hit.Parent == player.Character then
+                local hum = hit.Parent:FindFirstChild("Humanoid")
+                if hum then
+                    hum:TakeDamage(25)
+                    bullet:Destroy()
+                    conn:Disconnect()
+                end
+            end
+        end)
+
+        Debris:AddItem(bullet, 5)
+    end
+
+    spawn(function()
+        while npc.Parent do
+            RunService.RenderStepped:Wait()
+            if root and torso and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                torso.CFrame = CFrame.new(torso.Position, player.Character.HumanoidRootPart.Position)
+            end
+        end
+    end)
+
+    spawn(function()
+        while npc.Parent do
+            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") and humanoid.Health > 0 then
+                local path = PathfindingService:CreatePath({
+                    AgentRadius = 2,
+                    AgentHeight = 5,
+                    AgentCanJump = true,
+                    AgentJumpHeight = 10,
+                    AgentMaxSlope = 45,
+                })
+                local success, err = pcall(function()
+                    path:ComputeAsync(root.Position, player.Character.HumanoidRootPart.Position)
+                end)
+                if success then
+                    local waypoints = path:GetWaypoints()
+                    for _, waypoint in ipairs(waypoints) do
+                        if humanoid.Health <= 0 then break end
+                        humanoid:MoveTo(waypoint.Position)
+                        humanoid.MoveToFinished:Wait()
+                    end
+                end
+            end
+            wait(0.1)
+        end
+    end)
+
+    spawn(function()
+        while npc.Parent do
+            if humanoid.Health > 0 and player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 and canSeeTarget() then
+                shoot(player.Character.HumanoidRootPart.Position)
+            end
+            wait(0.1)
+        end
+    end)
+
+    table.insert(npcs, npc)
+    return npc
+end
+
+-- สร้างพื้นสีเทา
+local platform
+local success, err = pcall(function()
+    platform = Instance.new("Part")
+    platform.Size = platformSize
+    platform.Position = targetPosition
+    platform.Anchored = true
+    platform.CanCollide = true
+    platform.Material = Enum.Material.Concrete
+    platform.Color = Color3.fromRGB(128, 128, 128)
+    platform.Name = "Platform"
+    platform.Parent = workspace
+end)
+if success then
+    notify("😈 สร้างพื้นยักษ์สำเร็จ! ขนาด: " .. platformSize.X .. "x" .. platformSize.Z .. " 🚀", Color3.fromRGB(0, 255, 0))
+else
+    notify("❌ ล้มเหลวในการสร้างพื้น: " .. tostring(err) .. " 😞", Color3.fromRGB(255, 0, 0))
+end
+
+-- สร้างห้องย่อยแบบ grid และวาง NPC 25 ตัว
+local rooms = {}
+local startX = targetPosition.X - platformSize.X / 2 + roomSize.X / 2
+local startZ = targetPosition.Z - platformSize.Z / 2 + roomSize.Z / 2
+local columns = math.floor(platformSize.X / roomSize.X)
+local rows = math.floor(platformSize.Z / roomSize.Z)
+
+local roomCount = 0
+local npcCount = 0
+local targetNPCs = 25
+local roomsWithNPCs = {}
+
+while #roomsWithNPCs < 25 and #roomsWithNPCs < columns * rows do
+    local i = math.random(0, columns - 1)
+    local j = math.random(0, rows - 1)
+    local roomKey = i .. "_" .. j
+    if not table.find(roomsWithNPCs, roomKey) then
+        table.insert(roomsWithNPCs, roomKey)
+    end
+end
+
+for i = 0, columns - 1 do
+    for j = 0, rows - 1 do
+        local success, err = pcall(function()
+            local room = Instance.new("Model")
+            room.Name = "Room_" .. i .. "_" .. j
+            room.Parent = workspace
+
+            local x = startX + i * roomSize.X
+            local z = startZ + j * roomSize.Z
+            local y = targetPosition.Y + roomSize.Y / 2
+
+            local entranceSide = randomEntrance()
+
+            local connections = {}
+            if i > 0 then table.insert(connections, "left") end
+            if i < columns - 1 then table.insert(connections, "right") end
+            if j > 0 then table.insert(connections, "back") end
+            if j < rows - 1 then table.insert(connections, "front") end
+
+            local function createWall(size, position)
+                local wall = Instance.new("Part")
+                wall.Size = size
+                wall.Position = position
+                wall.Anchored = true
+                wall.Color = Color3.fromRGB(200, 200, 200)
+                wall.Material = Enum.Material.Concrete
+                wall.Parent = room
+                return wall
+            end
+
+            if entranceSide == "front" or table.find(connections, "front") then
+                createWall(Vector3.new((roomSize.X - entranceWidth) / 2, roomSize.Y, wallThickness),
+                    Vector3.new(x - (roomSize.X / 2 - (roomSize.X - entranceWidth) / 4), y, z - roomSize.Z / 2 + wallThickness / 2))
+                createWall(Vector3.new((roomSize.X - entranceWidth) / 2, roomSize.Y, wallThickness),
+                    Vector3.new(x + (roomSize.X / 2 - (roomSize.X - entranceWidth) / 4), y, z - roomSize.Z / 2 + wallThickness / 2))
+            else
+                createWall(Vector3.new(roomSize.X, roomSize.Y, wallThickness),
+                    Vector3.new(x, y, z - roomSize.Z / 2 + wallThickness / 2))
+            end
+
+            if entranceSide == "back" or table.find(connections, "back") then
+                createWall(Vector3.new((roomSize.X - entranceWidth) / 2, roomSize.Y, wallThickness),
+                    Vector3.new(x - (roomSize.X / 2 - (roomSize.X - entranceWidth) / 4), y, z + roomSize.Z / 2 - wallThickness / 2))
+                createWall(Vector3.new((roomSize.X - entranceWidth) / 2, roomSize.Y, wallThickness),
+                    Vector3.new(x + (roomSize.X / 2 - (roomSize.X - entranceWidth) / 4), y, z + roomSize.Z / 2 - wallThickness / 2))
+            else
+                createWall(Vector3.new(roomSize.X, roomSize.Y, wallThickness),
+                    Vector3.new(x, y, z + roomSize.Z / 2 - wallThickness / 2))
+            end
+
+            if entranceSide == "left" or table.find(connections, "left") then
+                createWall(Vector3.new(wallThickness, roomSize.Y, (roomSize.Z - entranceWidth) / 2),
+                    Vector3.new(x - roomSize.X / 2 + wallThickness / 2, y, z - (roomSize.Z / 2 - (roomSize.Z - entranceWidth) / 4)))
+                createWall(Vector3.new(wallThickness, roomSize.Y, (roomSize.Z - entranceWidth) / 2),
+                    Vector3.new(x - roomSize.X / 2 + wallThickness / 2, y, z + (roomSize.Z / 2 - (roomSize.Z - entranceWidth) / 4)))
+            else
+                createWall(Vector3.new(wallThickness, roomSize.Y, roomSize.Z),
+                    Vector3.new(x - roomSize.X / 2 + wallThickness / 2, y, z))
+            end
+
+            if entranceSide == "right" or table.find(connections, "right") then
+                createWall(Vector3.new(wallThickness, roomSize.Y, (roomSize.Z - entranceWidth) / 2),
+                    Vector3.new(x + roomSize.X / 2 - wallThickness / 2, y, z - (roomSize.Z / 2 - (roomSize.Z - entranceWidth) / 4)))
+                createWall(Vector3.new(wallThickness, roomSize.Y, (roomSize.Z - entranceWidth) / 2),
+                    Vector3.new(x + roomSize.X / 2 - wallThickness / 2, y, z + (roomSize.Z / 2 - (roomSize.Z - entranceWidth) / 4)))
+            else
+                createWall(Vector3.new(wallThickness, roomSize.Y, roomSize.Z),
+                    Vector3.new(x + roomSize.X / 2 - wallThickness / 2, y, z))
+            end
+
+            if table.find(roomsWithNPCs, i .. "_" .. j) and npcCount < targetNPCs then
+                local attempts = 0
+                local maxAttempts = 5
+                local npcPos
+                repeat
+                    local offsetX = math.random(-15, 15)
+                    local offsetZ = math.random(-15, 15)
+                    npcPos = Vector3.new(x + offsetX, targetPosition.Y + 3.5, z + offsetZ)
+                    attempts = attempts + 1
+                until isPositionValid(npcPos) or attempts >= maxAttempts
+                if isPositionValid(npcPos) then
+                    spawnNPC(npcPos)
+                    npcCount = npcCount + 1
+                end
+            end
+
+            table.insert(rooms, room)
+            roomCount = roomCount + 1
+        end)
+        if not success then
+            notify("❌ ล้มเหลวในการสร้างห้อง (" .. i .. "," .. j .. "): " .. tostring(err) .. " 😞", Color3.fromRGB(255, 0, 0))
+        end
+    end
+end
+notify("🏠 สร้าง " .. roomCount .. " ห้องสุดยิ่งใหญ่! พร้อม " .. npcCount .. " Noob NPCs ลอยได้! 🌟", Color3.fromRGB(0, 255, 0))
+
+-- ฟังก์ชันจัดการเมื่อกด "เลิก"
+local function stopPlaying()
+    if not playing then return end
+
+    camera.CameraType = Enum.CameraType.Custom
+    if originalCameraCFrame then
+        camera.CFrame = originalCameraCFrame
+    end
+
+    if followConnection then
+        followConnection:Disconnect()
+        followConnection = nil
+    end
+
+    local success, err = pcall(function()
+        local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+        if hrp and originalPosition then
+            hrp.CFrame = CFrame.new(originalPosition)
+        end
+    end)
+    if success then
+        notify("🔄 กลับสู่โลกเดิมสำเร็จ! 🌍", Color3.fromRGB(0, 255, 0))
+    else
+        notify("❌ ล้มเหลวในการกลับ: " .. tostring(err) .. " 😞", Color3.fromRGB(255, 0, 0))
+    end
+
+    if punchButton then
+        punchButton:Destroy()
+        punchButton = nil
+    end
+    if rotateButton then
+        rotateButton:Destroy()
+        rotateButton = nil
+    end
+
+    -- ลบพื้น ห้อง และ NPC (ปิดชั่วคราวเพื่อ debug)
+    --[[
+    platform:Destroy()
+    for _, room in ipairs(rooms) do
+        room:Destroy()
+    end
+    for _, npc in ipairs(npcs) do
+        npc:Destroy()
+    end
+    rooms = {}
+    npcs = {}
+    notify("🗑️ ลบฐานลับและ Noob NPCs ทั้งหมดแล้ว! 😈", Color3.fromRGB(255, 165, 0))
+    --]]
+
+    playing = false
+end
+
+-- สร้าง GUI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "😈_ExploitGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0, 150, 0, 50)
+button.Position = UDim2.new(0.5, -75, 0.8, 0)
+button.Text = "เล่น 😈"
+button.TextScaled = true
+button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+button.TextColor3 = Color3.fromRGB(255, 255, 255)
+button.Parent = screenGui
+
+-- ฟังก์ชันต่อย
+local function punch()
+    local character = player.Character
+    if not character or not character:FindFirstChild("HumanoidRootPart") or not character:FindFirstChild("Humanoid") then return end
+    local hrp = character.HumanoidRootPart
+    local humanoid = character.Humanoid
+
+    -- เล่นแอนิเมชัน
+    local animation = Instance.new("Animation")
+    animation.AnimationId = "rbxassetid://204062532"
+    local track = humanoid:LoadAnimation(animation)
+    track:Play()
+
+    -- Raycast เพื่อหา NPC
+    local rayParams = RaycastParams.new()
+    rayParams.FilterDescendantsInstances = {character}
+    rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+    local rayOrigin = hrp.Position
+    local rayDirection = hrp.CFrame.LookVector * 20
+    local result = Workspace:Raycast(rayOrigin, rayDirection, rayParams)
+
+    if result and result.Instance then
+        local hitModel = result.Instance:FindFirstAncestorOfClass("Model")
+        if hitModel and hitModel:FindFirstChild("Humanoid") and hitModel.Name:match("NoobNPC_") then
+            local targetHum = hitModel.Humanoid
+            targetHum:TakeDamage(75)
+            notify("👊 ต่อย NPC! ลด HP 75! 💥", Color3.fromRGB(255, 165, 0))
+        end
+    end
+
+    animation:Destroy()
+end
+
+-- ฟังก์ชันหันทิศ
+local function rotateCharacter()
+    local character = player.Character
+    if not character or not character:FindFirstChild("HumanoidRootPart") then return end
+    local hrp = character.HumanoidRootPart
+    local currentCFrame = hrp.CFrame
+    local rotation = CFrame.Angles(0, math.rad(90 * turnDirection), 0)
+    hrp.CFrame = currentCFrame * rotation
+    turnDirection = -turnDirection -- สลับทิศ
+    notify("↩️ หันทิศตัวละคร! " .. (turnDirection == 1 and "ขวา" or "ซ้าย") .. " 🌪️", Color3.fromRGB(0, 255, 255))
+end
+
+-- ฟังก์ชันรอตัวละคร
+local function waitForCharacter()
+    while not (player.Character and player.Character:FindFirstChild("HumanoidRootPart")) do
+        wait(0.1)
+    end
+    return player.Character.HumanoidRootPart
+end
+
+-- สร้างปุ่มต่อยและหันทศ
+local function createButtons()
+    punchButton = Instance.new("TextButton")
+    punchButton.Size = UDim2.new(0, 80, 0, 80)
+    punchButton.Position = UDim2.new(0.85, -40, 0.7, -40)
+    punchButton.Text = "ต่อย 👊"
+    punchButton.TextScaled = true
+    punchButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+    punchButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(1, 0)
+    corner.Parent = punchButton
+    punchButton.Parent = screenGui
+    punchButton.MouseButton1Click:Connect(punch)
+
+    rotateButton = Instance.new("TextButton")
+    rotateButton.Size = UDim2.new(0, 80, 0, 80)
+    rotateButton.Position = UDim2.new(0.85, -40, 0.85, -40)
+    rotateButton.Text = "หันทศ ↩️"
+    rotateButton.TextScaled = true
+    rotateButton.BackgroundColor3 = Color3.fromRGB(50, 50, 255)
+    rotateButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    local corner2 = Instance.new("UICorner")
+    corner2.CornerRadius = UDim.new(1, 0)
+    corner2.Parent = rotateButton
+    rotateButton.Parent = screenGui
+    rotateButton.MouseButton1Click:Connect(rotateCharacter)
+end
+
+-- จัดการเมื่อกด "เล่น"
+button.MouseButton1Click:Connect(function()
+    if not playing then
+        local hrp = waitForCharacter()
+        originalPosition = hrp.Position
+        originalCameraCFrame = camera.CFrame
+
+        local success, err = pcall(function()
+            hrp.CFrame = CFrame.new(targetPosition + Vector3.new(0, 10, 0))
+        end)
+        if success then
+            notify("🚀 วาร์ปไปฐานลับสุดโหดสำเร็จ! เตรียมเจอ " .. npcCount .. " Noob NPCs ลอยได้! 😈", Color3.fromRGB(0, 255, 0))
+        else
+            notify("❌ ล้มเหลวในการวาร์ป: " .. tostring(err) .. " 😞", Color3.fromRGB(255, 0, 0))
+            return
+        end
+
+        createButtons()
+
+        camera.CameraType = Enum.CameraType.Scriptable
+        followConnection = RunService.RenderStepped:Connect(function()
+            local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                local camHeight = 40
+                local camPosition = hrp.Position + Vector3.new(0, camHeight, 0)
+                local lookAt = hrp.Position
+                camera.CFrame = CFrame.new(camPosition, lookAt)
+            end
+        end)
+
+        button.Text = "เลิก 😴"
+        playing = true
+
+        -- ตรวจจับเมื่อผู้เล่นตาย
+        local character = player.Character
+        if character then
+            local humanoid = character:FindFirstChild("Humanoid")
+            if humanoid then
+                local diedConnection
+                diedConnection = humanoid.Died:Connect(function()
+                    stopPlaying()
+                    button.Text = "เล่น 😈"
+                    if diedConnection then
+                        diedConnection:Disconnect()
+                    end
+                end)
+            end
+        end
+
+        -- อัปเดตเมื่อตัวละครเกิดใหม่
+        player.CharacterAdded:Connect(function(newChar)
+            if not playing then return end
+            local newHum = newChar:WaitForChild("Humanoid")
+            local newDiedConnection
+            newDiedConnection = newHum.Died:Connect(function()
+                stopPlaying()
+                button.Text = "เล่น 😈"
+                if newDiedConnection then
+                    newDiedConnection:Disconnect()
+                end
+            end)
+        end)
+    else
+        stopPlaying()
+        button.Text = "เล่น 😈"
+    end
+end)
