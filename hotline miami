@@ -23,9 +23,10 @@ local roomSize = Vector3.new(50, 20, 50)
 local wallThickness = 2
 local entranceWidth = 15
 
--- เก็บ NPC และปุ่ม
+-- เก็บ NPC, ปุ่ม, และ UI
 local npcs = {}
-local punchButton, joystickFrame
+local punchButton, runButton, joystickFrame, healthBar, npcCounter
+local defaultWalkSpeed = 16 -- ความเร็วเดินปกติ
 
 -- สถานะ
 local playing = false
@@ -284,7 +285,7 @@ local function spawnNPC(position)
             if humanoid.Health > 0 and player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 and canSeeTarget() then
                 shoot(player.Character.HumanoidRootPart.Position)
             end
-            wait(0.8) -- ยิงช้าลงเป็น 0.8 วินาที
+            wait(0.8) -- ยิงทุก 0.8 วินาที
         end
     end)
 
@@ -292,8 +293,57 @@ local function spawnNPC(position)
     return npc
 end
 
+-- ฟังก์ชันรีเซ็ต NPC
+local function resetNPCs()
+    for _, npc in ipairs(npcs) do
+        npc:Destroy()
+    end
+    npcs = {}
+    local npcCount = 0
+    local targetNPCs = 25
+    local roomsWithNPCs = {}
+
+    while #roomsWithNPCs < 25 and #roomsWithNPCs < columns * rows do
+        local i = math.random(0, columns - 1)
+        local j = math.random(0, rows - 1)
+        local roomKey = i .. "_" .. j
+        if not table.find(roomsWithNPCs, roomKey) then
+            table.insert(roomsWithNPCs, roomKey)
+        end
+    end
+
+    for i = 0, columns - 1 do
+        for j = 0, rows - 1 do
+            if table.find(roomsWithNPCs, i .. "_" .. j) and npcCount < targetNPCs then
+                local x = startX + i * roomSize.X
+                local z = startZ + j * roomSize.Z
+                local attempts = 0
+                local maxAttempts = 5
+                local npcPos
+                repeat
+                    local offsetX = math.random(-15, 15)
+                    local offsetZ = math.random(-15, 15)
+                    npcPos = Vector3.new(x + offsetX, targetPosition.Y + 3.5, z + offsetZ)
+                    attempts = attempts + 1
+                until isPositionValid(npcPos) or attempts >= maxAttempts
+                if isPositionValid(npcPos) then
+                    spawnNPC(npcPos)
+                    npcCount = npcCount + 1
+                end
+            end
+        end
+    end
+    notify("🧑‍🚀 รีเซ็ต NPC! สร้าง " .. npcCount .. " Noob NPCs ใหม่! 🌟", Color3.fromRGB(0, 255, 0))
+end
+
 -- สร้างพื้นสีเทา
 local platform
+local rooms = {}
+local startX = targetPosition.X - platformSize.X / 2 + roomSize.X / 2
+local startZ = targetPosition.Z - platformSize.Z / 2 + roomSize.Z / 2
+local columns = math.floor(platformSize.X / roomSize.X)
+local rows = math.floor(platformSize.Z / roomSize.Z)
+
 local success, err = pcall(function()
     platform = Instance.new("Part")
     platform.Size = platformSize
@@ -312,12 +362,6 @@ else
 end
 
 -- สร้างห้องย่อยแบบ grid และวาง NPC 25 ตัว
-local rooms = {}
-local startX = targetPosition.X - platformSize.X / 2 + roomSize.X / 2
-local startZ = targetPosition.Z - platformSize.Z / 2 + roomSize.Z / 2
-local columns = math.floor(platformSize.X / roomSize.X)
-local rows = math.floor(platformSize.Z / roomSize.Z)
-
 local roomCount = 0
 local npcCount = 0
 local targetNPCs = 25
@@ -458,28 +502,29 @@ local function stopPlaying()
         punchButton:Destroy()
         punchButton = nil
     end
+    if runButton then
+        runButton:Destroy()
+        runButton = nil
+    end
     if joystickFrame then
         joystickFrame:Destroy()
         joystickFrame = nil
+    end
+    if healthBar then
+        healthBar:Destroy()
+        healthBar = nil
+    end
+    if npcCounter then
+        npcCounter:Destroy()
+        npcCounter = nil
     end
 
     isDraggingJoystick = false
     joystickOrigin = nil
     joystickDelta = Vector2.new(0, 0)
 
-    -- ลบพื้น ห้อง และ NPC (ปิดชั่วคราวเพื่อ debug)
-    --[[
-    platform:Destroy()
-    for _, room in ipairs(rooms) do
-        room:Destroy()
-    end
-    for _, npc in ipairs(npcs) do
-        npc:Destroy()
-    end
-    rooms = {}
-    npcs = {}
-    notify("🗑️ ลบฐานลับและ Noob NPCs ทั้งหมดแล้ว! 😈", Color3.fromRGB(255, 165, 0))
-    --]]
+    -- รีเซ็ต NPC
+    resetNPCs()
 
     playing = false
 end
@@ -505,7 +550,7 @@ local function punch()
     rayParams.FilterDescendantsInstances = {character}
     rayParams.FilterType = Enum.RaycastFilterType.Blacklist
     local rayOrigin = hrp.Position
-    local rayDirection = hrp.CFrame.LookVector * 15 -- ลดระยะเป็น 15 studs
+    local rayDirection = hrp.CFrame.LookVector * 15
     local result = Workspace:Raycast(rayOrigin, rayDirection, rayParams)
 
     if result and result.Instance then
@@ -517,7 +562,7 @@ local function punch()
             notify("👊 ต่อย NPC! ลด HP 75! 💥", Color3.fromRGB(255, 165, 0))
         else
             createPunchEffect(result.Position, false)
-            notify("👊 ต่อยไม่โดน NPC!", Color3.fromRGB(128, 128, 128))
+            notify("👊 ต่อยไม่โดน NPC! (ชน: " .. (result.Instance.Name or "ไม่ทราบ") .. ")", Color3.fromRGB(128, 128, 128))
         end
     else
         createPunchEffect(rayOrigin + rayDirection, false)
@@ -533,28 +578,22 @@ local function updateRotation()
     local character = player.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") then return end
     local hrp = character.HumanoidRootPart
-    local angle = joystickDelta.X * 0.05 -- ความไวการหมุน
+    local angle = joystickDelta.X * 0.05
     local rotation = CFrame.Angles(0, angle, 0)
     hrp.CFrame = hrp.CFrame * rotation
 end
 
--- สร้าง GUI
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "😈_ExploitGui"
-screenGui.ResetOnSpawn = false
-screenGui.Parent = player:WaitForChild("PlayerGui")
+-- ฟังก์ชันรอตัวละคร
+local function waitForCharacter()
+    while not (player.Character and player.Character:FindFirstChild("HumanoidRootPart")) do
+        wait(0.1)
+    end
+    return player.Character.HumanoidRootPart
+end
 
-local button = Instance.new("TextButton")
-button.Size = UDim2.new(0, 150, 0, 50)
-button.Position = UDim2.new(0.5, -75, 0.8, 0)
-button.Text = "เล่น 😈"
-button.TextScaled = true
-button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-button.TextColor3 = Color3.fromRGB(255, 255, 255)
-button.Parent = screenGui
-
--- สร้างปุ่มต่อยและ joystick
+-- สร้าง UI และปุ่ม
 local function createButtons()
+    -- ปุ่มต่อย
     punchButton = Instance.new("TextButton")
     punchButton.Size = UDim2.new(0, 80, 0, 80)
     punchButton.Position = UDim2.new(0.85, -40, 0.7, -40)
@@ -568,9 +607,41 @@ local function createButtons()
     punchButton.Parent = screenGui
     punchButton.MouseButton1Click:Connect(punch)
 
+    -- ปุ่มวิ่ง
+    runButton = Instance.new("TextButton")
+    runButton.Size = UDim2.new(0, 80, 0, 80)
+    runButton.Position = UDim2.new(0.85, -40, 0.85, -40)
+    runButton.Text = "วิ่ง 🏃‍♂️"
+    runButton.TextScaled = true
+    runButton.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
+    runButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    local runCorner = Instance.new("UICorner")
+    runCorner.CornerRadius = UDim.new(1, 0)
+    runCorner.Parent = runButton
+    runButton.Parent = screenGui
+
+    runButton.MouseButton1Down:Connect(function()
+        local character = player.Character
+        if character and character:FindFirstChild("Humanoid") then
+            local humanoid = character.Humanoid
+            humanoid.WalkSpeed = defaultWalkSpeed + 20
+            notify("🏃‍♂️ วิ่งเร็วขึ้น! WalkSpeed: " .. humanoid.WalkSpeed, Color3.fromRGB(0, 255, 0))
+        end
+    end)
+
+    runButton.MouseButton1Up:Connect(function()
+        local character = player.Character
+        if character and character:FindFirstChild("Humanoid") then
+            local humanoid = character.Humanoid
+            humanoid.WalkSpeed = defaultWalkSpeed
+            notify("🚶‍♂️ กลับความเร็วปกติ: WalkSpeed: " .. humanoid.WalkSpeed, Color3.fromRGB(0, 255, 0))
+        end
+    end)
+
+    -- Joystick หันทิศ
     joystickFrame = Instance.new("Frame")
     joystickFrame.Size = UDim2.new(0, 100, 0, 100)
-    joystickFrame.Position = UDim2.new(0.85, -50, 0.85, -50)
+    joystickFrame.Position = UDim2.new(0.85, -50, 1, -50)
     joystickFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 255)
     joystickFrame.BackgroundTransparency = 0.5
     local joystickCorner = Instance.new("UICorner")
@@ -620,15 +691,70 @@ local function createButtons()
             thumb.Position = UDim2.new(0.5, -20, 0.5, -20)
         end
     end)
+
+    -- แถบเลือด
+    healthBar = Instance.new("Frame")
+    healthBar.Size = UDim2.new(0, 200, 0, 30)
+    healthBar.Position = UDim2.new(0, 10, 0, 10)
+    healthBar.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    healthBar.BackgroundTransparency = 0.5
+    local healthText = Instance.new("TextLabel")
+    healthText.Size = UDim2.new(1, 0, 1, 0)
+    healthText.Text = "HP: 100/100"
+    healthText.TextScaled = true
+    healthText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    healthText.BackgroundTransparency = 1
+    healthText.Font = Enum.Font.SourceSansBold
+    healthText.Parent = healthBar
+    healthBar.Parent = screenGui
+
+    -- ตัวนับ NPC
+    npcCounter = Instance.new("Frame")
+    npcCounter.Size = UDim2.new(0, 200, 0, 30)
+    npcCounter.Position = UDim2.new(0, 10, 0, 50)
+    npcCounter.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    npcCounter.BackgroundTransparency = 0.5
+    local npcText = Instance.new("TextLabel")
+    npcText.Size = UDim2.new(1, 0, 1, 0)
+    npcText.Text = "NPCs ยังมีชีวิต: 25"
+    npcText.TextScaled = true
+    npcText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    npcText.BackgroundTransparency = 1
+    npcText.Font = Enum.Font.SourceSansBold
+    npcText.Parent = npcCounter
+    npcCounter.Parent = screenGui
 end
 
--- ฟังก์ชันรอตัวละคร
-local function waitForCharacter()
-    while not (player.Character and player.Character:FindFirstChild("HumanoidRootPart")) do
-        wait(0.1)
+-- อัปเดตแถบเลือดและจำนวน NPC
+local function updateUI()
+    if not playing then return end
+    local character = player.Character
+    if character and character:FindFirstChild("Humanoid") then
+        local humanoid = character.Humanoid
+        if healthBar and healthBar:FindFirstChild("TextLabel") then
+            healthBar.TextLabel.Text = string.format("HP: %.0f/%.0f", humanoid.Health, humanoid.MaxHealth)
+        end
     end
-    return player.Character.HumanoidRootPart
+    local aliveNPCs = 0
+    for _, npc in ipairs(npcs) do
+        if npc and npc:FindFirstChild("Humanoid") and npc.Humanoid.Health > 0 then
+            aliveNPCs = aliveNPCs + 1
+        end
+    end
+    if npcCounter and npcCounter:FindFirstChild("TextLabel") then
+        npcCounter.TextLabel.Text = "NPCs ยังมีชีวิต: " .. aliveNPCs
+    end
 end
+
+-- อัปเดตทุกวินาที
+spawn(function()
+    while true do
+        if playing then
+            updateUI()
+        end
+        wait(1)
+    end
+end)
 
 -- อัปเดตการหมุนทุกเฟรม
 RunService.RenderStepped:Connect(function()
@@ -636,6 +762,21 @@ RunService.RenderStepped:Connect(function()
         updateRotation()
     end
 end)
+
+-- สร้าง GUI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "😈_ExploitGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0, 150, 0, 50)
+button.Position = UDim2.new(0.5, -75, 0.8, 0)
+button.Text = "เล่น 😈"
+button.TextScaled = true
+button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+button.TextColor3 = Color3.fromRGB(255, 255, 255)
+button.Parent = screenGui
 
 -- จัดการเมื่อกด "เล่น"
 button.MouseButton1Click:Connect(function()
@@ -654,6 +795,11 @@ button.MouseButton1Click:Connect(function()
             return
         end
 
+        local character = player.Character
+        if character and character:FindFirstChild("Humanoid") then
+            defaultWalkSpeed = character.Humanoid.WalkSpeed
+        end
+
         createButtons()
 
         camera.CameraType = Enum.CameraType.Scriptable
@@ -670,7 +816,6 @@ button.MouseButton1Click:Connect(function()
         button.Text = "เลิก 😴"
         playing = true
 
-        local character = player.Character
         if character then
             local humanoid = character:FindFirstChild("Humanoid")
             if humanoid then
@@ -688,6 +833,7 @@ button.MouseButton1Click:Connect(function()
         player.CharacterAdded:Connect(function(newChar)
             if not playing then return end
             local newHum = newChar:WaitForChild("Humanoid")
+            defaultWalkSpeed = newHum.WalkSpeed
             local newDiedConnection
             newDiedConnection = newHum.Died:Connect(function()
                 stopPlaying()
