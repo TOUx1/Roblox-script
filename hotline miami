@@ -26,7 +26,7 @@ local entranceWidth = 15
 -- เก็บ NPC, ปุ่ม, และ UI
 local npcs = {}
 local punchButton, runButton, joystickFrame, healthBar, npcCounter
-local defaultWalkSpeed = 16 -- ความเร็วเดินปกติ
+local defaultWalkSpeed = 16
 
 -- สถานะ
 local playing = false
@@ -35,10 +35,18 @@ local isDraggingJoystick = false
 local joystickOrigin = nil
 local joystickDelta = Vector2.new(0, 0)
 
+-- สร้าง ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "😈_ExploitGui"
+screenGui.ResetOnSpawn = false
+screenGui.DisplayOrder = 10
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
 -- ฟังก์ชันแจ้งเตือนสุดเท่
 local function notify(message, color)
     local gui = Instance.new("ScreenGui")
     gui.Parent = player:WaitForChild("PlayerGui")
+    gui.DisplayOrder = 15
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(0, 350, 0, 60)
     frame.Position = UDim2.new(0.5, -175, 0.1, 0)
@@ -99,7 +107,7 @@ end
 -- ฟังก์ชันสร้างเอฟเฟกต์ต่อย
 local function createPunchEffect(position, hitNPC)
     local effect = Instance.new("ParticleEmitter")
-    effect.Texture = "rbxassetid://243098098" -- อนุภาคสปาร์ค
+    effect.Texture = "rbxassetid://243098098"
     effect.Color = ColorSequence.new(hitNPC and Color3.fromRGB(255, 0, 0) or Color3.fromRGB(128, 128, 128))
     effect.Size = NumberSequence.new(0.5)
     effect.Lifetime = NumberRange.new(0.3, 0.5)
@@ -285,7 +293,7 @@ local function spawnNPC(position)
             if humanoid.Health > 0 and player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 and canSeeTarget() then
                 shoot(player.Character.HumanoidRootPart.Position)
             end
-            wait(0.8) -- ยิงทุก 0.8 วินาที
+            wait(0.8)
         end
     end)
 
@@ -336,7 +344,7 @@ local function resetNPCs()
     notify("🧑‍🚀 รีเซ็ต NPC! สร้าง " .. npcCount .. " Noob NPCs ใหม่! 🌟", Color3.fromRGB(0, 255, 0))
 end
 
--- สร้างพื้นสีเทา
+-- สร้างพื้นและห้อง
 local platform
 local rooms = {}
 local startX = targetPosition.X - platformSize.X / 2 + roomSize.X / 2
@@ -361,7 +369,6 @@ else
     notify("❌ ล้มเหลวในการสร้างพื้น: " .. tostring(err) .. " 😞", Color3.fromRGB(255, 0, 0))
 end
 
--- สร้างห้องย่อยแบบ grid และวาง NPC 25 ตัว
 local roomCount = 0
 local npcCount = 0
 local targetNPCs = 25
@@ -523,7 +530,6 @@ local function stopPlaying()
     joystickOrigin = nil
     joystickDelta = Vector2.new(0, 0)
 
-    -- รีเซ็ต NPC
     resetNPCs()
 
     playing = false
@@ -539,13 +545,11 @@ local function punch()
     local hrp = character.HumanoidRootPart
     local humanoid = character.Humanoid
 
-    -- เล่นแอนิเมชัน
     local animation = Instance.new("Animation")
     animation.AnimationId = "rbxassetid://204062532"
     local track = humanoid:LoadAnimation(animation)
     track:Play()
 
-    -- Raycast เพื่อหา NPC
     local rayParams = RaycastParams.new()
     rayParams.FilterDescendantsInstances = {character}
     rayParams.FilterType = Enum.RaycastFilterType.Blacklist
@@ -593,33 +597,37 @@ end
 
 -- สร้าง UI และปุ่ม
 local function createButtons()
+    notify("🛠️ กำลังสร้าง UI: ปุ่มต่อย, วิ่ง, Joystick, แถบเลือด, ตัวนับ NPC... 🚀", Color3.fromRGB(0, 255, 0))
+
     -- ปุ่มต่อย
     punchButton = Instance.new("TextButton")
     punchButton.Size = UDim2.new(0, 80, 0, 80)
-    punchButton.Position = UDim2.new(0.85, -40, 0.7, -40)
+    punchButton.Position = UDim2.new(0.85, -40, 0.6, -40)
     punchButton.Text = "ต่อย 👊"
     punchButton.TextScaled = true
     punchButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
     punchButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    punchButton.ZIndex = 10
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(1, 0)
     corner.Parent = punchButton
     punchButton.Parent = screenGui
     punchButton.MouseButton1Click:Connect(punch)
+    notify("✅ สร้างปุ่มต่อยสำเร็จ!", Color3.fromRGB(0, 255, 0))
 
     -- ปุ่มวิ่ง
     runButton = Instance.new("TextButton")
     runButton.Size = UDim2.new(0, 80, 0, 80)
-    runButton.Position = UDim2.new(0.85, -40, 0.85, -40)
+    runButton.Position = UDim2.new(0.85, -40, 0.75, -40)
     runButton.Text = "วิ่ง 🏃‍♂️"
     runButton.TextScaled = true
     runButton.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
     runButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    runButton.ZIndex = 10
     local runCorner = Instance.new("UICorner")
     runCorner.CornerRadius = UDim.new(1, 0)
     runCorner.Parent = runButton
     runButton.Parent = screenGui
-
     runButton.MouseButton1Down:Connect(function()
         local character = player.Character
         if character and character:FindFirstChild("Humanoid") then
@@ -628,7 +636,6 @@ local function createButtons()
             notify("🏃‍♂️ วิ่งเร็วขึ้น! WalkSpeed: " .. humanoid.WalkSpeed, Color3.fromRGB(0, 255, 0))
         end
     end)
-
     runButton.MouseButton1Up:Connect(function()
         local character = player.Character
         if character and character:FindFirstChild("Humanoid") then
@@ -637,13 +644,15 @@ local function createButtons()
             notify("🚶‍♂️ กลับความเร็วปกติ: WalkSpeed: " .. humanoid.WalkSpeed, Color3.fromRGB(0, 255, 0))
         end
     end)
+    notify("✅ สร้างปุ่มวิ่งสำเร็จ!", Color3.fromRGB(0, 255, 0))
 
     -- Joystick หันทิศ
     joystickFrame = Instance.new("Frame")
     joystickFrame.Size = UDim2.new(0, 100, 0, 100)
-    joystickFrame.Position = UDim2.new(0.85, -50, 1, -50)
+    joystickFrame.Position = UDim2.new(0.85, -50, 0.9, -50)
     joystickFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 255)
     joystickFrame.BackgroundTransparency = 0.5
+    joystickFrame.ZIndex = 10
     local joystickCorner = Instance.new("UICorner")
     joystickCorner.CornerRadius = UDim.new(1, 0)
     joystickCorner.Parent = joystickFrame
@@ -653,10 +662,12 @@ local function createButtons()
     thumb.Size = UDim2.new(0, 40, 0, 40)
     thumb.Position = UDim2.new(0.5, -20, 0.5, -20)
     thumb.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    thumb.ZIndex = 11
     local thumbCorner = Instance.new("UICorner")
     thumbCorner.CornerRadius = UDim.new(1, 0)
     thumbCorner.Parent = thumb
     thumb.Parent = joystickFrame
+    notify("✅ สร้าง Joystick หันทิศสำเร็จ!", Color3.fromRGB(0, 255, 0))
 
     UserInputService.InputBegan:Connect(function(input, gameProcessed)
         if gameProcessed or not playing then return end
@@ -698,6 +709,7 @@ local function createButtons()
     healthBar.Position = UDim2.new(0, 10, 0, 10)
     healthBar.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
     healthBar.BackgroundTransparency = 0.5
+    healthBar.ZIndex = 10
     local healthText = Instance.new("TextLabel")
     healthText.Size = UDim2.new(1, 0, 1, 0)
     healthText.Text = "HP: 100/100"
@@ -705,8 +717,10 @@ local function createButtons()
     healthText.TextColor3 = Color3.fromRGB(255, 255, 255)
     healthText.BackgroundTransparency = 1
     healthText.Font = Enum.Font.SourceSansBold
+    healthText.ZIndex = 11
     healthText.Parent = healthBar
     healthBar.Parent = screenGui
+    notify("✅ สร้างแถบเลือดสำเร็จ!", Color3.fromRGB(0, 255, 0))
 
     -- ตัวนับ NPC
     npcCounter = Instance.new("Frame")
@@ -714,6 +728,7 @@ local function createButtons()
     npcCounter.Position = UDim2.new(0, 10, 0, 50)
     npcCounter.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
     npcCounter.BackgroundTransparency = 0.5
+    npcCounter.ZIndex = 10
     local npcText = Instance.new("TextLabel")
     npcText.Size = UDim2.new(1, 0, 1, 0)
     npcText.Text = "NPCs ยังมีชีวิต: 25"
@@ -721,8 +736,10 @@ local function createButtons()
     npcText.TextColor3 = Color3.fromRGB(255, 255, 255)
     npcText.BackgroundTransparency = 1
     npcText.Font = Enum.Font.SourceSansBold
+    npcText.ZIndex = 11
     npcText.Parent = npcCounter
     npcCounter.Parent = screenGui
+    notify("✅ สร้างตัวนับ NPC สำเร็จ!", Color3.fromRGB(0, 255, 0))
 end
 
 -- อัปเดตแถบเลือดและจำนวน NPC
@@ -746,7 +763,6 @@ local function updateUI()
     end
 end
 
--- อัปเดตทุกวินาที
 spawn(function()
     while true do
         if playing then
@@ -763,12 +779,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- สร้าง GUI
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "😈_ExploitGui"
-screenGui.ResetOnSpawn = false
-screenGui.Parent = player:WaitForChild("PlayerGui")
-
+-- สร้างปุ่ม "เล่น"
 local button = Instance.new("TextButton")
 button.Size = UDim2.new(0, 150, 0, 50)
 button.Position = UDim2.new(0.5, -75, 0.8, 0)
@@ -776,6 +787,7 @@ button.Text = "เล่น 😈"
 button.TextScaled = true
 button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 button.TextColor3 = Color3.fromRGB(255, 255, 255)
+button.ZIndex = 10
 button.Parent = screenGui
 
 -- จัดการเมื่อกด "เล่น"
