@@ -52,7 +52,7 @@ end
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "ClickDetectorHub"
 screenGui.ResetOnSpawn = false
-screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling -- จัดการ ZIndex ระหว่างองค์ประกอบ
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
 -- Circle Button for Reopening GUI
@@ -62,8 +62,8 @@ circleBtn.Size = UDim2.new(0, 50, 0, 50)
 circleBtn.Position = UDim2.new(0, 10, 0, 10)
 circleBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
 circleBtn.BackgroundTransparency = 0
-circleBtn.ZIndex = 1 -- ZIndex ต่ำกว่า main
-circleBtn.Active = false -- ปิดการรับ input เมื่อ main เปิด
+circleBtn.ZIndex = 1
+circleBtn.Active = false
 circleBtn.Visible = false
 local corner = Instance.new("UICorner", circleBtn)
 corner.CornerRadius = UDim.new(0.5, 0)
@@ -129,7 +129,7 @@ main.BorderSizePixel = 0
 main.AnchorPoint = Vector2.new(0.5, 0.5)
 main.ClipsDescendants = true
 main.Active = true
-main.ZIndex = 2 -- ZIndex สูงกว่า circleBtn
+main.ZIndex = 2
 
 -- Header
 local header = Instance.new("Frame", main)
@@ -140,7 +140,7 @@ header.ZIndex = 3
 
 local title = Instance.new("TextLabel", header)
 title.Text = "ClickDetector HUB 🔍"
-title.Size = UDim2.new(0.5, -8, 1, 0)
+title.Size = UDim2.new(0.4, -8, 1, 0) -- ปรับขนาดเพื่อรองรับปุ่มเพิ่มเติม
 title.Position = UDim2.new(0, 8, 0, 0)
 title.BackgroundTransparency = 1
 title.TextColor3 = Color3.fromRGB(235, 235, 235)
@@ -151,7 +151,7 @@ title.ZIndex = 4
 
 local toggleBtn = Instance.new("TextButton", header)
 toggleBtn.Size = UDim2.new(0.12, -8, 1, -8)
-toggleBtn.Position = UDim2.new(0.5, 8, 0, 4)
+toggleBtn.Position = UDim2.new(0.4, 8, 0, 4)
 toggleBtn.Text = "Hide 🖱️"
 toggleBtn.Font = Enum.Font.GothamBold
 toggleBtn.TextSize = 14
@@ -163,7 +163,7 @@ toggleBtn.ZIndex = 4
 
 local closeBtn = Instance.new("TextButton", header)
 closeBtn.Size = UDim2.new(0.12, -8, 1, -8)
-closeBtn.Position = UDim2.new(0.64, 8, 0, 4)
+closeBtn.Position = UDim2.new(0.54, 8, 0, 4)
 closeBtn.Text = "Close ❌"
 closeBtn.Font = Enum.Font.GothamBold
 closeBtn.TextSize = 14
@@ -175,13 +175,23 @@ closeBtn.ZIndex = 4
 
 local showAllBtn = Instance.new("TextButton", header)
 showAllBtn.Size = UDim2.new(0.12, -8, 1, -8)
-showAllBtn.Position = UDim2.new(0.78, 8, 0, 4)
+showAllBtn.Position = UDim2.new(0.68, 8, 0, 4)
 showAllBtn.Text = "Show All 🌐"
 showAllBtn.Font = Enum.Font.Gotham
 showAllBtn.TextSize = 12
 showAllBtn.BackgroundTransparency = 0.15
 showAllBtn.TextColor3 = Color3.fromRGB(230, 230, 230)
 showAllBtn.ZIndex = 4
+
+local autoFireToggleBtn = Instance.new("TextButton", header)
+autoFireToggleBtn.Size = UDim2.new(0.12, -8, 1, -8)
+autoFireToggleBtn.Position = UDim2.new(0.82, 8, 0, 4)
+autoFireToggleBtn.Text = "AutoFire Off ⚡"
+autoFireToggleBtn.Font = Enum.Font.Gotham
+autoFireToggleBtn.TextSize = 12
+autoFireToggleBtn.BackgroundTransparency = 0.15
+autoFireToggleBtn.TextColor3 = Color3.fromRGB(230, 230, 230)
+autoFireToggleBtn.ZIndex = 4
 
 -- Search + Refresh
 local searchBox = Instance.new("TextBox", main)
@@ -230,7 +240,6 @@ listFrame.ZIndex = 3
 local uiListLayout = Instance.new("UIListLayout", listFrame)
 uiListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 uiListLayout.Padding = UDim.new(0, 6)
-uiListLayout.ZIndex = 4
 
 -- Footer / Info
 local info = Instance.new("TextLabel", main)
@@ -423,38 +432,47 @@ local function rebuildList(filterText, showAll)
     clearList()
     detectors = {}
     filterText = (filterText or ""):lower()
-    for _, obj in ipairs(Workspace:GetDescendants()) do
-        if obj:IsA("ClickDetector") then
-            local path = shortPath(obj)
-            if filterText == "" or path:lower():find(filterText) or (obj.Parent and obj.Parent.Name:lower():find(filterText)) then
-                table.insert(detectors, obj)
+    task.spawn(function() -- ใช้ task.spawn เพื่อป้องกันการค้าง
+        for _, obj in ipairs(Workspace:GetDescendants()) do
+            if obj:IsA("ClickDetector") then
+                local path = shortPath(obj)
+                if filterText == "" or path:lower():find(filterText) or (obj.Parent and obj.Parent.Name:lower():find(filterText)) then
+                    table.insert(detectors, obj)
+                end
             end
         end
-    end
-    table.sort(detectors, function(a, b)
-        return shortPath(a) < shortPath(b)
-    end)
-    local displayCount = showAll and #detectors or math.min(#detectors, MAX_INITIAL_DISPLAY)
-    for i, cd in ipairs(detectors) do
-        if i <= displayCount then
-            pcall(function() makeEntry(cd) end)
+        if #detectors == 0 then
+            StarterGui:SetCore("SendNotification", {
+                Title = "ClickDetector HUB",
+                Text = "No ClickDetectors found in Workspace! 😕",
+                Duration = 5
+            })
         end
-    end
-    listFrame.CanvasSize = UDim2.new(0, 0, 0, math.max(0, displayCount * 62))
-    info.Text = "Status: Showing " .. tostring(displayCount) .. "/" .. tostring(#detectors) .. " ClickDetectors"
-    if #detectors > MAX_INITIAL_DISPLAY and not showAll then
-        StarterGui:SetCore("SendNotification", {
-            Title = "ClickDetector HUB",
-            Text = "Limited to " .. MAX_INITIAL_DISPLAY .. " ClickDetectors. Click 'Show All' to display all (" .. #detectors .. "). ⚠️",
-            Duration = 5
-        })
-    elseif showAll and #detectors > MAX_INITIAL_DISPLAY then
-        StarterGui:SetCore("SendNotification", {
-            Title = "ClickDetector HUB",
-            Text = "Showing all " .. #detectors .. " ClickDetectors. May cause lag! 🌐",
-            Duration = 5
-        })
-    end
+        table.sort(detectors, function(a, b)
+            return shortPath(a) < shortPath(b)
+        end)
+        local displayCount = showAll and #detectors or math.min(#detectors, MAX_INITIAL_DISPLAY)
+        for i, cd in ipairs(detectors) do
+            if i <= displayCount then
+                pcall(function() makeEntry(cd) end)
+            end
+        end
+        listFrame.CanvasSize = UDim2.new(0, 0, 0, math.max(0, displayCount * 62))
+        info.Text = "Status: Showing " .. tostring(displayCount) .. "/" .. tostring(#detectors) .. " ClickDetectors"
+        if #detectors > MAX_INITIAL_DISPLAY and not showAll then
+            StarterGui:SetCore("SendNotification", {
+                Title = "ClickDetector HUB",
+                Text = "Limited to " .. MAX_INITIAL_DISPLAY .. " ClickDetectors. Click 'Show All' to display all (" .. #detectors .. "). ⚠️",
+                Duration = 5
+            })
+        elseif showAll and #detectors > MAX_INITIAL_DISPLAY then
+            StarterGui:SetCore("SendNotification", {
+                Title = "ClickDetector HUB",
+                Text = "Showing all " .. #detectors .. " ClickDetectors. May cause lag! 🌐",
+                Duration = 5
+            })
+        end
+    end)
 end
 
 -- BUTTONS
@@ -504,6 +522,29 @@ showAllBtn.MouseButton1Click:Connect(function()
     rebuildList(searchBox.Text, true)
 end)
 
+-- AutoFire Handler
+autoFireToggleBtn.MouseButton1Click:Connect(function()
+    autoFireAll = not autoFireAll
+    autoFireToggleBtn.Text = "AutoFire " .. (autoFireAll and "On ⚡" or "Off ⚡")
+    if autoFireAll and not autoFireRunning then
+        autoFireRunning = true
+        task.spawn(function()
+            while autoFireAll do
+                for _, cd in ipairs(detectors) do
+                    if not lockedDetectors[cd] then
+                        pcall(function()
+                            tryFire(cd)
+                        end)
+                        task.wait(AUTO_FIRE_INTERVAL)
+                    end
+                end
+                task.wait(0.2)
+            end
+            autoFireRunning = false
+        end)
+    end
+end)
+
 -- Hotkey H เพื่อโชว์/ซ่อน
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
@@ -523,51 +564,17 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
 end)
 
 -- Auto refresh loop
-spawn(function()
+task.spawn(function()
     while true do
         if autoRefresh then
             pcall(function() rebuildList(searchBox.Text, false) end)
         end
-        wait(REFRESH_INTERVAL)
+        task.wait(REFRESH_INTERVAL)
     end
 end)
 
 -- Initial build
 rebuildList("", false)
-
--- Smart auto-fire ALL
-local autoFireToggleBtn = Instance.new("TextButton", header)
-autoFireToggleBtn.Size = UDim2.new(0.12, -8, 1, -8)
-autoFireToggleBtn.Position = UDim2.new(0.92, 8, 0, 4)
-autoFireToggleBtn.Text = "AutoFire Off ⚡"
-autoFireToggleBtn.Font = Enum.Font.Gotham
-autoFireToggleBtn.TextSize = 12
-autoFireToggleBtn.BackgroundTransparency = 0.15
-autoFireToggleBtn.TextColor3 = Color3.fromRGB(230, 230, 230)
-autoFireToggleBtn.ZIndex = 4
-
-local autoFireRunning = false
-autoFireToggleBtn.MouseButton1Click:Connect(function()
-    autoFireAll = not autoFireAll
-    autoFireToggleBtn.Text = "AutoFire " .. (autoFireAll and "On ⚡" or "Off ⚡")
-    if autoFireAll and not autoFireRunning then
-        autoFireRunning = true
-        spawn(function()
-            while autoFireAll do
-                for _, cd in ipairs(detectors) do
-                    if not lockedDetectors[cd] then
-                        pcall(function()
-                            tryFire(cd)
-                        end)
-                        task.wait(AUTO_FIRE_INTERVAL)
-                    end
-                end
-                task.wait(0.2)
-            end
-            autoFireRunning = false
-        end)
-    end
-end)
 
 -- Search box enter to refresh
 searchBox.FocusLost:Connect(function(enter)
