@@ -120,6 +120,115 @@ circleBtn.MouseLeave:Connect(function()
     end
 end)
 
+-- SPY UI Button
+local spyBtn = Instance.new("ImageButton", screenGui)
+spyBtn.Name = "SpyUIToggle"
+spyBtn.Size = UDim2.new(0, 50, 0, 50)
+spyBtn.Position = UDim2.new(0.5, 430, 0.5, 0) -- ข้าง main Frame
+spyBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+spyBtn.BackgroundTransparency = 0
+spyBtn.ZIndex = 1
+spyBtn.Active = true
+spyBtn.Visible = true
+local spyCorner = Instance.new("UICorner", spyBtn)
+spyCorner.CornerRadius = UDim.new(0.5, 0)
+
+local spyIcon = Instance.new("TextLabel", spyBtn)
+spyIcon.Size = UDim2.new(1, 0, 1, 0)
+spyIcon.BackgroundTransparency = 1
+spyIcon.Text = "😇"
+spyIcon.TextColor3 = Color3.fromRGB(230, 230, 230)
+spyIcon.TextSize = 24
+spyIcon.Font = Enum.Font.GothamBold
+spyIcon.TextTransparency = 0.2
+spyIcon.ZIndex = 2
+
+-- Drag for Spy Button
+local spyDragging, spyDragInput, spyDragStart, spyStartPos
+spyBtn.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        spyDragging = true
+        spyDragStart = input.Position
+        spyStartPos = spyBtn.Position
+        TweenService:Create(spyBtn, TweenInfo.new(0.2), {Size = UDim2.new(0, 55, 0, 55)}):Play()
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                spyDragging = false
+                TweenService:Create(spyBtn, TweenInfo.new(0.2), {Size = UDim2.new(0, 50, 0, 50)}):Play()
+            end
+        end)
+    end
+end)
+spyBtn.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        spyDragInput = input
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if input == spyDragInput and spyDragging then
+        local delta = input.Position - spyDragStart
+        local screenSize = game:GetService("GuiService"):GetScreenResolution() or Vector2.new(1920, 1080)
+        local newX = math.clamp(spyStartPos.X.Offset + delta.X, 0, screenSize.X - spyBtn.Size.X.Offset)
+        local newY = math.clamp(spyStartPos.Y.Offset + delta.Y, 0, screenSize.Y - spyBtn.Size.Y.Offset)
+        spyBtn.Position = UDim2.new(0, newX, 0, newY)
+    end
+end)
+
+spyBtn.MouseEnter:Connect(function()
+    TweenService:Create(spyBtn, TweenInfo.new(0.2), {Size = UDim2.new(0, 55, 0, 55)}):Play()
+end)
+spyBtn.MouseLeave:Connect(function()
+    if not spyDragging then
+        TweenService:Create(spyBtn, TweenInfo.new(0.2), {Size = UDim2.new(0, 50, 0, 50)}):Play()
+    end
+end)
+
+-- SPY UI Frame
+local spyFrame = Instance.new("Frame", screenGui)
+spyFrame.Name = "SpyUI"
+spyFrame.Size = UDim2.new(0, 200, 0, 300)
+spyFrame.Position = UDim2.new(0.5, 430, 0.5, 0)
+spyFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+spyFrame.BorderSizePixel = 0
+spyFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+spyFrame.ClipsDescendants = true
+spyFrame.Active = true
+spyFrame.ZIndex = 3
+spyFrame.Visible = false
+
+local spyHeader = Instance.new("Frame", spyFrame)
+spyHeader.Size = UDim2.new(1, 0, 0, 36)
+spyHeader.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+spyHeader.BorderSizePixel = 0
+spyHeader.ZIndex = 4
+
+local spyTitle = Instance.new("TextLabel", spyHeader)
+spyTitle.Text = "SPY UI 😇"
+spyTitle.Size = UDim2.new(1, -8, 1, 0)
+spyTitle.Position = UDim2.new(0, 8, 0, 0)
+spyTitle.BackgroundTransparency = 1
+spyTitle.TextColor3 = Color3.fromRGB(235, 235, 235)
+spyTitle.Font = Enum.Font.GothamBold
+spyTitle.TextSize = 16
+spyTitle.TextXAlignment = Enum.TextXAlignment.Left
+spyTitle.ZIndex = 5
+
+local spyListFrame = Instance.new("ScrollingFrame", spyFrame)
+spyListFrame.Size = UDim2.new(1, -16, 1, -44)
+spyListFrame.Position = UDim2.new(0, 8, 0, 40)
+spyListFrame.CanvasSize = UDim2.new(0, 0, 1, 0)
+spyListFrame.ScrollBarThickness = 6
+spyListFrame.BackgroundTransparency = 1
+spyListFrame.BorderSizePixel = 0
+spyListFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+spyListFrame.ClipsDescendants = true
+spyListFrame.ZIndex = 4
+
+local spyListLayout = Instance.new("UIListLayout", spyListFrame)
+spyListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+spyListLayout.Padding = UDim.new(0, 6)
+
+-- Main GUI
 local main = Instance.new("Frame", screenGui)
 main.Name = "Main"
 main.Size = UDim2.new(0, 420, 0, 420)
@@ -140,7 +249,7 @@ header.ZIndex = 3
 
 local title = Instance.new("TextLabel", header)
 title.Text = "ClickDetector HUB 🔍"
-title.Size = UDim2.new(0.4, -8, 1, 0) -- ปรับขนาดเพื่อรองรับปุ่มเพิ่มเติม
+title.Size = UDim2.new(0.4, -8, 1, 0)
 title.Position = UDim2.new(0, 8, 0, 0)
 title.BackgroundTransparency = 1
 title.TextColor3 = Color3.fromRGB(235, 235, 235)
@@ -279,14 +388,138 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
+-- SPY UI Functions
+local function makeSpyEntry(screenGui)
+    local entry = Instance.new("Frame")
+    entry.Name = "SpyEntry"
+    entry.Size = UDim2.new(1, 0, 0, 50) -- ปรับขนาดเพื่อรองรับสองปุ่ม
+    entry.BackgroundColor3 = Color3.fromRGB(28, 28, 33)
+    entry.BorderSizePixel = 0
+    entry.Parent = spyListFrame
+    entry.ZIndex = 5
+
+    local nameLabel = Instance.new("TextLabel", entry)
+    nameLabel.Size = UDim2.new(0.5, -8, 1, 0)
+    nameLabel.Position = UDim2.new(0, 8, 0, 0)
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+    nameLabel.Font = Enum.Font.GothamBold
+    nameLabel.TextSize = 14
+    nameLabel.TextColor3 = Color3.fromRGB(235, 235, 235)
+    nameLabel.Text = screenGui.Name
+    nameLabel.ZIndex = 6
+
+    local showBtn = Instance.new("TextButton", entry)
+    showBtn.Size = UDim2.new(0.2, -8, 0.8, -8)
+    showBtn.Position = UDim2.new(0.55, 8, 0, 4)
+    showBtn.Text = "Show 👁️"
+    showBtn.Font = Enum.Font.Gotham
+    showBtn.TextSize = 12
+    showBtn.BackgroundColor3 = Color3.fromRGB(30, 100, 30)
+    showBtn.TextColor3 = Color3.fromRGB(230, 230, 230)
+    showBtn.ZIndex = 6
+
+    local hideBtn = Instance.new("TextButton", entry)
+    hideBtn.Size = UDim2.new(0.2, -8, 0.8, -8)
+    hideBtn.Position = UDim2.new(0.75, 8, 0, 4)
+    hideBtn.Text = "Hide 🚫"
+    hideBtn.Font = Enum.Font.Gotham
+    hideBtn.TextSize = 12
+    hideBtn.BackgroundColor3 = Color3.fromRGB(100, 30, 30)
+    hideBtn.TextColor3 = Color3.fromRGB(230, 230, 230)
+    hideBtn.ZIndex = 6
+
+    showBtn.MouseButton1Click:Connect(function()
+        if not screenGui.Enabled then
+            screenGui.Enabled = true
+        end
+        local shown = false
+        for _, child in ipairs(screenGui:GetDescendants()) do
+            if child:IsA("Frame") or child:IsA("ImageLabel") or child:IsA("TextLabel") or child:IsA("TextButton") then
+                if child.Visible ~= nil then
+                    child.Visible = true
+                    shown = true
+                end
+            end
+        end
+        StarterGui:SetCore("SendNotification", {
+            Title = "SPY UI",
+            Text = screenGui.Name .. (shown and " shown 👁️" or " enabled 👁️"),
+            Duration = 3
+        })
+    end)
+
+    hideBtn.MouseButton1Click:Connect(function()
+        local hidden = false
+        for _, child in ipairs(screenGui:GetDescendants()) do
+            if child:IsA("Frame") or child:IsA("ImageLabel") or child:IsA("TextLabel") or child:IsA("TextButton") then
+                if child.Visible ~= nil then
+                    child.Visible = false
+                    hidden = true
+                end
+            end
+        end
+        if not hidden then
+            screenGui.Enabled = false
+        end
+        StarterGui:SetCore("SendNotification", {
+            Title = "SPY UI",
+            Text = screenGui.Name .. (hidden and " hidden 🚫" or " disabled 🚫"),
+            Duration = 3
+        })
+    end)
+
+    screenGui.AncestryChanged:Connect(function(_, parent)
+        if not parent then
+            entry:Destroy()
+        end
+    end)
+end
+
+local function rebuildSpyList()
+    for _, v in ipairs(spyListFrame:GetChildren()) do
+        if v:IsA("Frame") and v.Name == "SpyEntry" then v:Destroy() end
+    end
+    task.spawn(function()
+        local guis = {}
+        for _, gui in ipairs(LocalPlayer.PlayerGui:GetChildren()) do
+            if gui:IsA("ScreenGui") and gui.Name ~= "ClickDetectorHub" then
+                table.insert(guis, gui)
+            end
+        end
+        table.sort(guis, function(a, b)
+            return a.Name < b.Name
+        end)
+        for _, gui in ipairs(guis) do
+            pcall(function() makeSpyEntry(gui) end)
+        end
+        spyListFrame.CanvasSize = UDim2.new(0, 0, 0, math.max(0, #guis * 56))
+        if #guis == 0 then
+            StarterGui:SetCore("SendNotification", {
+                Title = "SPY UI",
+                Text = "No other ScreenGuis found in PlayerGui! 😕",
+                Duration = 5
+            })
+        end
+    end)
+end
+
+spyBtn.MouseButton1Click:Connect(function()
+    spyFrame.Visible = not spyFrame.Visible
+    if spyFrame.Visible then
+        rebuildSpyList()
+    end
+end)
+
 -- State
 local detectors = {}
 local autoRefresh = false
 local autoFireAll = false
+local autoFireRunning = false
 local distanceConnections = {}
 local lockedDetectors = {}
 
--- FUNCTIONS
+-- ClickDetector Functions
 local function clearList()
     for _, v in ipairs(listFrame:GetChildren()) do
         if v:IsA("Frame") and v.Name == "Entry" then v:Destroy() end
@@ -359,7 +592,7 @@ local function makeEntry(clickdetector)
     copyBtn.ZIndex = 5
 
     local lockBtn = Instance.new("TextButton", entry)
-    lockBtn.Size = UDim2.new(0.15, -8, 0.5, -6)
+    lockBtn.Size = UDim2.new(0.15, -8, 0.SPY UI 😇5, -6)
     lockBtn.Position = UDim2.new(0.7, 8, 0.5, 0)
     lockBtn.Text = lockedDetectors[clickdetector] and "Locked 🔒" or "Unlocked 🔓"
     lockBtn.Font = Enum.Font.Gotham
@@ -432,7 +665,7 @@ local function rebuildList(filterText, showAll)
     clearList()
     detectors = {}
     filterText = (filterText or ""):lower()
-    task.spawn(function() -- ใช้ task.spawn เพื่อป้องกันการค้าง
+    task.spawn(function()
         for _, obj in ipairs(Workspace:GetDescendants()) do
             if obj:IsA("ClickDetector") then
                 local path = shortPath(obj)
@@ -494,6 +727,7 @@ end)
 
 closeBtn.MouseButton1Click:Connect(function()
     main.Visible = false
+    spyFrame.Visible = false
     circleBtn.Visible = true
     circleBtn.Active = true
     autoRefresh = false
@@ -522,7 +756,6 @@ showAllBtn.MouseButton1Click:Connect(function()
     rebuildList(searchBox.Text, true)
 end)
 
--- AutoFire Handler
 autoFireToggleBtn.MouseButton1Click:Connect(function()
     autoFireAll = not autoFireAll
     autoFireToggleBtn.Text = "AutoFire " .. (autoFireAll and "On ⚡" or "Off ⚡")
@@ -584,6 +817,6 @@ end)
 -- Small tip notification once on open
 StarterGui:SetCore("SendNotification", {
     Title = "ClickDetector HUB",
-    Text = "H = Toggle UI. Refresh to scan. Lock to skip in AutoFire. Show All for full list. 🚀",
+    Text = "H = Toggle UI. SPY UI 😇 to show/hide game UIs. 🚀",
     Duration = 4
 })
