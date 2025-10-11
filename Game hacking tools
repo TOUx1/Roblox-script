@@ -1,0 +1,781 @@
+-- ClickDetector GUI Launcher (LocalScript)
+-- วางเป็น LocalScript ใน StarterPlayerScripts หรือ StarterGui
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local HttpService = game:GetService("HttpService")
+local UserInputService = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
+local StarterGui = game:GetService("StarterGui")
+local TweenService = game:GetService("TweenService")
+
+-- CONFIG
+local REFRESH_INTERVAL = 3 -- วินาที สำหรับ auto refresh รายการ
+local AUTO_FIRE_INTERVAL = 0.6 -- วินาที สำหรับการยิงอัตโนมัติ
+local MAX_INITIAL_DISPLAY = 100 -- จำกัด ClickDetector ตอนเริ่ม
+
+-- UTILS
+local function shortPath(inst)
+    local pieces = {}
+    local cur = inst
+    while cur and cur.Parent do
+        table.insert(pieces, 1, cur.Name)
+        cur = cur.Parent
+        if #pieces > 8 then break end
+    end
+    return table.concat(pieces, "/")
+end
+
+local function tryFire(clickdetector)
+    if not fireclickdetector then
+        StarterGui:SetCore("SendNotification", {
+            Title = "ClickDetector HUB",
+            Text = "Exploit does not support fireclickdetector! 🚫",
+            Duration = 5
+        })
+        return false
+    end
+    local ok, res
+    if typeof(fireclickdetector) == "function" then
+        ok, res = pcall(function() fireclickdetector(clickdetector) end)
+        if ok then return true end
+    end
+    ok, res = pcall(function()
+        if clickdetector.FireClick then
+            clickdetector:FireClick(LocalPlayer)
+        end
+    end)
+    return ok
+end
+
+-- BUILD GUI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "ClickDetectorHub"
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+-- Circle Button for Reopening GUI
+local circleBtn = Instance.new("ImageButton", screenGui)
+circleBtn.Name = "CircleToggle"
+circleBtn.Size = UDim2.new(0, 50, 0, 50)
+circleBtn.Position = UDim2.new(0, 10, 0, 10)
+circleBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+circleBtn.BackgroundTransparency = 0
+circleBtn.ZIndex = 1
+circleBtn.Active = false
+circleBtn.Visible = false
+local corner = Instance.new("UICorner", circleBtn)
+corner.CornerRadius = UDim.new(0.5, 0)
+
+local circleIcon = Instance.new("TextLabel", circleBtn)
+circleIcon.Size = UDim2.new(1, 0, 1, 0)
+circleIcon.BackgroundTransparency = 1
+circleIcon.Text = "🔍"
+circleIcon.TextColor3 = Color3.fromRGB(230, 230, 230)
+circleIcon.TextSize = 24
+circleIcon.Font = Enum.Font.GothamBold
+circleIcon.TextTransparency = 0.2
+circleIcon.ZIndex = 2
+
+-- Drag for Circle Button
+local circleDragging, circleDragInput, circleDragStart, circleStartPos
+circleBtn.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 and not main.Visible then
+        circleDragging = true
+        circleDragStart = input.Position
+        circleStartPos = circleBtn.Position
+        TweenService:Create(circleBtn, TweenInfo.new(0.2), {Size = UDim2.new(0, 55, 0, 55)}):Play()
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                circleDragging = false
+                TweenService:Create(circleBtn, TweenInfo.new(0.2), {Size = UDim2.new(0, 50, 0, 50)}):Play()
+            end
+        end)
+    end
+end)
+circleBtn.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        circleDragInput = input
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if input == circleDragInput and circleDragging then
+        local delta = input.Position - circleDragStart
+        local screenSize = game:GetService("GuiService"):GetScreenResolution() or Vector2.new(1920, 1080)
+        local newX = math.clamp(circleStartPos.X.Offset + delta.X, 0, screenSize.X - circleBtn.Size.X.Offset)
+        local newY = math.clamp(circleStartPos.Y.Offset + delta.Y, 0, screenSize.Y - circleBtn.Size.Y.Offset)
+        circleBtn.Position = UDim2.new(0, newX, 0, newY)
+    end
+end)
+
+circleBtn.MouseEnter:Connect(function()
+    if not main.Visible then
+        TweenService:Create(circleBtn, TweenInfo.new(0.2), {Size = UDim2.new(0, 55, 0, 55)}):Play()
+    end
+end)
+circleBtn.MouseLeave:Connect(function()
+    if not circleDragging and not main.Visible then
+        TweenService:Create(circleBtn, TweenInfo.new(0.2), {Size = UDim2.new(0, 50, 0, 50)}):Play()
+    end
+end)
+
+-- SPY UI Button
+local spyBtn = Instance.new("ImageButton", screenGui)
+spyBtn.Name = "SpyUIToggle"
+spyBtn.Size = UDim2.new(0, 50, 0, 50)
+spyBtn.Position = UDim2.new(0.5, 430, 0.5, 0) -- ข้าง main Frame
+spyBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+spyBtn.BackgroundTransparency = 0
+spyBtn.ZIndex = 1
+spyBtn.Active = true
+spyBtn.Visible = true
+local spyCorner = Instance.new("UICorner", spyBtn)
+spyCorner.CornerRadius = UDim.new(0.5, 0)
+
+local spyIcon = Instance.new("TextLabel", spyBtn)
+spyIcon.Size = UDim2.new(1, 0, 1, 0)
+spyIcon.BackgroundTransparency = 1
+spyIcon.Text = "😇"
+spyIcon.TextColor3 = Color3.fromRGB(230, 230, 230)
+spyIcon.TextSize = 24
+spyIcon.Font = Enum.Font.GothamBold
+spyIcon.TextTransparency = 0.2
+spyIcon.ZIndex = 2
+
+-- Drag for Spy Button
+local spyDragging, spyDragInput, spyDragStart, spyStartPos
+spyBtn.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        spyDragging = true
+        spyDragStart = input.Position
+        spyStartPos = spyBtn.Position
+        TweenService:Create(spyBtn, TweenInfo.new(0.2), {Size = UDim2.new(0, 55, 0, 55)}):Play()
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                spyDragging = false
+                TweenService:Create(spyBtn, TweenInfo.new(0.2), {Size = UDim2.new(0, 50, 0, 50)}):Play()
+            end
+        end)
+    end
+end)
+spyBtn.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        spyDragInput = input
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if input == spyDragInput and spyDragging then
+        local delta = input.Position - spyDragStart
+        local screenSize = game:GetService("GuiService"):GetScreenResolution() or Vector2.new(1920, 1080)
+        local newX = math.clamp(spyStartPos.X.Offset + delta.X, 0, screenSize.X - spyBtn.Size.X.Offset)
+        local newY = math.clamp(spyStartPos.Y.Offset + delta.Y, 0, screenSize.Y - spyBtn.Size.Y.Offset)
+        spyBtn.Position = UDim2.new(0, newX, 0, newY)
+    end
+end)
+
+spyBtn.MouseEnter:Connect(function()
+    TweenService:Create(spyBtn, TweenInfo.new(0.2), {Size = UDim2.new(0, 55, 0, 55)}):Play()
+end)
+spyBtn.MouseLeave:Connect(function()
+    if not spyDragging then
+        TweenService:Create(spyBtn, TweenInfo.new(0.2), {Size = UDim2.new(0, 50, 0, 50)}):Play()
+    end
+end)
+
+-- SPY UI Frame
+local spyFrame = Instance.new("Frame", screenGui)
+spyFrame.Name = "SpyUI"
+spyFrame.Size = UDim2.new(0, 200, 0, 300)
+spyFrame.Position = UDim2.new(0.5, 430, 0.5, 0) -- ข้าง main
+spyFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+spyFrame.BorderSizePixel = 0
+spyFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+spyFrame.ClipsDescendants = true
+spyFrame.Active = true
+spyFrame.ZIndex = 3
+spyFrame.Visible = false
+
+local spyHeader = Instance.new("Frame", spyFrame)
+spyHeader.Size = UDim2.new(1, 0, 0, 36)
+spyHeader.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+spyHeader.BorderSizePixel = 0
+spyHeader.ZIndex = 4
+
+local spyTitle = Instance.new("TextLabel", spyHeader)
+spyTitle.Text = "SPY UI 😇"
+spyTitle.Size = UDim2.new(1, -8, 1, 0)
+spyTitle.Position = UDim2.new(0, 8, 0, 0)
+spyTitle.BackgroundTransparency = 1
+spyTitle.TextColor3 = Color3.fromRGB(235, 235, 235)
+spyTitle.Font = Enum.Font.GothamBold
+spyTitle.TextSize = 16
+spyTitle.TextXAlignment = Enum.TextXAlignment.Left
+spyTitle.ZIndex = 5
+
+local spyListFrame = Instance.new("ScrollingFrame", spyFrame)
+spyListFrame.Size = UDim2.new(1, -16, 1, -44)
+spyListFrame.Position = UDim2.new(0, 8, 0, 40)
+spyListFrame.CanvasSize = UDim2.new(0, 0, 1, 0)
+spyListFrame.ScrollBarThickness = 6
+spyListFrame.BackgroundTransparency = 1
+spyListFrame.BorderSizePixel = 0
+spyListFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+spyListFrame.ClipsDescendants = true
+spyListFrame.ZIndex = 4
+
+local spyListLayout = Instance.new("UIListLayout", spyListFrame)
+spyListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+spyListLayout.Padding = UDim.new(0, 6)
+
+-- Main GUI
+local main = Instance.new("Frame", screenGui)
+main.Name = "Main"
+main.Size = UDim2.new(0, 420, 0, 420)
+main.Position = UDim2.new(0.5, 0, 0.5, 0)
+main.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+main.BorderSizePixel = 0
+main.AnchorPoint = Vector2.new(0.5, 0.5)
+main.ClipsDescendants = true
+main.Active = true
+main.ZIndex = 2
+
+-- Header
+local header = Instance.new("Frame", main)
+header.Size = UDim2.new(1, 0, 0, 36)
+header.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+header.BorderSizePixel = 0
+header.ZIndex = 3
+
+local title = Instance.new("TextLabel", header)
+title.Text = "ClickDetector HUB 🔍"
+title.Size = UDim2.new(0.4, -8, 1, 0)
+title.Position = UDim2.new(0, 8, 0, 0)
+title.BackgroundTransparency = 1
+title.TextColor3 = Color3.fromRGB(235, 235, 235)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 16
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.ZIndex = 4
+
+local toggleBtn = Instance.new("TextButton", header)
+toggleBtn.Size = UDim2.new(0.12, -8, 1, -8)
+toggleBtn.Position = UDim2.new(0.4, 8, 0, 4)
+toggleBtn.Text = "Hide 🖱️"
+toggleBtn.Font = Enum.Font.GothamBold
+toggleBtn.TextSize = 14
+toggleBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+toggleBtn.TextColor3 = Color3.fromRGB(230, 230, 230)
+toggleBtn.BorderSizePixel = 1
+toggleBtn.BorderColor3 = Color3.fromRGB(100, 100, 100)
+toggleBtn.ZIndex = 4
+
+local closeBtn = Instance.new("TextButton", header)
+closeBtn.Size = UDim2.new(0.12, -8, 1, -8)
+closeBtn.Position = UDim2.new(0.54, 8, 0, 4)
+closeBtn.Text = "Close ❌"
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextSize = 14
+closeBtn.BackgroundColor3 = Color3.fromRGB(100, 30, 30)
+closeBtn.TextColor3 = Color3.fromRGB(230, 230, 230)
+closeBtn.BorderSizePixel = 1
+closeBtn.BorderColor3 = Color3.fromRGB(150, 50, 50)
+closeBtn.ZIndex = 4
+
+local showAllBtn = Instance.new("TextButton", header)
+showAllBtn.Size = UDim2.new(0.12, -8, 1, -8)
+showAllBtn.Position = UDim2.new(0.68, 8, 0, 4)
+showAllBtn.Text = "Show All 🌐"
+showAllBtn.Font = Enum.Font.Gotham
+showAllBtn.TextSize = 12
+showAllBtn.BackgroundTransparency = 0.15
+showAllBtn.TextColor3 = Color3.fromRGB(230, 230, 230)
+showAllBtn.ZIndex = 4
+
+local autoFireToggleBtn = Instance.new("TextButton", header)
+autoFireToggleBtn.Size = UDim2.new(0.12, -8, 1, -8)
+autoFireToggleBtn.Position = UDim2.new(0.82, 8, 0, 4)
+autoFireToggleBtn.Text = "AutoFire Off ⚡"
+autoFireToggleBtn.Font = Enum.Font.Gotham
+autoFireToggleBtn.TextSize = 12
+autoFireToggleBtn.BackgroundTransparency = 0.15
+autoFireToggleBtn.TextColor3 = Color3.fromRGB(230, 230, 230)
+autoFireToggleBtn.ZIndex = 4
+
+-- Search + Refresh
+local searchBox = Instance.new("TextBox", main)
+searchBox.Size = UDim2.new(0.6, -12, 0, 28)
+searchBox.Position = UDim2.new(0, 8, 0, 44)
+searchBox.PlaceholderText = "ค้นหา (ชื่อ หรือ path)"
+searchBox.Font = Enum.Font.Gotham
+searchBox.TextSize = 14
+searchBox.Text = ""
+searchBox.BackgroundColor3 = Color3.fromRGB(23, 23, 27)
+searchBox.TextColor3 = Color3.fromRGB(230, 230, 230)
+searchBox.ZIndex = 3
+
+local refreshBtn = Instance.new("TextButton", main)
+refreshBtn.Size = UDim2.new(0.18, -8, 0, 28)
+refreshBtn.Position = UDim2.new(0.62, 8, 0, 44)
+refreshBtn.Text = "Refresh 🔄"
+refreshBtn.Font = Enum.Font.Gotham
+refreshBtn.TextSize = 14
+refreshBtn.BackgroundTransparency = 0.15
+refreshBtn.TextColor3 = Color3.fromRGB(230, 230, 230)
+refreshBtn.ZIndex = 3
+
+local autoRefreshChk = Instance.new("TextButton", main)
+autoRefreshChk.Size = UDim2.new(0.18, -8, 0, 28)
+autoRefreshChk.Position = UDim2.new(0.8, 8, 0, 44)
+autoRefreshChk.Text = "Auto: Off 🔁"
+autoRefreshChk.Font = Enum.Font.Gotham
+autoRefreshChk.TextSize = 14
+autoRefreshChk.BackgroundTransparency = 0.15
+autoRefreshChk.TextColor3 = Color3.fromRGB(230, 230, 230)
+autoRefreshChk.ZIndex = 3
+
+-- List Frame
+local listFrame = Instance.new("ScrollingFrame", main)
+listFrame.Size = UDim2.new(1, -16, 1, -100)
+listFrame.Position = UDim2.new(0, 8, 0, 80)
+listFrame.CanvasSize = UDim2.new(0, 0, 1, 0)
+listFrame.ScrollBarThickness = 6
+listFrame.BackgroundTransparency = 1
+listFrame.BorderSizePixel = 0
+listFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+listFrame.ClipsDescendants = true
+listFrame.ZIndex = 3
+
+local uiListLayout = Instance.new("UIListLayout", listFrame)
+uiListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+uiListLayout.Padding = UDim.new(0, 6)
+
+-- Footer / Info
+local info = Instance.new("TextLabel", main)
+info.Size = UDim2.new(1, -16, 0, 18)
+info.Position = UDim2.new(0, 8, 1, -24)
+info.BackgroundTransparency = 1
+info.Text = "Status: Ready"
+info.TextColor3 = Color3.fromRGB(200, 200, 200)
+info.Font = Enum.Font.Gotham
+info.TextSize = 12
+info.TextXAlignment = Enum.TextXAlignment.Left
+info.ZIndex = 3
+
+-- DRAG for Main Frame
+local dragging, dragInput, dragStart, startPos
+header.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = main.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+header.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - dragStart
+        main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+-- SPY UI Functions
+local function makeSpyEntry(screenGui)
+    local entry = Instance.new("Frame")
+    entry.Name = "SpyEntry"
+    entry.Size = UDim2.new(1, 0, 0, 40)
+    entry.BackgroundColor3 = Color3.fromRGB(28, 28, 33)
+    entry.BorderSizePixel = 0
+    entry.Parent = spyListFrame
+    entry.ZIndex = 5
+
+    local nameLabel = Instance.new("TextLabel", entry)
+    nameLabel.Size = UDim2.new(0.7, -8, 1, 0)
+    nameLabel.Position = UDim2.new(0, 8, 0, 0)
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+    nameLabel.Font = Enum.Font.GothamBold
+    nameLabel.TextSize = 14
+    nameLabel.TextColor3 = Color3.fromRGB(235, 235, 235)
+    nameLabel.Text = screenGui.Name
+    nameLabel.ZIndex = 6
+
+    local toggleBtn = Instance.new("TextButton", entry)
+    toggleBtn.Size = UDim2.new(0.25, -8, 1, -8)
+    toggleBtn.Position = UDim2.new(0.75, 8, 0, 4)
+    toggleBtn.Text = screenGui.Enabled and "Disable 🚫" or "Enable ✅"
+    toggleBtn.Font = Enum.Font.Gotham
+    toggleBtn.TextSize = 12
+    toggleBtn.BackgroundColor3 = screenGui.Enabled and Color3.fromRGB(100, 30, 30) or Color3.fromRGB(30, 100, 30)
+    toggleBtn.TextColor3 = Color3.fromRGB(230, 230, 230)
+    toggleBtn.ZIndex = 6
+
+    toggleBtn.MouseButton1Click:Connect(function()
+        screenGui.Enabled = not screenGui.Enabled
+        toggleBtn.Text = screenGui.Enabled and "Disable 🚫" or "Enable ✅"
+        toggleBtn.BackgroundColor3 = screenGui.Enabled and Color3.fromRGB(100, 30, 30) or Color3.fromRGB(30, 100, 30)
+        StarterGui:SetCore("SendNotification", {
+            Title = "SPY UI",
+            Text = screenGui.Name .. (screenGui.Enabled and " enabled ✅" or " disabled 🚫"),
+            Duration = 3
+        })
+    end)
+
+    screenGui.AncestryChanged:Connect(function(_, parent)
+        if not parent then
+            entry:Destroy()
+        end
+    end)
+end
+
+local function rebuildSpyList()
+    for _, v in ipairs(spyListFrame:GetChildren()) do
+        if v:IsA("Frame") and v.Name == "SpyEntry" then v:Destroy() end
+    end
+    local guis = {}
+    for _, gui in ipairs(LocalPlayer.PlayerGui:GetChildren()) do
+        if gui:IsA("ScreenGui") and gui.Name ~= "ClickDetectorHub" then
+            table.insert(guis, gui)
+        end
+    end
+    table.sort(guis, function(a, b)
+        return a.Name < b.Name
+    end)
+    for _, gui in ipairs(guis) do
+        pcall(function() makeSpyEntry(gui) end)
+    end
+    spyListFrame.CanvasSize = UDim2.new(0, 0, 0, math.max(0, #guis * 46))
+    if #guis == 0 then
+        StarterGui:SetCore("SendNotification", {
+            Title = "SPY UI",
+            Text = "No other ScreenGuis found in PlayerGui! 😕",
+            Duration = 5
+        })
+    end
+end
+
+spyBtn.MouseButton1Click:Connect(function()
+    spyFrame.Visible = not spyFrame.Visible
+    if spyFrame.Visible then
+        rebuildSpyList()
+    end
+end)
+
+-- State
+local detectors = {}
+local autoRefresh = false
+local autoFireAll = false
+local autoFireRunning = false
+local distanceConnections = {}
+local lockedDetectors = {}
+
+-- ClickDetector Functions
+local function clearList()
+    for _, v in ipairs(listFrame:GetChildren()) do
+        if v:IsA("Frame") and v.Name == "Entry" then v:Destroy() end
+    end
+    for _, conn in pairs(distanceConnections) do
+        conn:Disconnect()
+    end
+    distanceConnections = {}
+    lockedDetectors = {}
+end
+
+local function makeEntry(clickdetector)
+    local entry = Instance.new("Frame")
+    entry.Name = "Entry"
+    entry.Size = UDim2.new(1, 0, 0, 56)
+    entry.BackgroundColor3 = Color3.fromRGB(28, 28, 33)
+    entry.BorderSizePixel = 0
+    entry.Parent = listFrame
+    entry.ZIndex = 4
+
+    local nameLabel = Instance.new("TextLabel", entry)
+    nameLabel.Size = UDim2.new(0.5, -8, 1, 0)
+    nameLabel.Position = UDim2.new(0, 8, 0, 0)
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+    nameLabel.Font = Enum.Font.GothamBold
+    nameLabel.TextSize = 14
+    nameLabel.TextColor3 = Color3.fromRGB(235, 235, 235)
+    nameLabel.Text = clickdetector.Parent and clickdetector.Parent.Name or "(no parent)"
+    nameLabel.ZIndex = 5
+
+    local pathLabel = Instance.new("TextLabel", entry)
+    pathLabel.Size = UDim2.new(0.5, -8, 0, 18)
+    pathLabel.Position = UDim2.new(0, 8, 1, -18)
+    pathLabel.BackgroundTransparency = 1
+    pathLabel.Font = Enum.Font.Gotham
+    pathLabel.TextSize = 12
+    pathLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+    pathLabel.Text = shortPath(clickdetector)
+    pathLabel.ZIndex = 5
+
+    local distLabel = Instance.new("TextLabel", entry)
+    distLabel.Size = UDim2.new(0.2, -8, 1, 0)
+    distLabel.Position = UDim2.new(0.5, 8, 0, 0)
+    distLabel.BackgroundTransparency = 1
+    distLabel.Font = Enum.Font.Gotham
+    distLabel.TextSize = 13
+    distLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    distLabel.Text = "Dist: ?"
+    distLabel.ZIndex = 5
+
+    local fireBtn = Instance.new("TextButton", entry)
+    fireBtn.Size = UDim2.new(0.15, -8, 0.5, -6)
+    fireBtn.Position = UDim2.new(0.7, 8, 0, 6)
+    fireBtn.Text = "Fire 🔥"
+    fireBtn.Font = Enum.Font.Gotham
+    fireBtn.TextSize = 13
+    fireBtn.BackgroundTransparency = 0.12
+    fireBtn.TextColor3 = Color3.fromRGB(230, 230, 230)
+    fireBtn.ZIndex = 5
+
+    local copyBtn = Instance.new("TextButton", entry)
+    copyBtn.Size = UDim2.new(0.15, -8, 0.5, -6)
+    copyBtn.Position = UDim2.new(0.85, 8, 0, 6)
+    copyBtn.Text = "Copy 📋"
+    copyBtn.Font = Enum.Font.Gotham
+    copyBtn.TextSize = 13
+    copyBtn.BackgroundTransparency = 0.12
+    copyBtn.TextColor3 = Color3.fromRGB(230, 230, 230)
+    copyBtn.ZIndex = 5
+
+    local lockBtn = Instance.new("TextButton", entry)
+    lockBtn.Size = UDim2.new(0.15, -8, 0.5, -6)
+    lockBtn.Position = UDim2.new(0.7, 8, 0.5, 0)
+    lockBtn.Text = lockedDetectors[clickdetector] and "Locked 🔒" or "Unlocked 🔓"
+    lockBtn.Font = Enum.Font.Gotham
+    lockBtn.TextSize = 13
+    lockBtn.BackgroundColor3 = lockedDetectors[clickdetector] and Color3.fromRGB(100, 30, 30) or Color3.fromRGB(30, 100, 30)
+    lockBtn.TextColor3 = Color3.fromRGB(230, 230, 230)
+    lockBtn.BorderSizePixel = 1
+    lockBtn.BorderColor3 = lockedDetectors[clickdetector] and Color3.fromRGB(150, 50, 50) or Color3.fromRGB(50, 150, 50)
+    lockBtn.ZIndex = 5
+
+    local conn = RunService.Heartbeat:Connect(function()
+        local char = LocalPlayer.Character
+        local pp = char and (char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char.PrimaryPart)
+        if pp and clickdetector.Parent and clickdetector.Parent:IsA("BasePart") then
+            local d = (pp.Position - clickdetector.Parent.Position).Magnitude
+            distLabel.Text = string.format("Dist: %.1f", d)
+        else
+            distLabel.Text = "Dist: -"
+        end
+    end)
+    distanceConnections[clickdetector] = conn
+
+    fireBtn.MouseButton1Click:Connect(function()
+        local ok = tryFire(clickdetector)
+        if ok then
+            info.Text = "Status: Fired -> " .. shortPath(clickdetector)
+        else
+            info.Text = "Status: Fire failed (permission)."
+            StarterGui:SetCore("SendNotification", {
+                Title = "ClickDetector HUB",
+                Text = "Fire failed — server may block client FireClick. 🚫",
+                Duration = 3
+            })
+        end
+    end)
+
+    copyBtn.MouseButton1Click:Connect(function()
+        local path = shortPath(clickdetector)
+        pcall(function() setclipboard(path) end)
+        StarterGui:SetCore("SendNotification", {
+            Title = "ClickDetector HUB",
+            Text = "Copied path: " .. path .. " 📋",
+            Duration = 2
+        })
+    end)
+
+    lockBtn.MouseButton1Click:Connect(function()
+        lockedDetectors[clickdetector] = not lockedDetectors[clickdetector]
+        lockBtn.Text = lockedDetectors[clickdetector] and "Locked 🔒" or "Unlocked 🔓"
+        lockBtn.BackgroundColor3 = lockedDetectors[clickdetector] and Color3.fromRGB(100, 30, 30) or Color3.fromRGB(30, 100, 30)
+        lockBtn.BorderColor3 = lockedDetectors[clickdetector] and Color3.fromRGB(150, 50, 50) or Color3.fromRGB(50, 150, 50)
+        StarterGui:SetCore("SendNotification", {
+            Title = "ClickDetector HUB",
+            Text = (lockedDetectors[clickdetector] and "Locked: " or "Unlocked: ") .. shortPath(clickdetector) .. " 🔧",
+            Duration = 2
+        })
+    end)
+
+    clickdetector.AncestryChanged:Connect(function(_, parent)
+        if not parent then
+            conn:Disconnect()
+            distanceConnections[clickdetector] = nil
+            lockedDetectors[clickdetector] = nil
+            entry:Destroy()
+        end
+    end)
+end
+
+local function rebuildList(filterText, showAll)
+    clearList()
+    detectors = {}
+    filterText = (filterText or ""):lower()
+    task.spawn(function()
+        for _, obj in ipairs(Workspace:GetDescendants()) do
+            if obj:IsA("ClickDetector") then
+                local path = shortPath(obj)
+                if filterText == "" or path:lower():find(filterText) or (obj.Parent and obj.Parent.Name:lower():find(filterText)) then
+                    table.insert(detectors, obj)
+                end
+            end
+        end
+        if #detectors == 0 then
+            StarterGui:SetCore("SendNotification", {
+                Title = "ClickDetector HUB",
+                Text = "No ClickDetectors found in Workspace! 😕",
+                Duration = 5
+            })
+        end
+        table.sort(detectors, function(a, b)
+            return shortPath(a) < shortPath(b)
+        end)
+        local displayCount = showAll and #detectors or math.min(#detectors, MAX_INITIAL_DISPLAY)
+        for i, cd in ipairs(detectors) do
+            if i <= displayCount then
+                pcall(function() makeEntry(cd) end)
+            end
+        end
+        listFrame.CanvasSize = UDim2.new(0, 0, 0, math.max(0, displayCount * 62))
+        info.Text = "Status: Showing " .. tostring(displayCount) .. "/" .. tostring(#detectors) .. " ClickDetectors"
+        if #detectors > MAX_INITIAL_DISPLAY and not showAll then
+            StarterGui:SetCore("SendNotification", {
+                Title = "ClickDetector HUB",
+                Text = "Limited to " .. MAX_INITIAL_DISPLAY .. " ClickDetectors. Click 'Show All' to display all (" .. #detectors .. "). ⚠️",
+                Duration = 5
+            })
+        elseif showAll and #detectors > MAX_INITIAL_DISPLAY then
+            StarterGui:SetCore("SendNotification", {
+                Title = "ClickDetector HUB",
+                Text = "Showing all " .. #detectors .. " ClickDetectors. May cause lag! 🌐",
+                Duration = 5
+            })
+        end
+    end)
+end
+
+-- BUTTONS
+refreshBtn.MouseButton1Click:Connect(function()
+    rebuildList(searchBox.Text, false)
+end)
+
+autoRefreshChk.MouseButton1Click:Connect(function()
+    autoRefresh = not autoRefresh
+    autoRefreshChk.Text = "Auto: " .. (autoRefresh and "On 🔁" or "Off 🔁")
+end)
+
+toggleBtn.MouseButton1Click:Connect(function()
+    main.Visible = not main.Visible
+    toggleBtn.Text = main.Visible and "Hide 🖱️" or "Show 🖱️"
+    circleBtn.Active = not main.Visible
+    circleBtn.Visible = not main.Visible
+end)
+
+closeBtn.MouseButton1Click:Connect(function()
+    main.Visible = false
+    spyFrame.Visible = false
+    circleBtn.Visible = true
+    circleBtn.Active = true
+    autoRefresh = false
+    autoRefreshChk.Text = "Auto: Off 🔁"
+    toggleBtn.Text = "Show 🖱️"
+    StarterGui:SetCore("SendNotification", {
+        Title = "ClickDetector HUB",
+        Text = "GUI Hidden. Click the circle button to reopen! 🔄",
+        Duration = 3
+    })
+end)
+
+circleBtn.MouseButton1Click:Connect(function()
+    main.Visible = true
+    circleBtn.Visible = false
+    circleBtn.Active = false
+    toggleBtn.Text = "Hide 🖱️"
+    StarterGui:SetCore("SendNotification", {
+        Title = "ClickDetector HUB",
+        Text = "GUI Reopened! Ready to exploit. 🚀",
+        Duration = 3
+    })
+end)
+
+showAllBtn.MouseButton1Click:Connect(function()
+    rebuildList(searchBox.Text, true)
+end)
+
+autoFireToggleBtn.MouseButton1Click:Connect(function()
+    autoFireAll = not autoFireAll
+    autoFireToggleBtn.Text = "AutoFire " .. (autoFireAll and "On ⚡" or "Off ⚡")
+    if autoFireAll and not autoFireRunning then
+        autoFireRunning = true
+        task.spawn(function()
+            while autoFireAll do
+                for _, cd in ipairs(detectors) do
+                    if not lockedDetectors[cd] then
+                        pcall(function()
+                            tryFire(cd)
+                        end)
+                        task.wait(AUTO_FIRE_INTERVAL)
+                    end
+                end
+                task.wait(0.2)
+            end
+            autoFireRunning = false
+        end)
+    end
+end)
+
+-- Hotkey H เพื่อโชว์/ซ่อน
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.H then
+        if circleBtn.Visible then
+            main.Visible = true
+            circleBtn.Visible = false
+            circleBtn.Active = false
+            toggleBtn.Text = "Hide 🖱️"
+        else
+            main.Visible = not main.Visible
+            toggleBtn.Text = main.Visible and "Hide 🖱️" or "Show 🖱️"
+            circleBtn.Visible = not main.Visible
+            circleBtn.Active = not main.Visible
+        end
+    end
+end)
+
+-- Auto refresh loop
+task.spawn(function()
+    while true do
+        if autoRefresh then
+            pcall(function() rebuildList(searchBox.Text, false) end)
+        end
+        task.wait(REFRESH_INTERVAL)
+    end
+end)
+
+-- Initial build
+rebuildList("", false)
+
+-- Search box enter to refresh
+searchBox.FocusLost:Connect(function(enter)
+    if enter then rebuildList(searchBox.Text, false) end
+end)
+
+-- Small tip notification once on open
+StarterGui:SetCore("SendNotification", {
+    Title = "ClickDetector HUB",
+    Text = "H = Toggle UI. SPY UI 😇 to toggle game UIs. 🚀",
+    Duration = 4
+})
