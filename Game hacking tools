@@ -187,7 +187,7 @@ end)
 local spyFrame = Instance.new("Frame", screenGui)
 spyFrame.Name = "SpyUI"
 spyFrame.Size = UDim2.new(0, 200, 0, 300)
-spyFrame.Position = UDim2.new(0.5, 430, 0.5, 0) -- ข้าง main
+spyFrame.Position = UDim2.new(0.5, 430, 0.5, 0)
 spyFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
 spyFrame.BorderSizePixel = 0
 spyFrame.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -409,23 +409,30 @@ local function makeSpyEntry(screenGui)
     nameLabel.Text = screenGui.Name
     nameLabel.ZIndex = 6
 
-    local toggleBtn = Instance.new("TextButton", entry)
-    toggleBtn.Size = UDim2.new(0.25, -8, 1, -8)
-    toggleBtn.Position = UDim2.new(0.75, 8, 0, 4)
-    toggleBtn.Text = screenGui.Enabled and "Disable 🚫" or "Enable ✅"
-    toggleBtn.Font = Enum.Font.Gotham
-    toggleBtn.TextSize = 12
-    toggleBtn.BackgroundColor3 = screenGui.Enabled and Color3.fromRGB(100, 30, 30) or Color3.fromRGB(30, 100, 30)
-    toggleBtn.TextColor3 = Color3.fromRGB(230, 230, 230)
-    toggleBtn.ZIndex = 6
+    local showBtn = Instance.new("TextButton", entry)
+    showBtn.Size = UDim2.new(0.25, -8, 1, -8)
+    showBtn.Position = UDim2.new(0.75, 8, 0, 4)
+    showBtn.Text = "Show 👁️"
+    showBtn.Font = Enum.Font.Gotham
+    showBtn.TextSize = 12
+    showBtn.BackgroundColor3 = Color3.fromRGB(30, 100, 30)
+    showBtn.TextColor3 = Color3.fromRGB(230, 230, 230)
+    showBtn.ZIndex = 6
 
-    toggleBtn.MouseButton1Click:Connect(function()
-        screenGui.Enabled = not screenGui.Enabled
-        toggleBtn.Text = screenGui.Enabled and "Disable 🚫" or "Enable ✅"
-        toggleBtn.BackgroundColor3 = screenGui.Enabled and Color3.fromRGB(100, 30, 30) or Color3.fromRGB(30, 100, 30)
+    showBtn.MouseButton1Click:Connect(function()
+        if not screenGui.Enabled then
+            screenGui.Enabled = true
+        end
+        for _, child in ipairs(screenGui:GetDescendants()) do
+            if child:IsA("Frame") or child:IsA("ImageLabel") or child:IsA("TextLabel") or child:IsA("TextButton") then
+                if child.Visible ~= nil then
+                    child.Visible = true
+                end
+            end
+        end
         StarterGui:SetCore("SendNotification", {
             Title = "SPY UI",
-            Text = screenGui.Name .. (screenGui.Enabled and " enabled ✅" or " disabled 🚫"),
+            Text = screenGui.Name .. " shown 👁️",
             Duration = 3
         })
     end)
@@ -441,26 +448,28 @@ local function rebuildSpyList()
     for _, v in ipairs(spyListFrame:GetChildren()) do
         if v:IsA("Frame") and v.Name == "SpyEntry" then v:Destroy() end
     end
-    local guis = {}
-    for _, gui in ipairs(LocalPlayer.PlayerGui:GetChildren()) do
-        if gui:IsA("ScreenGui") and gui.Name ~= "ClickDetectorHub" then
-            table.insert(guis, gui)
+    task.spawn(function()
+        local guis = {}
+        for _, gui in ipairs(LocalPlayer.PlayerGui:GetChildren()) do
+            if gui:IsA("ScreenGui") and gui.Name ~= "ClickDetectorHub" then
+                table.insert(guis, gui)
+            end
         end
-    end
-    table.sort(guis, function(a, b)
-        return a.Name < b.Name
+        table.sort(guis, function(a, b)
+            return a.Name < b.Name
+        end)
+        for _, gui in ipairs(guis) do
+            pcall(function() makeSpyEntry(gui) end)
+        end
+        spyListFrame.CanvasSize = UDim2.new(0, 0, 0, math.max(0, #guis * 46))
+        if #guis == 0 then
+            StarterGui:SetCore("SendNotification", {
+                Title = "SPY UI",
+                Text = "No other ScreenGuis found in PlayerGui! 😕",
+                Duration = 5
+            })
+        end
     end)
-    for _, gui in ipairs(guis) do
-        pcall(function() makeSpyEntry(gui) end)
-    end
-    spyListFrame.CanvasSize = UDim2.new(0, 0, 0, math.max(0, #guis * 46))
-    if #guis == 0 then
-        StarterGui:SetCore("SendNotification", {
-            Title = "SPY UI",
-            Text = "No other ScreenGuis found in PlayerGui! 😕",
-            Duration = 5
-        })
-    end
 end
 
 spyBtn.MouseButton1Click:Connect(function()
@@ -550,7 +559,7 @@ local function makeEntry(clickdetector)
     copyBtn.TextColor3 = Color3.fromRGB(230, 230, 230)
     copyBtn.ZIndex = 5
 
-    local lockBtn = Instance.new("TextButton", entry)
+local lockBtn = Instance.new("TextButton", entry)
     lockBtn.Size = UDim2.new(0.15, -8, 0.5, -6)
     lockBtn.Position = UDim2.new(0.7, 8, 0.5, 0)
     lockBtn.Text = lockedDetectors[clickdetector] and "Locked 🔒" or "Unlocked 🔓"
@@ -776,6 +785,6 @@ end)
 -- Small tip notification once on open
 StarterGui:SetCore("SendNotification", {
     Title = "ClickDetector HUB",
-    Text = "H = Toggle UI. SPY UI 😇 to toggle game UIs. 🚀",
+    Text = "H = Toggle UI. SPY UI 😇 to show game UIs. 🚀",
     Duration = 4
 })
