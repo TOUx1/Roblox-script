@@ -1,4 +1,4 @@
---// ⚡ GUI "Player Selector & Command Sender v13" by Sigma (Enhanced by Grok) 😈
+--// ⚡ GUI "Player Selector & Command Sender v14" by Sigma (Enhanced by Grok) 😈
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TextChatService = game:GetService("TextChatService")
@@ -611,22 +611,24 @@ sendCommandButton.MouseLeave:Connect(function()
 	TweenService:Create(sendCommandButton, tweenInfo, { Size = UDim2.new(0.35, -15, 0, 35), BackgroundColor3 = Color3.fromRGB(255, 50, 50) }):Play()
 end)
 
--- 🎮 ซ่อน/แสดง GUI (PlayerSelectorUI)
+-- 🎮 ปุ่มเปิด GUI: เลือกชื่อ (PlayerSelectorUI)
 local playerGuiVisible = true
 local playerToggleIndicator = Instance.new("TextButton")
-playerToggleIndicator.Size = UDim2.new(0, 60, 0, 60)
-playerToggleIndicator.Position = UDim2.new(0.3, -30, 0, 10)
+playerToggleIndicator.Size = UDim2.new(0, 100, 0, 40)
+playerToggleIndicator.Position = UDim2.new(0.3, -50, 0, 10)
 playerToggleIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-playerToggleIndicator.Text = "🟢"
+playerToggleIndicator.Text = "เลือกชื่อ"
 playerToggleIndicator.TextColor3 = Color3.new(1, 1, 1)
 playerToggleIndicator.Font = Enum.Font.GothamBlack
-playerToggleIndicator.TextSize = 24
+playerToggleIndicator.TextSize = 16
 playerToggleIndicator.ZIndex = 10
 playerToggleIndicator.Visible = false
+playerToggleIndicator.Active = true
+playerToggleIndicator.Draggable = true
 playerToggleIndicator.Parent = playerGui
 
 local playerCornerIndicator = Instance.new("UICorner")
-playerCornerIndicator.CornerRadius = UDim.new(1, 0)
+playerCornerIndicator.CornerRadius = UDim.new(0, 6)
 playerCornerIndicator.Parent = playerToggleIndicator
 
 local playerStrokeIndicator = Instance.new("UIStroke")
@@ -650,28 +652,30 @@ end
 playerToggleGui.MouseButton1Click:Connect(togglePlayerGuiVisibility)
 playerToggleIndicator.MouseButton1Click:Connect(togglePlayerGuiVisibility)
 playerToggleIndicator.MouseEnter:Connect(function()
-	TweenService:Create(playerToggleIndicator, tweenInfo, { Size = UDim2.new(0, 65, 0, 65) }):Play()
+	TweenService:Create(playerToggleIndicator, tweenInfo, { Size = UDim2.new(0, 105, 0, 42), BackgroundColor3 = Color3.fromRGB(255, 100, 100) }):Play()
 end)
 playerToggleIndicator.MouseLeave:Connect(function()
-	TweenService:Create(playerToggleIndicator, tweenInfo, { Size = UDim2.new(0, 60, 0, 60) }):Play()
+	TweenService:Create(playerToggleIndicator, tweenInfo, { Size = UDim2.new(0, 100, 0, 40), BackgroundColor3 = playerGuiVisible and Color3.fromRGB(255, 50, 50) or Color3.fromRGB(0, 200, 100) }):Play()
 end)
 
--- 🎮 ซ่อน/แสดง GUI (CommandSenderUI)
+-- 🎮 ปุ่มเปิด GUI: คำสั่ง (CommandSenderUI)
 local commandGuiVisible = true
 local commandToggleIndicator = Instance.new("TextButton")
-commandToggleIndicator.Size = UDim2.new(0, 60, 0, 60)
-commandToggleIndicator.Position = UDim2.new(0.7, -30, 0, 10)
+commandToggleIndicator.Size = UDim2.new(0, 100, 0, 40)
+commandToggleIndicator.Position = UDim2.new(0.7, -50, 0, 10)
 commandToggleIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-commandToggleIndicator.Text = "🟢"
+commandToggleIndicator.Text = "คำสั่ง"
 commandToggleIndicator.TextColor3 = Color3.new(1, 1, 1)
 commandToggleIndicator.Font = Enum.Font.GothamBlack
-commandToggleIndicator.TextSize = 24
+commandToggleIndicator.TextSize = 16
 commandToggleIndicator.ZIndex = 10
 commandToggleIndicator.Visible = false
+commandToggleIndicator.Active = true
+commandToggleIndicator.Draggable = true
 commandToggleIndicator.Parent = commandGui
 
 local commandCornerIndicator = Instance.new("UICorner")
-commandCornerIndicator.CornerRadius = UDim.new(1, 0)
+commandCornerIndicator.CornerRadius = UDim.new(0, 6)
 commandCornerIndicator.Parent = commandToggleIndicator
 
 local commandStrokeIndicator = Instance.new("UIStroke")
@@ -695,10 +699,10 @@ end
 commandToggleGui.MouseButton1Click:Connect(toggleCommandGuiVisibility)
 commandToggleIndicator.MouseButton1Click:Connect(toggleCommandGuiVisibility)
 commandToggleIndicator.MouseEnter:Connect(function()
-	TweenService:Create(commandToggleIndicator, tweenInfo, { Size = UDim2.new(0, 65, 0, 65) }):Play()
+	TweenService:Create(commandToggleIndicator, tweenInfo, { Size = UDim2.new(0, 105, 0, 42), BackgroundColor3 = Color3.fromRGB(255, 100, 100) }):Play()
 end)
 commandToggleIndicator.MouseLeave:Connect(function()
-	TweenService:Create(commandToggleIndicator, tweenInfo, { Size = UDim2.new(0, 60, 0, 60) }):Play()
+	TweenService:Create(commandToggleIndicator, tweenInfo, { Size = UDim2.new(0, 100, 0, 40), BackgroundColor3 = commandGuiVisible and Color3.fromRGB(255, 50, 50) or Color3.fromRGB(0, 200, 100) }):Play()
 end)
 
 -- 🎮 คีย์ลัด (Ctrl + H สำหรับ PlayerSelectorUI, Ctrl + J สำหรับ CommandSenderUI)
