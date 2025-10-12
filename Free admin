@@ -3,23 +3,41 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TextChatService = game:GetService("TextChatService")
 local UserInputService = game:GetService("UserInputService")
-local TweenService = game:Get 경제Service("TweenService")
+local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 
 -- 🧾 ตารางผู้เล่นที่เลือก (แชร์ระหว่าง GUI)
 local selectedPlayers = {}
 
--- 🌐 ฟังก์ชันส่งคำสั่ง HD Admin
-local function sendMessage(command, playerName)
-	local args = { ":" .. command .. " " .. playerName }
+-- 🌐 ฟังก์ชันส่งคำความคิดเห็น HD Admin
+local function sendMessage(command, value)
+	local hdAdminClient = ReplicatedStorage:FindFirstChild("HDAdminClient")
+	if not hdAdminClient then
+		warn("❌ ไม่พบ HDAdminClient ใน ReplicatedStorage")
+		return false
+	end
+
+	local signals = hdAdminClient:FindFirstChild("Signals")
+	if not signals then
+		warn("❌ ไม่พบ Signals ใน HDAdminClient")
+		return false
+	end
+
+	local requestCommand = signals:FindFirstChild("RequestCommand")
+	if not requestCommand then
+		warn("❌ ไม่พบ RequestCommand ใน Signals")
+		return false
+	end
+
+	local args = { ":" .. command .. " " .. value }
 	local success, result = pcall(function()
-		return ReplicatedStorage:WaitForChild("HDAdminClient"):WaitForChild("Signals"):WaitForChild("RequestCommand"):InvokeServer(unpack(args))
+		requestCommand:InvokeServer(unpack(args))
 	end)
 	if success then
 		print("✅ ส่งคำสั่ง: " .. args[1])
 		return true
 	else
-		warn("❌ ล้มเหลว: ไม่พบ HDAdminClient หรือ RequestCommand - " .. tostring(result))
+		warn("❌ ล้มเหลวในการInvokeServer: " .. tostring(result))
 		return false
 	end
 end
@@ -46,7 +64,7 @@ playerCorner.CornerRadius = UDim.new(0, 10)
 playerCorner.Parent = playerMain
 
 local playerGradient = Instance.new("UIGradient")
-playerGradient.Color =  ColorSequence.new({
+playerGradient.Color = ColorSequence.new({
 	ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 30)),
 	ColorSequenceKeypoint.new(1, Color3.fromRGB(50, 0, 0))
 })
@@ -379,9 +397,7 @@ local statusLabel = Instance.new("TextLabel")
 statusLabel.Size = UDim2.new(1, -10, 0, 35)
 statusLabel.Position = UDim2.new(0, 5, 0, 85)
 statusLabel.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-statusLabel.TextColor3 = Color3.fromRGB(255,  
-
-100, 100)
+statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
 statusLabel.Text = "🛡️ สถานะ: รอคำสั่ง..."
 statusLabel.Font = Enum.Font.Gotham
 statusLabel.TextSize = 16
@@ -505,389 +521,81 @@ buttonLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 	buttonFrame.CanvasSize = UDim2.new(0, 0, 0, buttonLayout.AbsoluteContentSize.Y + 10)
 end)
 
--- 🎵 UI กรอก ID เพลง
-local musicInputUI = Instance.new("Frame")
-musicInputUI.Size = UDim2.new(0, 200, 0, 120)
-musicInputUI.Position = UDim2.new(0.5, -100, 0.5, -60)
-musicInputUI.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
-musicInputUI.BorderSizePixel = 0
-musicInputUI.Visible = false
-musicInputUI.ZIndex = 10
-musicInputUI.Parent = commandGui
+-- เพิ่มแทบ "ผู้เล่น" สำหรับรันใส่ตัวเอง
+local selfCommandsFrame = Instance.new("Frame")
+selfCommandsFrame.Size = UDim2.new(1, -10, 0, 100)
+selfCommandsFrame.Position = UDim2.new(0, 5, 0, 280)
+selfCommandsFrame.BackgroundTransparency = 1
+selfCommandsFrame.ZIndex = 5
+selfCommandsFrame.Parent = commandMain
 
-local musicCorner = Instance.new("UICorner")
-musicCorner.CornerRadius = UDim.new(0, 10)
-musicCorner.Parent = musicInputUI
+local selfTitle = Instance.new("TextLabel")
+selfTitle.Text = "👤 ผู้เล่น (รันใส่ตัวเอง)"
+selfTitle.Size = UDim2.new(1, 0, 0, 30)
+selfTitle.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+selfTitle.TextColor3 = Color3.fromRGB(255, 50, 50)
+selfTitle.Font = Enum.Font.GothamBlack
+selfTitle.TextSize = 16
+selfTitle.ZIndex = 6
+selfTitle.Parent = selfCommandsFrame
+local selfCornerTitle = Instance.new("UICorner")
+selfCornerTitle.CornerRadius = UDim.new(0, 6)
+selfCornerTitle.Parent = selfTitle
 
-local musicGradient = Instance.new("UIGradient")
-musicGradient.Color = ColorSequence.new({
-	ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 30)),
-	ColorSequenceKeypoint.new(1, Color3.fromRGB(50, 0, 0))
-})
-musicGradient.Rotation = 45
-musicGradient.Parent = musicInputUI
+local selfLayout = Instance.new("UIGridLayout")
+selfLayout.CellSize = UDim2.new(0, 80, 0, 30)
+selfLayout.CellPadding = UDim2.new(0, 8, 0, 8)
+selfLayout.SortOrder = Enum.SortOrder.LayoutOrder
+selfLayout.Parent = selfCommandsFrame
 
-local musicStroke = Instance.new("UIStroke")
-musicStroke.Thickness = 2
-musicStroke.Color = Color3.fromRGB(255, 50, 50)
-musicStroke.Transparency = 0.5
-musicStroke.Parent = musicInputUI
+local function createSelfButton(text, color, command)
+	local btn = Instance.new("TextButton")
+	btn.Text = text
+	btn.BackgroundColor3 = color
+	btn.TextColor3 = Color3.new(1, 1, 1)
+	btn.Font = Enum.Font.GothamBlack
+	btn.TextSize = 14
+	btn.ZIndex = 6
+	btn.Parent = selfCommandsFrame
 
-local musicTitle = Instance.new("TextLabel")
-musicTitle.Text = "🎵 กรอก ID เพลง"
-musicTitle.Size = UDim2.new(1, 0, 0, 30)
-musicTitle.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-musicTitle.TextColor3 = Color3.fromRGB(255, 50, 50)
-musicTitle.Font = Enum.Font.GothamBlack
-musicTitle.TextSize = 16
-musicTitle.ZIndex = 11
-musicTitle.Parent = musicInputUI
-local musicCornerTitle = Instance.new("UICorner")
-musicCornerTitle.CornerRadius = UDim.new(0, 8)
-musicCornerTitle.Parent = musicTitle
+	local cornerBtn = Instance.new("UICorner")
+	cornerBtn.CornerRadius = UDim.new(0, 6)
+	cornerBtn.Parent = btn
 
-local musicIdInput = Instance.new("TextBox")
-musicIdInput.Size = UDim2.new(1, -10, 0, 30)
-musicIdInput.Position = UDim2.new(0, 5, 0, 35)
-musicIdInput.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-musicIdInput.TextColor3 = Color3.new(1, 1, 1)
-musicIdInput.PlaceholderText = "🎵 ป้อน ID เพลง..."
-musicIdInput.Font = Enum.Font.Gotham
-musicIdInput.TextSize = 14
-musicIdInput.ZIndex = 11
-musicIdInput.Parent = musicInputUI
-local musicCornerInput = Instance.new("UICorner")
-musicCornerInput.CornerRadius = UDim.new(0, 6)
-musicCornerInput.Parent = musicIdInput
-local musicStrokeInput = Instance.new("UIStroke")
-musicStrokeInput.Thickness = 1
-musicStrokeInput.Color = Color3.fromRGB(255, 50, 50)
-musicStrokeInput.Transparency = 0.7
-musicStrokeInput.Parent = musicIdInput
+	local stroke = Instance.new("UIStroke")
+	stroke.Thickness = 1
+	stroke.Color = Color3.fromRGB(255, 255, 255)
+	stroke.Transparency = 0.7
+	stroke.Parent = btn
 
-local musicButtonFrame = Instance.new("Frame")
-musicButtonFrame.Size = UDim2.new(1, -10, 0, 40)
-musicButtonFrame.Position = UDim2.new(0, 5, 0, 70)
-musicButtonFrame.BackgroundTransparency = 1
-musicButtonFrame.ZIndex = 11
-musicButtonFrame.Parent = musicInputUI
-
-local musicButtonLayout = Instance.new("UIGridLayout")
-musicButtonLayout.CellSize = UDim2.new(0, 90, 0, 30)
-musicButtonLayout.CellPadding = UDim2.new(0, 8, 0, 5)
-musicButtonLayout.SortOrder = Enum.SortOrder.LayoutOrder
-musicButtonLayout.Parent = musicButtonFrame
-
-local confirmButton = Instance.new("TextButton")
-confirmButton.Text = "✅ ตกลง"
-confirmButton.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
-confirmButton.TextColor3 = Color3.new(1, 1, 1)
-confirmButton.Font = Enum.Font.GothamBlack
-confirmButton.TextSize = 14
-confirmButton.ZIndex = 12
-confirmButton.Parent = musicButtonFrame
-local cornerConfirm = Instance.new("UICorner")
-cornerConfirm.CornerRadius = UDim.new(0, 6)
-cornerConfirm.Parent = confirmButton
-local strokeConfirm = Instance.new("UIStroke")
-strokeConfirm.Thickness = 1
-strokeConfirm.Color = Color3.fromRGB(255, 255, 255)
-strokeConfirm.Transparency = 0.7
-strokeConfirm.Parent = confirmButton
-
-local cancelButton = Instance.new("TextButton")
-cancelButton.Text = "❌ ยกเลิก"
-cancelButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-cancelButton.TextColor3 = Color3.new(1, 1, 1)
-cancelButton.Font = Enum.Font.GothamBlack
-cancelButton.TextSize = 14
-cancelButton.ZIndex = 12
-cancelButton.Parent = musicButtonFrame
-local cornerCancel = Instance.new("UICorner")
-cornerCancel.CornerRadius = UDim.new(0, 6)
-cornerCancel.Parent = cancelButton
-local strokeCancel = Instance.new("UIStroke")
-strokeCancel.Thickness = 1
-strokeCancel.Color = Color3.fromRGB(255, 255, 255)
-strokeCancel.Transparency = 0.7
-strokeCancel.Parent = cancelButton
-
--- 🧩 การทำงานของ UI กรอก ID เพลง
-local function closeMusicInputUI()
-	local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-	TweenService:Create(musicInputUI, tweenInfo, { BackgroundTransparency = 1 }):Play()
-	task.wait(0.3)
-	musicInputUI.Visible = false
-end
-
-confirmButton.MouseButton1Click:Connect(function()
-	local id = musicIdInput.Text:match("^%d+$")
-	if not id then
-		local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-		statusLabel.Text = "⚠️ กรุณาป้อน ID เพลง (ตัวเลขเท่านั้น)!"
-		TweenService:Create(statusLabel, tweenInfo, { TextTransparency = 0 }):Play()
-		task.wait(3)
-		TweenService:Create(statusLabel, tweenInfo, { TextTransparency = 1 }):Play()
-		task.wait(0.5)
-		statusLabel.Text = "🛡️ สถานะ: รอคำสั่ง..."
-		TweenService:Create(statusLabel, tweenInfo, { TextTransparency = 0 }):Play()
-		return
-	end
-	task.spawn(function()
-		if sendMessage("music", id) then
-			local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-			statusLabel.Text = "📤 ส่งเพลง ID: " .. id
-			TweenService:Create(statusLabel, tweenInfo, { TextTransparency = 0 }):Play()
-			task.wait(3)
-			TweenService:Create(statusLabel, tweenInfo, { TextTransparency = 1 }):Play()
-			task.wait(0.5)
-			statusLabel.Text = "🛡️ สถานะ: รอคำสั่ง..."
-			TweenService:Create(statusLabel, tweenInfo, { TextTransparency = 0 }):Play()
-		end
+	local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+	btn.MouseEnter:Connect(function()
+		TweenService:Create(btn, tweenInfo, { Size = UDim2.new(0, 85, 0, 32), BackgroundColor3 = Color3.fromRGB(math.min(color.R * 255 + 50, 255), math.min(color.G * 255 + 50, 255), math.min(color.B * 255 + 50, 255)) }):Play()
 	end)
-	closeMusicInputUI()
-end)
+	btn.MouseLeave:Connect(function()
+		TweenService:Create(btn, tweenInfo, { Size = UDim2.new(0, 80, 0, 30), BackgroundColor3 = color }):Play()
+	end)
 
-cancelButton.MouseButton1Click:Connect(function()
-	closeMusicInputUI()
-end)
-
-musicIdInput.FocusLost:Connect(function(enterPressed)
-	if enterPressed then
-		confirmButton.MouseButton1Click:Fire()
-	end
-end)
-
--- 🧩 กรอบปุ่มควบคุม (CommandSenderUI)
-local commandControlFrame = Instance.new("Frame")
-commandControlFrame.Size = UDim2.new(1, -10, 0, 80)
-commandControlFrame.Position = UDim2.new(0, 5, 1, -90)
-commandControlFrame.BackgroundTransparency = 1
-commandControlFrame.ZIndex = 5
-commandControlFrame.Parent = commandMain
-
-local commandControlLayout = Instance.new("UIGridLayout")
-commandControlLayout.CellSize = UDim2.new(0, 120, 0, 30)
-commandControlLayout.CellPadding = UDim2.new(0, 8, 0, 5)
-commandControlLayout.SortOrder = Enum.SortOrder.LayoutOrder
-commandControlLayout.Parent = commandControlFrame
-
--- 🎮 ปุ่มซ่อน/แสดง (CommandSenderUI)
-local commandToggleGui = Instance.new("TextButton")
-commandToggleGui.Text = "🔴 ซ่อน GUI"
-commandToggleGui.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-commandToggleGui.TextColor3 = Color3.new(1, 1, 1)
-commandToggleGui.Font = Enum.Font.GothamBlack
-commandToggleGui.TextSize = 14
-commandToggleGui.ZIndex = 6
-commandToggleGui.Parent = commandControlFrame
-local cornerCommandToggleGui = Instance.new("UICorner")
-cornerCommandToggleGui.CornerRadius = UDim.new(0, 6)
-cornerCommandToggleGui.Parent = commandToggleGui
-local strokeCommandToggleGui = Instance.new("UIStroke")
-strokeCommandToggleGui.Thickness = 1
-strokeCommandToggleGui.Color = Color3.fromRGB(255, 255, 0)
-strokeCommandToggleGui.Transparency = 0.7
-strokeCommandToggleGui.Parent = commandToggleGui
-
--- 🛡️ ปุ่ม Auto :re
-local autoReEnabled = false
-local autoReButton = Instance.new("TextButton")
-autoReButton.Text = "🔄 Auto :re (ปิด)"
-autoReButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-autoReButton.TextColor3 = Color3.new(1, 1, 1)
-autoReButton.Font = Enum.Font.GothamBlack
-autoReButton.Text Size = 14
-autoReButton.ZIndex = 6
-autoReButton.Parent = commandControlFrame
-local cornerAutoRe = Instance.new("UICorner")
-cornerAutoRe.CornerRadius = UDim.new(0, 6)
-cornerAutoRe.Parent = autoReButton
-local strokeAutoRe = Instance.new("UIStroke")
-strokeAutoRe.Thickness = 1
-strokeAutoRe.Color = Color3.fromRGB(255, 255, 255)
-strokeAutoRe.Transparency = 0.7
-strokeAutoRe.Parent = autoReButton
-
--- 🛡️ ปุ่ม Anti-Command
-local antiCommandEnabled = false
-local antiCommandButton = Instance.new("TextButton")
-antiCommandButton.Text = "🛡️ Anti-Command (ปิด)"
-antiCommandButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-antiCommandButton.TextColor3 = Color3.new(1, 1, 1)
-antiCommandButton.Font = Enum.Font.GothamBlack
-antiCommandButton.TextSize = 14
-antiCommandButton.ZIndex = 6
-antiCommandButton.Parent = commandControlFrame
-local cornerAntiCommand = Instance.new("UICorner")
-cornerAntiCommand.CornerRadius = UDim.new(0, 6)
-cornerAntiCommand.Parent = antiCommandButton
-local strokeAntiCommand = Instance.new("UIStroke")
-strokeAntiCommand.Thickness = 1
-strokeAntiCommand.Color = Color3.fromRGB(255, 255, 255)
-strokeAntiCommand.Transparency = 0.7
-strokeAntiCommand.Parent = antiCommandButton
-
--- 🎮 ปุ่มเปิด GUI: เลือกชื่อ (PlayerSelectorUI)
-local playerGuiVisible = true
-local playerToggleIndicator = Instance.new("TextButton")
-playerToggleIndicator.Size = UDim2.new(0, 100, 0, 40)
-playerToggleIndicator.Position = UDim2.new(0.3, -50, 0, 10)
-playerToggleIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-playerToggleIndicator.Text = "เลือกชื่อ"
-playerToggleIndicator.TextColor3 = Color3.new(1, 1, 1)
-playerToggleIndicator.Font = Enum.Font.GothamBlack
-playerToggleIndicator.TextSize = 16
-playerToggleIndicator.ZIndex = 10
-playerToggleIndicator.Visible = false
-playerToggleIndicator.Active = true
-playerToggleIndicator.Draggable = true
-playerToggleIndicator.Parent = playerGui
-
-local playerCornerIndicator = Instance.new("UICorner")
-playerCornerIndicator.CornerRadius = UDim.new(0, 6)
-playerCornerIndicator.Parent = playerToggleIndicator
-
-local playerStrokeIndicator = Instance.new("UIStroke")
-playerStrokeIndicator.Thickness = 2
-playerStrokeIndicator.Color = Color3.fromRGB(255, 255, 255)
-playerStrokeIndicator.Transparency = 0.5
-playerStrokeIndicator.Parent = playerToggleIndicator
-
-local function togglePlayerGuiVisibility()
-	playerGuiVisible = not playerGuiVisible
-	playerMain.Visible = playerGuiVisible
-	playerToggleIndicator.Visible = not playerGuiVisible
-	playerToggleGui.Text = playerGuiVisible and "🔴 ซ่อน GUI" or "🟢 แสดง GUI"
-	playerToggleGui.BackgroundColor3 = playerGuiVisible and Color3.fromRGB(255, 50, 50) or Color3.fromRGB(0, 200, 100)
-	playerToggleIndicator.BackgroundColor3 = playerGuiVisible and Color3.fromRGB(255, 50, 50) or Color3.fromRGB(0, 200, 100)
-	local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-	TweenService:Create(playerMain, tweenInfo, { BackgroundTransparency = playerGuiVisible and 0 or 1 }):Play()
-	TweenService:Create(playerToggleIndicator, tweenInfo, { BackgroundTransparency = playerGuiVisible and 1 or 0 }):Play()
-end
-
-playerToggleGui.MouseButton1Click:Connect(togglePlayerGuiVisibility)
-playerToggleIndicator.MouseButton1Click:Connect(togglePlayerGuiVisibility)
-playerToggleIndicator.MouseEnter:Connect(function()
-	TweenService:Create(playerToggleIndicator, tweenInfo, { Size = UDim2.new(0, 105, 0, 42), BackgroundColor3 = Color3.fromRGB(255, 100, 100) }):Play()
-end)
-playerToggleIndicator.MouseLeave:Connect(function()
-	TweenService:Create(playerToggleIndicator, tweenInfo, { Size = UDim2.new(0, 100, 0, 40), BackgroundColor3 = playerGuiVisible and Color3.fromRGB(255, 50, 50) or Color3.fromRGB(0, 200, 100) }):Play()
-end)
-
--- 🎮 ปุ่มเปิด GUI: คำสั่ง (CommandSenderUI)
-local commandGuiVisible = true
-local commandToggleIndicator = Instance.new("TextButton")
-commandToggleIndicator.Size = UDim2.new(0, 100, 0, 40)
-commandToggleIndicator.Position = UDim2.new(0.7, -50, 0, 10)
-commandToggleIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-commandToggleIndicator.Text = "คำสั่ง"
-commandToggleIndicator.TextColor3 = Color3.new(1, 1, 1)
-commandToggleIndicator.Font = Enum.Font.GothamBlack
-commandToggleIndicator.TextSize = 16
-commandToggleIndicator.ZIndex = 10
-commandToggleIndicator.Visible = false
-commandToggleIndicator.Active = true
-commandToggleIndicator.Draggable = true
-commandToggleIndicator.Parent = commandGui
-
-local commandCornerIndicator = Instance.new("UICorner")
-commandCornerIndicator.CornerRadius = UDim.new(0, 6)
-commandCornerIndicator.Parent = commandToggleIndicator
-
-local commandStrokeIndicator = Instance.new("UIStroke")
-commandStrokeIndicator.Thickness = 2
-commandStrokeIndicator.Color = Color3.fromRGB(255, 255, 255)
-commandStrokeIndicator.Transparency = 0.5
-commandStrokeIndicator.Parent = commandToggleIndicator
-
-local function toggleCommandGuiVisibility()
-	commandGuiVisible = not commandGuiVisible
-	commandMain.Visible = commandGuiVisible
-	commandToggleIndicator.Visible = not commandGuiVisible
-	commandToggleGui.Text = commandGuiVisible and "🔴 ซ่อน GUI" or "🟢 แสดง GUI"
-	commandToggleGui.BackgroundColor3 = commandGuiVisible and Color3.fromRGB(255, 50, 50) or Color3.fromRGB(0, 200, 100)
-	commandToggleIndicator.BackgroundColor3 = commandGuiVisible and Color3.fromRGB(255, 50, 50) or Color3.fromRGB(0, 200, 100)
-	local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-	TweenService:Create(commandMain, tweenInfo, { BackgroundTransparency = commandGuiVisible and 0 or 1 }):Play()
-	TweenService:Create(commandToggleIndicator, tweenInfo, { BackgroundTransparency = commandGuiVisible and 1 or 0 }):Play()
-end
-
-commandToggleGui.MouseButton1Click:Connect(toggleCommandGuiVisibility)
-commandToggleIndicator.MouseButton1Click:Connect(toggleCommandGuiVisibility)
-commandToggleIndicator.MouseEnter:Connect(function()
-	TweenService:Create(commandToggleIndicator, tweenInfo, { Size = UDim2.new(0, 105, 0, 42), BackgroundColor3 = Color3.fromRGB(255, 100, 100) }):Play()
-end)
-commandToggleIndicator.MouseLeave:Connect(function()
-	TweenService:Create(commandToggleIndicator, tweenInfo, { Size = UDim2.new(0, 100, 0, 40), BackgroundColor3 = commandGuiVisible and Color3.fromRGB(255, 50, 50) or Color3.fromRGB(0, 200, 100) }):Play()
-end)
-
--- 🎮 คีย์ลัด (Ctrl + H สำหรับ PlayerSelectorUI, Ctrl + J สำหรับ CommandSenderUI)
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-	if gameProcessed then return end
-	if input.UserInputType == Enum.UserInputType.Keyboard then
-		if input.KeyCode == Enum.KeyCode.H and UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
-			togglePlayerGuiVisibility()
-		elseif input.KeyCode == Enum.KeyCode.J and UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
-			toggleCommandGuiVisibility()
-		end
-	end
-end)
-
--- 🔄 Auto :re เมื่อตาย
-autoReButton.MouseButton1Click:Connect(function()
-	autoReEnabled = not autoReEnabled
-	autoReButton.Text = autoReEnabled and "🔄 Auto :re (เปิด)" or "🔄 Auto :re (ปิด)"
-	autoReButton.BackgroundColor3 = autoReEnabled and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(100, 100, 100)
-end)
-
-LocalPlayer.CharacterAdded:Connect(function(character)
-	if autoReEnabled then
-		local humanoid = character:WaitForChild("Humanoid")
-		humanoid.Died:Connect(function()
-			task.spawn(function()
-				sendMessage("re", LocalPlayer.Name)
-			end)
-		end)
-	end
-end)
-
--- 🛡️ ต่อต้านคำสั่ง (:poop, :jail, :ice, :control)
-antiCommandButton.MouseButton1Click:Connect(function()
-	antiCommandEnabled = not antiCommandEnabled
-	antiCommandButton.Text = antiCommandEnabled and "🛡️ Anti-Command (เปิด)" or "🛡️ Anti-Command (ปิด)"
-	antiCommandButton.BackgroundColor3 = antiCommandEnabled and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(100, 100, 100)
-end)
-
-TextChatService.TextChannels.RBXGeneral.MessageReceived:Connect(function(message)
-	if not antiCommandEnabled then return end
-	local msg = message.Text:lower()
-	local sender = Players:GetPlayerByUserId(message.SenderUserId)
-	local commands = { "poop", "jail", "ice", "control" }
-	local counterCommands = { "unpoop", "unjail", "unice", "control" }
-	for i, cmd in ipairs(commands) do
-		if msg:match(":" .. cmd .. "%s+(%S+)") then
-			local targetName = msg:match(":" .. cmd .. "%s+(%S+)")
-			if targetName and LocalPlayer.Name:lower():find(targetName, 1, true) then
-				task.spawn(function()
-					local counterCmd = counterCommands[i]
-					local target = (cmd == "control" and sender and sender.Name) or LocalPlayer.Name
-					if target then
-						sendMessage(counterCmd, target)
-						local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-						statusLabel.Text = "🛡️ ป้องกัน: รัน " .. counterCmd .. " สำเร็จ! (ตรวจจับ: " .. targetName .. ")"
-						TweenService:Create(statusLabel, tweenInfo, { TextTransparency = 0 }):Play()
-						task.wait(3)
-						TweenService:Create(statusLabel, tweenInfo, { TextTransparency = 1 }):Play()
-						task.wait(0.5)
-						statusLabel.Text = "🛡️ สถานะ: รอคำสั่ง..."
-						TweenService:Create(statusLabel, tweenInfo, { TextTransparency = 0 }):Play()
-					end
-				end)
+	btn.MouseButton1Click:Connect(function()
+		task.spawn(function()
+			if sendMessage(command, LocalPlayer.Name) then
+				local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+				statusLabel.Text = "📤 รัน " .. command .. " ใส่ตัวเองสำเร็จ!"
+				TweenService:Create(statusLabel, tweenInfo, { TextTransparency = 0 }):Play()
+				task.wait(3)
+				TweenService:Create(statusLabel, tweenInfo, { TextTransparency = 1 }):Play()
+				task.wait(0.5)
+				statusLabel.Text = "🛡️ สถานะ: รอคำสั่ง..."
+				TweenService:Create(statusLabel, tweenInfo, { TextTransparency = 0 }):Play()
 			end
-		end
-	end
-end)
+		end)
+	end)
+end
+
+createSelfButton("❄️ :unice", Color3.fromRGB(0, 170, 255), "unice")
+createSelfButton("🔓 :unjail", Color3.fromRGB(255, 90, 90), "unjail")
+createSelfButton("🎮 :uncontrol", Color3.fromRGB(200, 50, 200), "uncontrol")
+createSelfButton("🔥 :unfrozen", Color3.fromRGB(255, 150, 50), "unfrozen")
 
 -- โหลดรายชื่อเริ่มต้น
 updatePlayerList()
