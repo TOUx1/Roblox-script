@@ -1,4 +1,4 @@
---// ⚡ GUI "Player Selector & Command Sender v17" by Sigma (Enhanced by Grok) 😈
+--// ⚡ GUI "Player Selector & Command Sender v15" by Sigma (Enhanced by Grok) 😈
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TextChatService = game:GetService("TextChatService")
@@ -6,39 +6,20 @@ local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 
--- 
 -- 🧾 ตารางผู้เล่นที่เลือก (แชร์ระหว่าง GUI)
 local selectedPlayers = {}
 
 -- 🌐 ฟังก์ชันส่งคำสั่ง HD Admin
-local function sendMessage(command, playerName)
-	local hdAdminClient = ReplicatedStorage:FindFirstChild("HDAdminClient")
-	if not hdAdminClient then
-		warn("❌ ไม่พบ HDAdminClient ใน ReplicatedStorage")
-		return false
-	end
-
-	local signals = hdAdminClient:FindFirstChild("Signals")
-	if not signals then
-		warn("❌ ไม่พบ Signals ใน HDAdminClient")
-		return false
-	end
-
-	local requestCommand = signals:FindFirstChild("RequestCommand")
-	if not requestCommand then
-		warn("❌ ไม่พบ RequestCommand ใน Signals")
-		return false
-	end
-
-	local args = { ":" .. command .. " " .. playerName }
+local function sendMessage(command, value)
+	local args = { ":" .. command .. " " .. value }
 	local success, result = pcall(function()
-		requestCommand:InvokeServer(unpack(args))
+		return ReplicatedStorage:WaitForChild("HDAdminClient"):WaitForChild("Signals"):WaitForChild("RequestCommand"):InvokeServer(unpack(args))
 	end)
 	if success then
 		print("✅ ส่งคำสั่ง: " .. args[1])
 		return true
 	else
-		warn("❌ ล้มเหลวในการInvokeServer: " .. tostring(result))
+		warn("❌ ล้มเหลว: ไม่พบ HDAdminClient หรือ RequestCommand - " .. tostring(result))
 		return false
 	end
 end
@@ -69,7 +50,7 @@ playerGradient.Color = ColorSequence.new({
 	ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 30)),
 	ColorSequenceKeypoint.new(1, Color3.fromRGB(50, 0, 0))
 })
-playerGradient.Ro tation = 45
+playerGradient.Rotation = 45
 playerGradient.Parent = playerMain
 
 local playerStroke = Instance.new("UIStroke")
@@ -126,7 +107,7 @@ local playerLayout = Instance.new("UIListLayout")
 playerLayout.Padding = UDim.new(0, 4)
 playerLayout.Parent = playerList
 
--- 🧩 ฟังก์ชันสร้างรายชื่อผู้เล่นทั้งหมด
+-- 🧩 ฟังก์ชันสร้างรายชื่อผู้เล่น
 local function updatePlayerList()
 	for _, child in ipairs(playerList:GetChildren()) do
 		if child:IsA("Frame") then
@@ -312,8 +293,8 @@ commandGui.ResetOnSpawn = false
 commandGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
 local commandMain = Instance.new("Frame")
-commandMain.Size = UDim2.new(0, 400, 0, 650)
-commandMain.Position = UDim2.new(0.7, -200, 0.5, -325)
+commandMain.Size = UDim2.new(0, 400, 0, 400)
+commandMain.Position = UDim2.new(0.7, -200, 0.5, -200)
 commandMain.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
 commandMain.BorderSizePixel = 0
 commandMain.Active = true
@@ -353,9 +334,9 @@ local commandCornerTitle = Instance.new("UICorner")
 commandCornerTitle.CornerRadius = UDim.new(0, 8)
 commandCornerTitle.Parent = commandTitle
 
--- 📜 ช่องป้อนคำสั่ง
+-- 📜 ช่องป้อนคำสั่ง
 local commandInput = Instance.new("TextBox")
-commandInput.Size UDim2.new(0.65, -10, 0, 35)
+commandInput.Size = UDim2.new(0.65, -10, 0, 35)
 commandInput.Position = UDim2.new(0, 5, 0, 45)
 commandInput.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
 commandInput.TextColor3 = Color3.new(1, 1, 1)
@@ -429,98 +410,6 @@ buttonLayout.CellPadding = UDim2.new(0, 8, 0, 8)
 buttonLayout.SortOrder = Enum.SortOrder.LayoutOrder
 buttonLayout.Parent = buttonFrame
 
--- 🧩 ฟังก์ชันสร้างปุ่มคำสั่ง
-local function createButton(text, color, command, isMusic)
-	local btn = Instance.new("TextButton")
-	btn.Text = text
-	btn.BackgroundColor3 = color
-	btn.TextColor3 = Color3.new(1, 1, 1)
-	btn.Font = Enum.Font.GothamBlack
-	btn.TextSize = 14
-	btn.ZIndex = 6
-	btn.Parent = buttonFrame
-
-	local cornerBtn = Instance.new("UICorner")
-	cornerBtn.CornerRadius = UDim.new(0, 6)
-	cornerBtn.Parent = btn
-
-	local stroke = Instance.new("UIStroke")
-	stroke.Thickness = 1
-	stroke.Color = Color3.fromRGB(255, 255, 255)
-	stroke.Transparency = 0.7
-	stroke.Parent = btn
-
-	local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-	btn.MouseEnter:Connect(function()
-		TweenService:Create(btn, tweenInfo, { Size = UDim2.new(0, 75, 0, 32), BackgroundColor3 = Color3.fromRGB(math.min(color.R * 255 + 50, 255), math.min(color.G * 255 + 50, 255), math.min(color.B * 255 + 50, 255)) }):Play()
-	end)
-	btn.MouseLeave:Connect(function()
-		TweenService:Create(btn, tweenInfo, { Size = UDim2.new(0, 70, 0, 30), BackgroundColor3 = color }):Play()
-	end)
-
-	if isMusic then
-		btn.MouseButton1Click:Connect(function()
-			musicInputUI.Visible = true
-			musicIdInput.Text = ""
-			TweenService:Create(musicInputUI, tweenInfo, { BackgroundTransparency = 0 }):Play()
-			musicIdInput:CaptureFocus()
-		end)
-	else
-		btn.MouseButton1Click:Connect(function()
-			if not next(selectedPlayers) and playerInput.Text == "" رنگ
-				warn("⚠️ กรุณาเลือกผู้เล่นหรือป้อนชื่อผู้เล่น!")
-				return
-			end
-			if playerInput.Text ~= "" then
-				task.spawn(function()
-					if sendMessage(command, playerInput.Text) then
-						local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-						statusLabel.Text = "📤 ส่งคำสั่ง: " .. command .. " ไปยัง " .. playerInput.Text
-						TweenService:Create(statusLabel, tweenInfo, { TextTransparency = 0 }):Play()
-						task.wait(3)
-						TweenService:Create(statusLabel, tweenInfo, { TextTransparency = 1 }):Play()
-						task.wait(0.5)
-						statusLabel.Text = "🛡️ สถานะ: รอคำสั่ง..."
-						TweenService:Create(statusLabel, tweenInfo, { TextTransparency = 0 }):Play()
-					end
-				end)
-			end
-			for name in pairs(selectedPlayers) do
-				task.spawn(function()
-					if sendMessage(command, name) then
-						local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-						statusLabel.Text = "📤 ส่งคำสั่ง: " .. command .. " ไปยัง " .. name
-						TweenService:Create(statusLabel, tweenInfo, { TextTransparency = 0 }):Play()
-						task.wait(3)
-						TweenService:Create(statusLabel, tweenInfo, { TextTransparency = 1 }):Play()
-						task.wait(0.5:"", statusLabel.Text = "🛡️ สถานะ: รอคำสั่ง..."
-						TweenService:Create(statusLabel, tweenInfo, { TextTransparency = 0 }):Play()
-					end
-				end)
-			end
-		end)
-	end
-end
-
--- ปุ่มคำสั่งหลัก
-createButton("💩 :poop", Color3.fromRGB(140, 100, 255), "poop")
-createButton("🧊 :ice", Color3.fromRGB(0, 170, 255), "ice")
-createButton("🚔 :jail", Color3.fromRGB(255, 90, 90), "jail")
-createButton("⚡ :zap", Color3.fromRGB(255, 210, 50), "zap")
-createButton("🛑 :uncmdbar2", Color3.fromRGB(200, 50, 200), "uncmdbar2")
-createButton("🔥 :unff", Color3.fromRGB(255, 150, 50), "unff")
-createButton("🕊️ :unfly", Color3.fromRGB(50, 200, 200), "unfly")
-createButton("🔄 :re", Color3.fromRGB(100, 255, 100), "re")
-createButton("🚶 :to", Color3.fromRGB(255, 100, 150), "to")
-createButton("🤝 :bring", Color3.fromRGB(100, 150, 255), "bring")
-createButton("🚀 :rocket", Color3.fromRGB(255, 100, 0), "rocket")
-createButton("🎵 :music", Color3.fromRGB(0, 150, 255), "music", true)
-
--- อัปเดต CanvasSize
-buttonLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-	buttonFrame.CanvasSize = UDim(selector2.new(0, 0, 0, buttonLayout.AbsoluteContentSize.Y + 10)
-end)
-
 -- 🎵 UI กรอก ID เพลง
 local musicInputUI = Instance.new("Frame")
 musicInputUI.Size = UDim2.new(0, 200, 0, 120)
@@ -536,7 +425,7 @@ musicCorner.CornerRadius = UDim.new(0, 10)
 musicCorner.Parent = musicInputUI
 
 local musicGradient = Instance.new("UIGradient")
-musicGradient.Color = Color lSequence.new({
+musicGradient.Color = ColorSequence.new({
 	ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 30)),
 	ColorSequenceKeypoint.new(1, Color3.fromRGB(50, 0, 0))
 })
@@ -545,7 +434,7 @@ musicGradient.Parent = musicInputUI
 
 local musicStroke = Instance.new("UIStroke")
 musicStroke.Thickness = 2
-musicStroke.Color = Color3.fromRGB(56, 50, 50)
+musicStroke.Color = Color3.fromRGB(255, 50, 50)
 musicStroke.Transparency = 0.5
 musicStroke.Parent = musicInputUI
 
@@ -557,13 +446,13 @@ musicTitle.TextColor3 = Color3.fromRGB(255, 50, 50)
 musicTitle.Font = Enum.Font.GothamBlack
 musicTitle.TextSize = 16
 musicTitle.ZIndex = 11
-musicTitle.Parentbee = musicInputUI
+musicTitle.Parent = musicInputUI
 local musicCornerTitle = Instance.new("UICorner")
-musicCornerTitle.CornerRadius = UDim2.new(0, 8)
+musicCornerTitle.CornerRadius = UDim.new(0, 8)
 musicCornerTitle.Parent = musicTitle
 
-local musicIdInput = Instance.new("Textboxt")
-.musicIdInput.Size = UDim2.new(1, -10, 0, 30)
+local musicIdInput = Instance.new("TextBox")
+musicIdInput.Size = UDim2.new(1, -10, 0, 30)
 musicIdInput.Position = UDim2.new(0, 5, 0, 35)
 musicIdInput.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
 musicIdInput.TextColor3 = Color3.new(1, 1, 1)
@@ -584,7 +473,7 @@ musicStrokeInput.Parent = musicIdInput
 local musicButtonFrame = Instance.new("Frame")
 musicButtonFrame.Size = UDim2.new(1, -10, 0, 40)
 musicButtonFrame.Position = UDim2.new(0, 5, 0, 70)
-musicButtonFrame.BackgroundTranspar ency = 1
+musicButtonFrame.BackgroundTransparency = 1
 musicButtonFrame.ZIndex = 11
 musicButtonFrame.Parent = musicInputUI
 
@@ -628,7 +517,100 @@ strokeCancel.Color = Color3.fromRGB(255, 255, 255)
 strokeCancel.Transparency = 0.7
 strokeCancel.Parent = cancelButton
 
--- 🧩 การทำงานของ UI กรอก ID เพลง
+-- 🧩 ฟังก์ชันสร้างปุ่มคำสั่ง
+local function createButton(text, color, command, isMusic)
+	local btn = Instance.new("TextButton")
+	btn.Text = text
+	btn.BackgroundColor3 = color
+	btn.TextColor3 = Color3.new(1, 1, 1)
+	btn.Font = Enum.Font.GothamBlack
+	btn.TextSize = 14
+	btn.ZIndex = 6
+	btn.Parent = buttonFrame
+
+	local cornerBtn = Instance.new("UICorner")
+	cornerBtn.CornerRadius = UDim.new(0, 6)
+	cornerBtn.Parent = btn
+
+	local stroke = Instance.new("UIStroke")
+	stroke.Thickness = 1
+	stroke.Color = Color3.fromRGB(255, 255, 255)
+	stroke.Transparency = 0.7
+	stroke.Parent = btn
+
+	local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+	btn.MouseEnter:Connect(function()
+		TweenService:Create(btn, tweenInfo, { Size = UDim2.new(0, 75, 0, 32), BackgroundColor3 = Color3.fromRGB(math.min(color.R * 255 + 50, 255), math.min(color.G * 255 + 50, 255), math.min(color.B * 255 + 50, 255)) }):Play()
+	end)
+	btn.MouseLeave:Connect(function()
+		TweenService:Create(btn, tweenInfo, { Size = UDim2.new(0, 70, 0, 30), BackgroundColor3 = color }):Play()
+	end)
+
+	if isMusic then
+		btn.MouseButton1Click:Connect(function()
+			musicInputUI.Visible = true
+			musicIdInput.Text = ""
+			TweenService:Create(musicInputUI, tweenInfo, { BackgroundTransparency = 0 }):Play()
+			musicIdInput:CaptureFocus()
+		end)
+	else
+		btn.MouseButton1Click:Connect(function()
+			if not next(selectedPlayers) and playerInput.Text == "" then
+				warn("⚠️ กรุณาเลือกผู้เล่นหรือป้อนชื่อผู้เล่น!")
+				return
+			end
+			if playerInput.Text ~= "" then
+				task.spawn(function()
+					if sendMessage(command, playerInput.Text) then
+						local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+						statusLabel.Text = "📤 ส่งคำสั่ง: " .. command .. " ไปยัง " .. playerInput.Text
+						TweenService:Create(statusLabel, tweenInfo, { TextTransparency = 0 }):Play()
+						task.wait(3)
+						TweenService:Create(statusLabel, tweenInfo, { TextTransparency = 1 }):Play()
+						task.wait(0.5)
+						statusLabel.Text = "🛡️ สถานะ: รอคำสั่ง..."
+						TweenService:Create(statusLabel, tweenInfo, { TextTransparency = 0 }):Play()
+					end
+				end)
+			end
+			for name in pairs(selectedPlayers) do
+				task.spawn(function()
+					if sendMessage(command, name) then
+						local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+						statusLabel.Text = "📤 ส่งคำสั่ง: " .. command .. " ไปยัง " .. name
+						TweenService:Create(statusLabel, tweenInfo, { TextTransparency = 0 }):Play()
+						task.wait(3)
+						TweenService:Create(statusLabel, tweenInfo, { TextTransparency = 1 }):Play()
+						task.wait(0.5)
+						statusLabel.Text = "🛡️ สถานะ: รอคำสั่ง..."
+						TweenService:Create(statusLabel, tweenInfo, { TextTransparency = 0 }):Play()
+					end
+				end)
+			end
+		end)
+	end
+end
+
+-- ปุ่มคำสั่ง
+createButton("💩 :poop", Color3.fromRGB(140, 100, 255), "poop")
+createButton("🧊 :ice", Color3.fromRGB(0, 170, 255), "ice")
+createButton("🚔 :jail", Color3.fromRGB(255, 90, 90), "jail")
+createButton("⚡ :zap", Color3.fromRGB(255, 210, 50), "zap")
+createButton("🛑 :uncmdbar2", Color3.fromRGB(200, 50, 200), "uncmdbar2")
+createButton("🔥 :unff", Color3.fromRGB(255, 150, 50), "unff")
+createButton("🕊️ :unfly", Color3.fromRGB(50, 200, 200), "unfly")
+createButton("🔄 :re", Color3.fromRGB(100, 255, 100), "re")
+createButton("🚶 :to", Color3.fromRGB(255, 100, 150), "to")
+createButton("🤝 :bring", Color3.fromRGB(100, 150, 255), "bring")
+createButton("🚀 :rocket", Color3.fromRGB(255, 100, 0), "rocket")
+createButton("🎵 :music", Color3.fromRGB(0, 150, 255), "music", true)
+
+-- อัปเดต CanvasSize
+buttonLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+	buttonFrame.CanvasSize = UDim2.new(0, 0, 0, buttonLayout.AbsoluteContentSize.Y + 10)
+end)
+
+-- 🎵 การทำงานของ UI กรอก ID เพลง
 local function closeMusicInputUI()
 	local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 	TweenService:Create(musicInputUI, tweenInfo, { BackgroundTransparency = 1 }):Play()
@@ -658,19 +640,56 @@ confirmButton.MouseButton1Click:Connect(function()
 			TweenService:Create(statusLabel, tweenInfo, { TextTransparency = 1 }):Play()
 			task.wait(0.5)
 			statusLabel.Text = "🛡️ สถานะ: รอคำสั่ง..."
-		 TweenService:Create(statusLabel, tweenInfo, { TextTransparency = 0 }):Play()
+			TweenService:Create(statusLabel, tweenInfo, { TextTransparency = 0 }):Play()
 		end
 	end)
 	closeMusicInputUI()
 end)
 
+confirmButton.MouseEnter:Connect(function()
+	TweenService:Create(confirmButton, tweenInfo, { Size = UDim2.new(0, 95, 0, 32), BackgroundColor3 = Color3.fromRGB(0, 255, 100) }):Play()
+end)
+confirmButton.MouseLeave:Connect(function()
+	TweenService:Create(confirmButton, tweenInfo, { Size = UDim2.new(0, 90, 0, 30), BackgroundColor3 = Color3.fromRGB(0, 200, 100) }):Play()
+end)
+
 cancelButton.MouseButton1Click:Connect(function()
 	closeMusicInputUI()
+end)
+cancelButton.MouseEnter:Connect(function()
+	TweenService:Create(cancelButton, tweenInfo, { Size = UDim2.new(0, 95, 0, 32), BackgroundColor3 = Color3.fromRGB(255, 100, 100) }):Play()
+end)
+cancelButton.MouseLeave:Connect(function()
+	TweenService:Create(cancelButton, tweenInfo, { Size = UDim2.new(0, 90, 0, 30), BackgroundColor3 = Color3.fromRGB(255, 50, 50) }):Play()
 end)
 
 musicIdInput.FocusLost:Connect(function(enterPressed)
 	if enterPressed then
-		confirmButton.MouseButton1Click:Fire()
+		local id = musicIdInput.Text:match("^%d+$")
+		if not id then
+			local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+			statusLabel.Text = "⚠️ กรุณาป้อน ID เพลง (ตัวเลขเท่านั้น)!"
+			TweenService:Create(statusLabel, tweenInfo, { TextTransparency = 0 }):Play()
+			task.wait(3)
+			TweenService:Create(statusLabel, tweenInfo, { TextTransparency = 1 }):Play()
+			task.wait(0.5)
+			statusLabel.Text = "🛡️ สถานะ: รอคำสั่ง..."
+			TweenService:Create(statusLabel, tweenInfo, { TextTransparency = 0 }):Play()
+			return
+		end
+		task.spawn(function()
+			if sendMessage("music", id) then
+				local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+				statusLabel.Text = "📤 ส่งเพลง ID: " .. id
+				TweenService:Create(statusLabel, tweenInfo, { TextTransparency = 0 }):Play()
+				task.wait(3)
+				TweenService:Create(statusLabel, tweenInfo, { TextTransparency = 1 }):Play()
+				task.wait(0.5)
+				statusLabel.Text = "🛡️ สถานะ: รอคำสั่ง..."
+				TweenService:Create(statusLabel, tweenInfo, { TextTransparency = 0 }):Play()
+			end
+		end)
+		closeMusicInputUI()
 	end
 end)
 
@@ -697,18 +716,18 @@ commandToggleGui.Font = Enum.Font.GothamBlack
 commandToggleGui.TextSize = 14
 commandToggleGui.ZIndex = 6
 commandToggleGui.Parent = commandControlFrame
-local commandToggleGuiCorner = Instance.new("UICorner")
-commandToggleGuiCorner.CornerRadius = UDim.new(0, 6)
-commandToggleGuiCorner.Parent = commandToggleGui
-local commandToggleGuiStroke = Instance.new("UIStroke")
-commandToggleGuiStroke.Thickness = 1
-commandToggleGuiStroke.Color = Color3.fromRGB(255, 255, 255)
-commandToggleGuiStroke.Transparency = 0.7
-commandToggleGuiStroke.Parent = commandToggleGui
+local cornerCommandToggleGui = Instance.new("UICorner")
+cornerCommandToggleGui.CornerRadius = UDim.new(0, 6)
+cornerCommandToggleGui.Parent = commandToggleGui
+local strokeCommandToggleGui = Instance.new("UIStroke")
+strokeCommandToggleGui.Thickness = 1
+strokeCommandToggleGui.Color = Color3.fromRGB(255, 255, 255)
+strokeCommandToggleGui.Transparency = 0.7
+strokeCommandToggleGui.Parent = commandToggleGui
 
 -- 🛡️ ปุ่ม Auto :re
 local autoReEnabled = false
-local auto/Pablo ReButton = Instance.new("TextButton")
+local autoReButton = Instance.new("TextButton")
 autoReButton.Text = "🔄 Auto :re (ปิด)"
 autoReButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
 autoReButton.TextColor3 = Color3.new(1, 1, 1)
@@ -720,13 +739,13 @@ local cornerAutoRe = Instance.new("UICorner")
 cornerAutoRe.CornerRadius = UDim.new(0, 6)
 cornerAutoRe.Parent = autoReButton
 local strokeAutoRe = Instance.new("UIStroke")
-削strokeAutoRe.Thickness = 1
+strokeAutoRe.Thickness = 1
 strokeAutoRe.Color = Color3.fromRGB(255, 255, 255)
 strokeAutoRe.Transparency = 0.7
 strokeAutoRe.Parent = autoReButton
 
 -- 🛡️ ปุ่ม Anti-Command
-local antiCommandEnabledEnabled = false
+local antiCommandEnabled = false
 local antiCommandButton = Instance.new("TextButton")
 antiCommandButton.Text = "🛡️ Anti-Command (ปิด)"
 antiCommandButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
@@ -742,11 +761,11 @@ local strokeAntiCommand = Instance.new("UIStroke")
 strokeAntiCommand.Thickness = 1
 strokeAntiCommand.Color = Color3.fromRGB(255, 255, 255)
 strokeAntiCommand.Transparency = 0.7
-strokeAntiCommand.Parent = antiantiCommandButton
+strokeAntiCommand.Parent = antiCommandButton
 
 -- 🚀 การทำงานของปุ่มส่งคำสั่ง
 sendCommandButton.MouseButton1Click:Connect(function()
-	local	command = commandInput.Text:lower():gsub("^:", "")
+	local command = commandInput.Text:lower():gsub("^:", "") -- ลบ :
 	if command == "" then
 		warn("⚠️ กรุณาป้อนคำสั่ง!")
 		return
@@ -888,23 +907,27 @@ end)
 
 -- 🎮 คีย์ลัด (Ctrl + H สำหรับ PlayerSelectorUI, Ctrl + J สำหรับ CommandSenderUI)
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
-	if gameProcessed then
-		return
-	end
+	if gameProcessed then return end
 	if input.UserInputType == Enum.UserInputType.Keyboard then
 		if input.KeyCode == Enum.KeyCode.H and UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
 			togglePlayerGuiVisibility()
-		elseif input.KeyCode = Enum.KeyCode.J and UserInputService:IsKeyDown Enum.KeyCode.LeftControl) then
+		elseif input.KeyCode == Enum.KeyCode.J and UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
 			toggleCommandGuiVisibility()
 		end
 	end
 end)
 
--- 🔄 Auto :re เมื่อตาย
+-- 🔄 Auto :re
 autoReButton.MouseButton1Click:Connect(function()
 	autoReEnabled = not autoReEnabled
 	autoReButton.Text = autoReEnabled and "🔄 Auto :re (เปิด)" or "🔄 Auto :re (ปิด)"
 	autoReButton.BackgroundColor3 = autoReEnabled and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(100, 100, 100)
+end)
+autoReButton.MouseEnter:Connect(function()
+	TweenService:Create(autoReButton, tweenInfo, { Size = UDim2.new(0, 125, 0, 32), BackgroundColor3 = autoReEnabled and Color3.fromRGB(0, 255, 100) or Color3.fromRGB(150, 150, 150) }):Play()
+end)
+autoReButton.MouseLeave:Connect(function()
+	TweenService:Create(autoReButton, tweenInfo, { Size = UDim2.new(0, 120, 0, 30), BackgroundColor3 = autoReEnabled and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(100, 100, 100) }):Play()
 end)
 
 LocalPlayer.CharacterAdded:Connect(function(character)
@@ -923,6 +946,12 @@ antiCommandButton.MouseButton1Click:Connect(function()
 	antiCommandEnabled = not antiCommandEnabled
 	antiCommandButton.Text = antiCommandEnabled and "🛡️ Anti-Command (เปิด)" or "🛡️ Anti-Command (ปิด)"
 	antiCommandButton.BackgroundColor3 = antiCommandEnabled and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(100, 100, 100)
+end)
+antiCommandButton.MouseEnter:Connect(function()
+	TweenService:Create(antiCommandButton, tweenInfo, { Size = UDim2.new(0, 125, 0, 32), BackgroundColor3 = antiCommandEnabled and Color3.fromRGB(0, 255, 100) or Color3.fromRGB(150, 150, 150) }):Play()
+end)
+antiCommandButton.MouseLeave:Connect(function()
+	TweenService:Create(antiCommandButton, tweenInfo, { Size = UDim2.new(0, 120, 0, 30), BackgroundColor3 = antiCommandEnabled and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(100, 100, 100) }):Play()
 end)
 
 TextChatService.TextChannels.RBXGeneral.MessageReceived:Connect(function(message)
