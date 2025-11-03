@@ -1,392 +1,525 @@
---// GUI "ขโมยเสียง😈⚙️"
+-- Sound Logger v6.1 - All-Hunt Mode
+-- โดย: Exploiter ตัวพ่อ
+
 local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local HttpService = game:GetService("HttpService")
+local player = Players.LocalPlayer
+local StarterGui = game:GetService("StarterGui")
 local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
 
--- UI หลัก
-local success, ScreenGui = pcall(function()
-	local gui = Instance.new("ScreenGui")
-	gui.Name = "ขโมยเสียง😈⚙️"
-	gui.ResetOnSpawn = false
-	gui.Parent = LocalPlayer:WaitForChild("PlayerGui", 5)
-	return gui
-end)
-if not success then
-	warn("⚠️ ไม่สามารถสร้าง ScreenGui ได้!")
-	return
-end
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "SoundLoggerV6_1"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = player:WaitForChild("PlayerGui")
 
--- กรอบหลัก
-local Frame = Instance.new("Frame")
-Frame.Size = UDim2.new(0, 600, 0, 300)
-Frame.Position = UDim2.new(0.5, -300, 0.5, -150)
-Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-Frame.BorderSizePixel = 0
-Frame.Active = true
-Frame.Draggable = true
-Frame.Parent = ScreenGui
-Frame.Visible = false
+-- === MainFrame (เท่ขึ้น + เงา) ===
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0,720,0,520)
+MainFrame.Position = UDim2.new(0.5,-360,0.5,-260)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20,20,30)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.ZIndex = 10
+MainFrame.Parent = ScreenGui
 
--- ปุ่มวงกลมเปิด/ปิด
+local Corner = Instance.new("UICorner")
+Corner.CornerRadius = UDim.new(0,12)
+Corner.Parent = MainFrame
+
+local Shadow = Instance.new("ImageLabel")
+Shadow.Size = UDim2.new(1,30,1,30)
+Shadow.Position = UDim2.new(0,-15,0,-15)
+Shadow.BackgroundTransparency = 1
+Shadow.Image = "rbxassetid://6014261993"
+Shadow.ImageColor3 = Color3.fromRGB(0,0,0)
+Shadow.ImageTransparency = 0.6
+Shadow.ZIndex = 9
+Shadow.Parent = MainFrame
+
+-- === Title Bar (มีกราเดียนท์) ===
+local Title = Instance.new("Frame")
+Title.Size = UDim2.new(1,0,0,45)
+Title.BackgroundColor3 = Color3.fromRGB(40,40,60)
+Title.ZIndex = 11
+Title.Parent = MainFrame
+
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0,12)
+TitleCorner.Parent = Title
+
+local Gradient = Instance.new("UIGradient")
+Gradient.Color = ColorSequence.new{
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(70,70,120)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(40,40,80))
+}
+Gradient.Rotation = 90
+Gradient.Parent = Title
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Size = UDim2.new(1,-140,1,0)
+TitleLabel.Position = UDim2.new(0,15,0,0)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "Sound Logger v6.1"
+TitleLabel.Font = Enum.Font.GothamBlack
+TitleLabel.TextColor3 = Color3.fromRGB(100,200,255)
+TitleLabel.TextSize = 20
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.ZIndex = 12
+TitleLabel.Parent = Title
+
+-- ปุ่มซ่อน
 local ToggleButton = Instance.new("TextButton")
-ToggleButton.Size = UDim2.new(0, 60, 0, 60)
-ToggleButton.Position = UDim2.new(0, 10, 0, 10)
-ToggleButton.BackgroundColor3 = Color3.fromRGB(90, 130, 255)
-ToggleButton.Text = "😈"
+ToggleButton.Size = UDim2.new(0,110,0,32)
+ToggleButton.Position = UDim2.new(1,-125,0,6.5)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(60,60,90)
+ToggleButton.Text = "ซ่อน"
+ToggleButton.TextColor3 = Color3.fromRGB(255,255,255)
 ToggleButton.Font = Enum.Font.GothamBold
-ToggleButton.TextSize = 24
-ToggleButton.TextColor3 = Color3.new(1, 1, 1)
-ToggleButton.BorderSizePixel = 0
-ToggleButton.Parent = ScreenGui
-ToggleButton.Active = true
+ToggleButton.TextSize = 13
+ToggleButton.ZIndex = 13
+ToggleButton.Parent = Title
 
-local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(1, 0)
-UICorner.Parent = ToggleButton
+local ToggleCorner = Instance.new("UICorner")
+ToggleCorner.CornerRadius = UDim.new(0,8)
+ToggleCorner.Parent = ToggleButton
 
--- ทำให้ปุ่มลากได้
-local Dragging = false
-local DragStart = nil
-local StartPos = nil
+-- === Scroll เสียง ===
+local Scroll = Instance.new("ScrollingFrame")
+Scroll.Size = UDim2.new(0.73,0,1,-50)
+Scroll.Position = UDim2.new(0,10,0,50)
+Scroll.BackgroundColor3 = Color3.fromRGB(15,15,25)
+Scroll.BorderSizePixel = 0
+Scroll.CanvasSize = UDim2.new(0,0,0,0)
+Scroll.ScrollBarThickness = 5
+Scroll.ZIndex = 11
+Scroll.Parent = MainFrame
 
-ToggleButton.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-		Dragging = true
-		DragStart = input.Position
-		StartPos = ToggleButton.Position
-	end
-end)
-
-ToggleButton.InputChanged:Connect(function(input)
-	if Dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-		local Delta = input.Position - DragStart
-		ToggleButton.Position = UDim2.new(
-			StartPos.X.Scale,
-			StartPos.X.Offset + Delta.X,
-			StartPos.Y.Scale,
-			StartPos.Y.Offset + Delta.Y
-		)
-	end
-end)
-
-ToggleButton.InputEnded:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-		Dragging = false
-	end
-end)
-
--- การทำงานของปุ่มเปิด/ปิด GUI
-local IsGuiOpen = false
-local TweenInfoOpenClose = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
-
-ToggleButton.MouseButton1Click:Connect(function()
-	IsGuiOpen = not IsGuiOpen
-	local targetScale = IsGuiOpen and 1 or 0
-	local tween = TweenService:Create(Frame, TweenInfoOpenClose, { Size = UDim2.new(0, 600 * targetScale, 0, 300 * targetScale) })
-	Frame.Visible = IsGuiOpen
-	ToggleButton.Text = IsGuiOpen and "🔒" or "😈"
-	ToggleButton.BackgroundColor3 = IsGuiOpen and Color3.fromRGB(255, 90, 90) or Color3.fromRGB(90, 130, 255)
-	tween:Play()
-end)
-
--- หัว GUI
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 40)
-Title.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-Title.Text = "ขโมยเสียง 😈⚙️"
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.Font = Enum.Font.GothamBold
-Title.TextSize = 20
-Title.Parent = Frame
-
--- Scroll แสดงข้อมูล BoomBox
-local ScrollingFrame = Instance.new("ScrollingFrame")
-ScrollingFrame.Size = UDim2.new(0, 390, 1, -50)
-ScrollingFrame.Position = UDim2.new(0, 5, 0, 45)
-ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-ScrollingFrame.ScrollBarThickness = 8
-ScrollingFrame.BackgroundTransparency = 1
-ScrollingFrame.Parent = Frame
+local ScrollCorner = Instance.new("UICorner")
+ScrollCorner.CornerRadius = UDim.new(0,8)
+ScrollCorner.Parent = Scroll
 
 local UIListLayout = Instance.new("UIListLayout")
-UIListLayout.Padding = UDim.new(0, 6)
-UIListLayout.Parent = ScrollingFrame
+UIListLayout.Padding = UDim.new(0,6)
+UIListLayout.Parent = Scroll
 
--- ช่องเก็บ ID ด้านขวา
-local SavedIdsFrame = Instance.new("Frame")
-SavedIdsFrame.Size = UDim2.new(0, 190, 1, -50)
-SavedIdsFrame.Position = UDim2.new(0, 405, 0, 45)
-SavedIdsFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-SavedIdsFrame.BorderSizePixel = 0
-SavedIdsFrame.Parent = Frame
+-- === Right Panel ===
+local RightBar = Instance.new("Frame")
+RightBar.Size = UDim2.new(0.26,0,1,-50)
+RightBar.Position = UDim2.new(0.74,0,0,50)
+RightBar.BackgroundColor3 = Color3.fromRGB(30,30,45)
+RightBar.ZIndex = 11
+RightBar.Parent = MainFrame
 
-local SavedIdsTitle = Instance.new("TextLabel")
-SavedIdsTitle.Size = UDim2.new(1, 0, 0, 30)
-SavedIdsTitle.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-SavedIdsTitle.Text = "เก็บ ID ⚙️"
-SavedIdsTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-SavedIdsTitle.Font = Enum.Font.GothamBold
-SavedIdsTitle.TextSize = 16
-SavedIdsTitle.Parent = SavedIdsFrame
+local RightCorner = Instance.new("UICorner")
+RightCorner.CornerRadius = UDim.new(0,8)
+RightCorner.Parent = RightBar
 
-local SavedIdsScroll = Instance.new("ScrollingFrame")
-SavedIdsScroll.Size = UDim2.new(1, -10, 1, -40)
-SavedIdsScroll.Position = UDim2.new(0, 5, 0, 35)
-SavedIdsScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-SavedIdsScroll.ScrollBarThickness = 6
-SavedIdsScroll.BackgroundTransparency = 1
-SavedIdsScroll.Parent = SavedIdsFrame
+local RightLayout = Instance.new("UIListLayout")
+RightLayout.Padding = UDim.new(0,6)
+RightLayout.Parent = RightBar
 
-local SavedIdsListLayout = Instance.new("UIListLayout")
-SavedIdsListLayout.Padding = UDim.new(0, 5)
-SavedIdsListLayout.Parent = SavedIdsScroll
+-- === ปุ่ม "ล่าเสียงทุกคน" (ใหม่!) ===
+local HuntAllButton = Instance.new("TextButton")
+HuntAllButton.Size = UDim2.new(1,-10,0,40)
+HuntAllButton.BackgroundColor3 = Color3.fromRGB(100,180,100)
+HuntAllButton.Text = "ล่าเสียงทุกคน"
+HuntAllButton.TextColor3 = Color3.fromRGB(255,255,255)
+HuntAllButton.Font = Enum.Font.GothamBold
+HuntAllButton.TextSize = 14
+HuntAllButton.ZIndex = 12
+HuntAllButton.Parent = RightBar
 
--- ตัวแปรเก็บสถานะ
-local CurrentSound = nil
-local CurrentPlayBtn = nil
-local SavedIds = {} -- เก็บ SoundId พร้อมชื่อผู้เล่น
-local PlayerSoundHistory = {} -- เก็บประวัติ SoundId ของแต่ละผู้เล่น
+local HuntAllCorner = Instance.new("UICorner")
+HuntAllCorner.CornerRadius = UDim.new(0,8)
+HuntAllCorner.Parent = HuntAllButton
 
--- ฟังก์ชันสร้างรายการ ID ที่บันทึก
-local function CreateSavedIdEntry(soundId, playerName)
-	if not table.find(SavedIds, soundId) then
-		table.insert(SavedIds, soundId)
-		local Entry = Instance.new("Frame")
-		Entry.Size = UDim2.new(1, -10, 0, 50)
-		Entry.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-		Entry.BorderSizePixel = 0
-		Entry.Parent = SavedIdsScroll
+local HuntAllGradient = Instance.new("UIGradient")
+HuntAllGradient.Color = ColorSequence.new{
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(120,200,120)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(80,160,80))
+}
+HuntAllGradient.Parent = HuntAllButton
 
-		local IdLabel = Instance.new("TextLabel")
-		IdLabel.Size = UDim2.new(0, 100, 0, 20)
-		IdLabel.Position = UDim2.new(0, 5, 0, 5)
-		IdLabel.BackgroundTransparency = 1
-		IdLabel.Text = soundId:gsub("rbxassetid://", "")
-		IdLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-		IdLabel.Font = Enum.Font.Gotham
-		IdLabel.TextXAlignment = Enum.TextXAlignment.Left
-		IdLabel.TextSize = 14
-		IdLabel.Parent = Entry
+-- === แถบ "จะเอาเสียงใคร" ===
+local HuntTitle = Instance.new("TextLabel")
+HuntTitle.Size = UDim2.new(1,-10,0,35)
+HuntTitle.BackgroundColor3 = Color3.fromRGB(50,70,100)
+HuntTitle.Text = "จะเอาเสียงใคร"
+HuntTitle.TextColor3 = Color3.fromRGB(255,255,120)
+HuntTitle.Font = Enum.Font.GothamBold
+HuntTitle.TextSize = 15
+HuntTitle.ZIndex = 12
+HuntTitle.Parent = RightBar
 
-		local PlayerLabel = Instance.new("TextLabel")
-		PlayerLabel.Size = UDim2.new(0, 100, 0, 20)
-		PlayerLabel.Position = UDim2.new(0, 5, 0, 25)
-		PlayerLabel.BackgroundTransparency = 1
-		PlayerLabel.Text = "จาก: " .. playerName
-		PlayerLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
-		PlayerLabel.Font = Enum.Font.Gotham
-		PlayerLabel.TextXAlignment = Enum.TextXAlignment.Left
-		PlayerLabel.TextSize = 12
-		PlayerLabel.Parent = Entry
+local HuntTitleCorner = Instance.new("UICorner")
+HuntTitleCorner.CornerRadius = UDim.new(0,6)
+HuntTitleCorner.Parent = HuntTitle
 
-		local CopyBtn = Instance.new("TextButton")
-		CopyBtn.Size = UDim2.new(0, 50, 0, 20)
-		CopyBtn.Position = UDim2.new(1, -55, 0.5, -10)
-		CopyBtn.Text = "คัดลอก"
-		CopyBtn.Font = Enum.Font.GothamBold
-		CopyBtn.TextSize = 12
-		CopyBtn.TextColor3 = Color3.new(1, 1, 1)
-		CopyBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
-		CopyBtn.Parent = Entry
+-- === ช่องค้นหา ===
+local SearchBox = Instance.new("TextBox")
+SearchBox.Size = UDim2.new(1,-10,0,35)
+SearchBox.BackgroundColor3 = Color3.fromRGB(40,40,60)
+SearchBox.PlaceholderText = "พิมพ์ชื่อ..."
+SearchBox.Text = ""
+SearchBox.TextColor3 = Color3.fromRGB(255,255,255)
+SearchBox.Font = Enum.Font.Gotham
+SearchBox.TextSize = 14
+SearchBox.ZIndex = 12
+SearchBox.Parent = RightBar
 
-		CopyBtn.MouseButton1Click:Connect(function()
-			local success, err = pcall(function()
-				setclipboard(soundId)
-			end)
-			if success then
-				CopyBtn.Text = "คัดลอกแล้ว!"
-				CopyBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-				task.wait(1)
-				CopyBtn.Text = "คัดลอก"
-				CopyBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
-			else
-				CopyBtn.Text = "ล้มเหลว!"
-				CopyBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-				task.wait(1)
-				CopyBtn.Text = "คัดลอก"
-				CopyBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
-			end
-		end)
+local SearchCorner = Instance.new("UICorner")
+SearchCorner.CornerRadius = UDim.new(0,6)
+SearchCorner.Parent = SearchBox
 
-		local function UpdateSavedIdsCanvasSize()
-			SavedIdsScroll.CanvasSize = UDim2.new(0, 0, 0, SavedIdsListLayout.AbsoluteContentSize.Y + 10)
-		end
-		SavedIdsListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(UpdateSavedIdsCanvasSize)
-		UpdateSavedIdsCanvasSize()
-	end
-end
+-- === Scroll ผู้เล่น ===
+local PlayerScroll = Instance.new("ScrollingFrame")
+PlayerScroll.Size = UDim2.new(1,-10,1,-180)
+PlayerScroll.Position = UDim2.new(0,5,0,140)
+PlayerScroll.BackgroundTransparency = 1
+PlayerScroll.ScrollBarThickness = 4
+PlayerScroll.CanvasSize = UDim2.new(0,0,0,0)
+PlayerScroll.ZIndex = 12
+PlayerScroll.Parent = RightBar
 
--- ฟังก์ชันสร้างข้อมูลเสียง
-local function CreateSoundEntry(plr, sound)
-	local soundId = tostring(sound.SoundId)
-	local playerName = plr.DisplayName or plr.Name
+local PlayerLayout = Instance.new("UIListLayout")
+PlayerLayout.Padding = UDim.new(0,4)
+PlayerLayout.Parent = PlayerScroll
 
-	-- บันทึก SoundId ลงช่องเก็บ ID โดยอัตโนมัติ
-	if not PlayerSoundHistory[plr.UserId] then
-		PlayerSoundHistory[plr.UserId] = {}
-	end
-	if not table.find(PlayerSoundHistory[plr.UserId], soundId) then
-		table.insert(PlayerSoundHistory[plr.UserId], soundId)
-		CreateSavedIdEntry(soundId, playerName)
-	end
+-- === ปุ่มดึงเสียงเกม ===
+local GameSoundToggle = Instance.new("TextButton")
+GameSoundToggle.Size = UDim2.new(1,-10,0,35)
+GameSoundToggle.BackgroundColor3 = Color3.fromRGB(70,120,70)
+GameSoundToggle.Text = "ดึงเสียงเกม: เปิด"
+GameSoundToggle.TextColor3 = Color3.fromRGB(255,255,255)
+GameSoundToggle.Font = Enum.Font.GothamBold
+GameSoundToggle.TextSize = 13
+GameSoundToggle.ZIndex = 12
+GameSoundToggle.Parent = RightBar
 
-	local Entry = Instance.new("Frame")
-	Entry.Size = UDim2.new(1, -10, 0, 70)
-	Entry.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-	Entry.BorderSizePixel = 0
-	Entry.Parent = ScrollingFrame
+local GameCorner = Instance.new("UICorner")
+GameCorner.CornerRadius = UDim.new(0,6)
+GameCorner.Parent = GameSoundToggle
+
+-- === ปุ่มเคลียร์ ===
+local ClearButton = Instance.new("TextButton")
+ClearButton.Size = UDim2.new(1,-10,0,35)
+ClearButton.BackgroundColor3 = Color3.fromRGB(180,50,50)
+ClearButton.Text = "เคลียร์ทั้งหมด"
+ClearButton.TextColor3 = Color3.fromRGB(255,255,255)
+ClearButton.Font = Enum.Font.GothamBold
+ClearButton.TextSize = 13
+ClearButton.ZIndex = 12
+ClearButton.Parent = RightBar
+
+local ClearCorner = Instance.new("UICorner")
+ClearCorner.CornerRadius = UDim.new(0,6)
+ClearCorner.Parent = ClearButton
+
+-- === ปุ่มลอย ===
+local FloatButton = Instance.new("TextButton")
+FloatButton.Size = UDim2.new(0,130,0,45)
+FloatButton.Position = UDim2.new(0.5,-65,0,15)
+FloatButton.BackgroundColor3 = Color3.fromRGB(60,60,90)
+FloatButton.Text = "เปิด GUI"
+FloatButton.TextColor3 = Color3.fromRGB(255,255,255)
+FloatButton.Font = Enum.Font.GothamBold
+FloatButton.TextSize = 14
+FloatButton.Visible = false
+FloatButton.ZIndex = 20
+FloatButton.Parent = ScreenGui
+FloatButton.Active = true
+FloatButton.Draggable = true
+
+local FloatCorner = Instance.new("UICorner")
+FloatCorner.CornerRadius = UDim.new(0,10)
+FloatCorner.Parent = FloatButton
+
+-- === ตัวแปร ===
+local CaptureGameSounds = true
+local LoggedSounds = {}
+local TargetPlayers = {}
+local PlayerRows = {}
+local HuntAllActive = false
+
+-- === ฟังก์ชันสร้างแถวผู้เล่น ===
+local function CreatePlayerRow(p)
+	if PlayerRows[p] or p == player then return end
+
+	local Row = Instance.new("Frame")
+	Row.Size = UDim2.new(1,0,0,48)
+	Row.BackgroundColor3 = Color3.fromRGB(45,45,65)
+	Row.ZIndex = 13
+	Row.Parent = PlayerScroll
+
+	local RowCorner = Instance.new("UICorner")
+	RowCorner.CornerRadius = UDim.new(0,6)
+	RowCorner.Parent = Row
 
 	local Avatar = Instance.new("ImageLabel")
-	Avatar.Size = UDim2.new(0, 60, 0, 60)
-	Avatar.Position = UDim2.new(0, 5, 0.5, -30)
+	Avatar.Size = UDim2.new(0,38,0,38)
+	Avatar.Position = UDim2.new(0,5,0.5,-19)
 	Avatar.BackgroundTransparency = 1
-	Avatar.Image = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. plr.UserId .. "&width=100&height=100"
-	Avatar.Parent = Entry
+	Avatar.Image = GetAvatarImage(p.UserId)
+	Avatar.ZIndex = 14
+	Avatar.Parent = Row
 
 	local NameLabel = Instance.new("TextLabel")
-	NameLabel.Size = UDim2.new(0, 150, 0, 25)
-	NameLabel.Position = UDim2.new(0, 70, 0, 5)
+	NameLabel.Size = UDim2.new(0.5,0,1,0)
+	NameLabel.Position = UDim2.new(0.2,0,0,0)
 	NameLabel.BackgroundTransparency = 1
-	NameLabel.Text = playerName
-	NameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-	NameLabel.Font = Enum.Font.GothamBold
+	NameLabel.Text = p.DisplayName
+	NameLabel.TextColor3 = Color3.fromRGB(220,220,255)
+	NameLabel.Font = Enum.Font.GothamSemibold
+	NameLabel.TextSize = 13
 	NameLabel.TextXAlignment = Enum.TextXAlignment.Left
-	NameLabel.TextSize = 16
-	NameLabel.Parent = Entry
+	NameLabel.ZIndex = 14
+	NameLabel.Parent = Row
 
-	local IDLabel = Instance.new("TextLabel")
-	IDLabel.Size = UDim2.new(0, 150, 0, 25)
-	IDLabel.Position = UDim2.new(0, 70, 0, 35)
-	IDLabel.BackgroundTransparency = 1
-	IDLabel.Text = soundId:gsub("rbxassetid://", "")
-	IDLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-	IDLabel.Font = Enum.Font.Gotham
-	IDLabel.TextXAlignment = Enum.TextXAlignment.Left
-	IDLabel.TextSize = 14
-	IDLabel.Parent = Entry
+	local HuntBtn = Instance.new("TextButton")
+	HuntBtn.Size = UDim2.new(0.28,0,0.65,0)
+	HuntBtn.Position = UDim2.new(0.7,0,0.175,0)
+	HuntBtn.BackgroundColor3 = Color3.fromRGB(70,120,70)
+	HuntBtn.Text = "ล่า"
+	HuntBtn.TextColor3 = Color3.fromRGB(255,255,255)
+	HuntBtn.Font = Enum.Font.GothamBold
+	HuntBtn.TextSize = 11
+	HuntBtn.ZIndex = 14
+	HuntBtn.Parent = Row
 
-	local CopyBtn = Instance.new("TextButton")
-	CopyBtn.Size = UDim2.new(0, 60, 0, 25)
-	CopyBtn.Position = UDim2.new(1, -130, 0.5, -12)
-	CopyBtn.Text = "คัดลอก"
-	CopyBtn.Font = Enum.Font.GothamBold
-	CopyBtn.TextSize = 14
-	CopyBtn.TextColor3 = Color3.new(1, 1, 1)
-	CopyBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
-	CopyBtn.Parent = Entry
+	local BtnCorner = Instance.new("UICorner")
+	BtnCorner.CornerRadius = UDim.new(0,5)
+	BtnCorner.Parent = HuntBtn
+
+	local isHunting = false
+	HuntBtn.MouseButton1Click:Connect(function()
+		isHunting = not isHunting
+		TargetPlayers[p] = isHunting or nil
+		HuntBtn.Text = isHunting and "หยุด" or "ล่า"
+		HuntBtn.BackgroundColor3 = isHunting and Color3.fromRGB(180,70,70) or Color3.fromRGB(70,120,70)
+	end)
+
+	PlayerRows[p] = {Row = Row, HuntBtn = HuntBtn}
+end
+
+-- === ปุ่มล่าเสียงทุกคน ===
+HuntAllButton.MouseButton1Click:Connect(function()
+	HuntAllActive = not HuntAllActive
+	HuntAllButton.Text = HuntAllActive and "หยุดล่าทั้งหมด" or "ล่าเสียงทุกคน"
+	HuntAllButton.BackgroundColor3 = HuntAllActive and Color3.fromRGB(180,70,70) or Color3.fromRGB(100,180,100)
+
+	for p, data in pairs(PlayerRows) do
+		local shouldHunt = HuntAllActive
+		TargetPlayers[p] = shouldHunt or nil
+		data.HuntBtn.Text = shouldHunt and "หยุด" or "ล่า"
+		data.HuntBtn.BackgroundColor3 = shouldHunt and Color3.fromRGB(180,70,70) or Color3.fromRGB(70,120,70)
+	end
+end)
+
+-- === ค้นหา ===
+SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
+	local query = SearchBox.Text:lower()
+	for p, data in pairs(PlayerRows) do
+		local matches = p.DisplayName:lower():find(query) or p.Name:lower():find(query)
+		data.Row.Visible = (query == "" or matches)
+	end
+end)
+
+-- === ดึง Avatar (ปลอดภัย) ===
+function GetAvatarImage(userId)
+	local success, content = pcall(function()
+		return Players:GetUserThumbnailAsync(userId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48)
+	end)
+	return success and content or ""
+end
+
+-- === เพิ่มผู้เล่น ===
+Players.PlayerAdded:Connect(CreatePlayerRow)
+Players.PlayerRemoving:Connect(function(p)
+	if PlayerRows[p] then
+		PlayerRows[p].Row:Destroy()
+		PlayerRows[p] = nil
+		TargetPlayers[p] = nil
+	end
+end)
+for _, p in pairs(Players:GetPlayers()) do
+	if p ~= player then CreatePlayerRow(p) end
+end
+
+-- === หาเจ้าของเสียง ===
+local function GetSoundOwner(sound)
+	for _, p in pairs(Players:GetPlayers()) do
+		if p.Character and sound:IsDescendantOf(p.Character) then
+			return p
+		end
+	end
+	return nil
+end
+
+-- === เพิ่มแถวเสียง ===
+local function AddSoundRow(sound, owner)
+	if not sound:IsA("Sound") or LoggedSounds[sound.SoundId] then return end
+	if not CaptureGameSounds and not owner then return end
+	if owner and not TargetPlayers[owner] and not HuntAllActive then return end
+
+	LoggedSounds[sound.SoundId] = true
+
+	local Row = Instance.new("Frame")
+	Row.Size = UDim2.new(1,-10,0,62)
+	Row.BackgroundColor3 = Color3.fromRGB(35,35,55)
+	Row.ZIndex = 12
+	Row.Parent = Scroll
+
+	local RowCorner = Instance.new("UICorner")
+	RowCorner.CornerRadius = UDim.new(0,8)
+	RowCorner.Parent = Row
+
+	local Avatar = Instance.new("ImageLabel")
+	Avatar.Size = UDim2.new(0,50,0,50)
+	Avatar.Position = UDim2.new(0,6,0.5,-25)
+	Avatar.BackgroundTransparency = 1
+	Avatar.Image = owner and GetAvatarImage(owner.UserId) or "rbxassetid://0"
+	Avatar.ZIndex = 13
+	Avatar.Parent = Row
+
+	local NameLabel = Instance.new("TextLabel")
+	NameLabel.Size = UDim2.new(0.48,0,1,0)
+	NameLabel.Position = UDim2.new(0.14,0,0,0)
+	NameLabel.BackgroundTransparency = 1
+	NameLabel.Text = owner and (owner.DisplayName.." "..sound.Name) or ("ระบบ: "..sound.Name)
+	NameLabel.TextColor3 = Color3.fromRGB(200,230,255)
+	NameLabel.Font = Enum.Font.GothamSemibold
+	NameLabel.TextSize = 13
+	NameLabel.TextXAlignment = Enum.TextXAlignment.Left
+	NameLabel.ZIndex = 13
+	NameLabel.Parent = Row
 
 	local PlayBtn = Instance.new("TextButton")
-	PlayBtn.Size = UDim2.new(0, 60, 0, 25)
-	PlayBtn.Position = UDim2.new(1, -65, 0.5, -12)
-	PlayBtn.Text = "ฟัง"
+	PlayBtn.Size = UDim2.new(0.14,0,0.75,0)
+	PlayBtn.Position = UDim2.new(0.63,0,0.125,0)
+	PlayBtn.BackgroundColor3 = Color3.fromRGB(70,120,180)
+	PlayBtn.Text = "Play"
+	PlayBtn.TextColor3 = Color3.fromRGB(255,255,255)
 	PlayBtn.Font = Enum.Font.GothamBold
-	PlayBtn.TextSize = 14
-	PlayBtn.TextColor3 = Color3.new(1, 1, 1)
-	PlayBtn.BackgroundColor3 = Color3.fromRGB(90, 130, 255)
-	PlayBtn.Parent = Entry
+	PlayBtn.TextSize = 12
+	PlayBtn.ZIndex = 13
+	PlayBtn.Parent = Row
 
-	local function UpdateCanvasSize()
-		ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 10)
-	end
-	UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(UpdateCanvasSize)
-	UpdateCanvasSize()
+	local PlayCorner = Instance.new("UICorner")
+	PlayCorner.CornerRadius = UDim.new(0,6)
+	PlayCorner.Parent = PlayBtn
+
+	local CopyBtn = Instance.new("TextButton")
+	CopyBtn.Size = UDim2.new(0.14,0,0.75,0)
+	CopyBtn.Position = UDim2.new(0.79,0,0.125,0)
+	CopyBtn.BackgroundColor3 = Color3.fromRGB(90,90,120)
+	CopyBtn.Text = "Copy"
+	CopyBtn.TextColor3 = Color3.fromRGB(255,255,255)
+	CopyBtn.Font = Enum.Font.GothamBold
+	CopyBtn.TextSize = 12
+	CopyBtn.ZIndex = 13
+	CopyBtn.Parent = Row
+
+	local CopyCorner = Instance.new("UICorner")
+	CopyCorner.CornerRadius = UDim.new(0,6)
+	CopyCorner.Parent = CopyBtn
+
+	local LocalSound = Instance.new("Sound")
+	LocalSound.SoundId = sound.SoundId
+	LocalSound.Volume = 1
+	LocalSound.Parent = workspace
+
+	local isPlaying = false
+	PlayBtn.MouseButton1Click:Connect(function()
+		if not isPlaying then
+			LocalSound:Play()
+			PlayBtn.Text = "Pause"
+			isPlaying = true
+		else
+			LocalSound:Stop()
+			PlayBtn.Text = "Play"
+			isPlaying = false
+		end
+	end)
 
 	CopyBtn.MouseButton1Click:Connect(function()
-		local success, err = pcall(function()
-			setclipboard(soundId)
-		end)
-		if success then
-			CopyBtn.Text = "คัดลอกแล้ว!"
-			CopyBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-			task.wait(1)
-			CopyBtn.Text = "คัดลอก"
-			CopyBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
-		else
-			CopyBtn.Text = "ล้มเหลว!"
-			CopyBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-			task.wait(1)
-			CopyBtn.Text = "คัดลอก"
-			CopyBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
-		end
-	end)
-
-	PlayBtn.MouseButton1Click:Connect(function()
-		if CurrentSound and CurrentPlayBtn and CurrentPlayBtn ~= PlayBtn then
-			CurrentSound:Stop()
-			CurrentPlayBtn.Text = "ฟัง"
-			CurrentPlayBtn.BackgroundColor3 = Color3.fromRGB(90, 130, 255)
-		end
-
-		if CurrentSound and CurrentPlayBtn == PlayBtn then
-			CurrentSound:Stop()
-			CurrentSound = nil
-			PlayBtn.Text = "ฟัง"
-			PlayBtn.BackgroundColor3 = Color3.fromRGB(90, 130, 255)
-			CurrentPlayBtn = nil
-		else
-			local success, newSound = pcall(function()
-				local sound = Instance.new("Sound")
-				sound.SoundId = soundId
-				sound.Volume = 1
-				sound.Looped = false
-				sound.Parent = workspace
-				return sound
-			end)
-			if success then
-				newSound:Play()
-				CurrentSound = newSound
-				CurrentPlayBtn = PlayBtn
-				PlayBtn.Text = "หยุด"
-				PlayBtn.BackgroundColor3 = Color3.fromRGB(255, 90, 90)
-				newSound.Ended:Connect(function()
-					if CurrentSound == newSound then
-						CurrentSound = nil
-						PlayBtn.Text = "ฟัง"
-						PlayBtn.BackgroundColor3 = Color3.fromRGB(90, 130, 255)
-						CurrentPlayBtn = nil
-					end
-				end)
-				game.Debris:AddItem(newSound, 60)
-			else
-				PlayBtn.Text = "ล้มเหลว!"
-				PlayBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-				task.wait(1)
-				PlayBtn.Text = "ฟัง"
-				PlayBtn.BackgroundColor3 = Color3.fromRGB(90, 130, 255)
-			end
-		end
+		setclipboard(sound.SoundId)
+		StarterGui:SetCore("SendNotification", {Title="คัดลอก!", Text=sound.SoundId, Duration=2})
 	end)
 end
 
--- ตรวจจับเสียงของทุกคน
-local function ScanBoomBoxes()
-	for _, child in ipairs(ScrollingFrame:GetChildren()) do
-		if child:IsA("Frame") then
-			child:Destroy()
-		end
-	end
-	for _, plr in ipairs(Players:GetPlayers()) do
-		local success, boombox = pcall(function()
-			return plr:FindFirstChild("BoomBox") or (plr.Character and plr.Character:FindFirstChild("BoomBox"))
-		end)
-		if success and boombox then
-			local sound = boombox:FindFirstChild("Handle") and boombox.Handle:FindFirstChild("Sound")
-			if sound then
-				CreateSoundEntry(plr, sound)
+-- === Queue เสียง ===
+local soundQueue = {}
+local processing = false
+local function ProcessQueue()
+	if processing then return end
+	processing = true
+	while #soundQueue > 0 do
+		local s = table.remove(soundQueue,1)
+		local owner = GetSoundOwner(s)
+		if not LoggedSounds[s.SoundId] then
+			if CaptureGameSounds or (owner and (TargetPlayers[owner] or HuntAllActive)) then
+				AddSoundRow(s, owner)
 			end
 		end
+		task.wait(0.03)
 	end
+	processing = false
 end
 
--- อัพเดตทุก 5 วิ
-spawn(function()
-	while true do
-		local success, err = pcall(ScanBoomBoxes)
-		if not success then
-			warn("⚠️ การสแกน BoomBox ล้มเหลว: " .. tostring(err))
-		end
-		task.wait(5)
+workspace.DescendantAdded:Connect(function(obj)
+	if obj:IsA("Sound") then
+		table.insert(soundQueue, obj)
+		ProcessQueue()
 	end
+end)
+
+for _, obj in pairs(workspace:GetDescendants()) do
+	if obj:IsA("Sound") then table.insert(soundQueue, obj) end
+end
+ProcessQueue()
+
+-- === ปุ่มต่าง ๆ ===
+GameSoundToggle.MouseButton1Click:Connect(function()
+	CaptureGameSounds = not CaptureGameSounds
+	GameSoundToggle.Text = CaptureGameSounds and "ดึงเสียงเกม: เปิด" or "ดึงเสียงเกม: ปิด"
+	GameSoundToggle.BackgroundColor3 = CaptureGameSounds and Color3.fromRGB(70,120,70) or Color3.fromRGB(120,70,70)
+end)
+
+ClearButton.MouseButton1Click:Connect(function()
+	for _, child in pairs(Scroll:GetChildren()) do
+		if child:IsA("Frame") then child:Destroy() end
+	end
+	LoggedSounds = {}
+end)
+
+local visible = true
+ToggleButton.MouseButton1Click:Connect(function()
+	visible = not visible
+	MainFrame.Visible = visible
+	ToggleButton.Text = visible and "ซ่อน" or "เปิด"
+	FloatButton.Visible = not visible
+end)
+
+FloatButton.MouseButton1Click:Connect(function()
+	MainFrame.Visible = true
+	FloatButton.Visible = false
+	ToggleButton.Text = "ซ่อน"
+	visible = true
+end)
+
+-- === ป้องกัน GUI หาย ===
+player.CharacterAdded:Connect(function()
+	task.wait(1)
+	if not player.PlayerGui:FindFirstChild("SoundLoggerV6_1") then
+		ScreenGui.Parent = player:WaitForChild("PlayerGui")
+	end
+end)
+
+-- === อัปเดต Canvas ===
+UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+	Scroll.CanvasSize = UDim2.new(0,0,0,UIListLayout.AbsoluteContentSize.Y + 10)
+end)
+
+PlayerLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+	PlayerScroll.CanvasSize = UDim2.new(0,0,0,PlayerLayout.AbsoluteContentSize.Y + 10)
 end)
