@@ -1,22 +1,22 @@
--- // TOU HUB v18 FINAL - FARM 100% WORKING + WARP 11 JUMPS 💰🌌🚀🔥😈
--- คัดลอกทั้งหมด → รันใน Executor → กด LeftControl → ฟาร์ม + วาป ทำงานทันที!
--- URL ใหม่จากคุณ — ฟาร์มโหด ไม่มีตาย!
+-- // TOU HUB v20 FINAL - CITY THAILAND 2 EXPLOIT HUB 💰🇹🇭🌌🚀👻
+-- คัดลอกทั้งหมด → รันใน Executor → กด LeftControl → ฟาร์มเงียบ + วาป City Thailand 2!
+-- URL ใหม่จากคุณ — ล่องหน 100% ไม่มี Notify รัว!
 
 local NothingLibrary = loadstring(game:HttpGetAsync('https://raw.githubusercontent.com/3345-c-a-t-s-u-s/NOTHING/main/source.lua'))()
 local Notify = NothingLibrary.Notification()
 
--- แจ้งเตือนโหลด
+-- แจ้งเตือนโหลด (ครั้งเดียว)
 Notify.new({
-	Title = "🔥 TOU HUB v18 LOADED 😈",
-	Description = "ฟาร์ม + กล่อง + ยา + วาป 11 จุด ทำงาน 100%! URL ใหม่!",
-	Duration = 6,
+	Title = "🔥 TOU HUB v20 LOADED 🇹🇭",
+	Description = "City Thailand 2 — ฟาร์มเงียบ + วาป 11 จุดไทยลับ!",
+	Duration = 5,
 	Icon = "rbxassetid://8997385628"
 })
 
 -- หน้าต่างหลัก
 local Windows = NothingLibrary.new({
 	Title = "TOU HUB",
-	Description = "Da Hood Exploit Hub — ฟาร์มโหด + วาปลับ",
+	Description = "City Thailand 2 Exploit Hub — ล่องหน 100%",
 	Keybind = Enum.KeyCode.LeftControl,
 	Logo = 'http://www.roblox.com/asset/?id=18898582662'
 })
@@ -24,7 +24,7 @@ local Windows = NothingLibrary.new({
 -- ====================== แท็บ Farm ======================
 local FarmTab = Windows:NewTab({
 	Title = "💰 Farm",
-	Description = "ฟาร์มเงิน + กล่อง + ยา (รันจริง!)",
+	Description = "ฟาร์ม Sell + กล่อง + ยา (City Thailand 2 ล่องหน)",
 	Icon = "rbxassetid://7733960981"
 })
 
@@ -46,26 +46,21 @@ local InfoSec = FarmTab:NewSection({
 	Position = "Right"
 })
 
--- ====================== URL ใหม่ (จากคุณ!) ======================
+-- ====================== URL สำหรับ City Thailand 2 ======================
 local URL_FARM = "https://raw.githubusercontent.com/TOUx1/Roblox-script/refs/heads/main/Sell"
 local URL_BOX  = "https://pastefy.app/VaHDLWjU/raw"
 local URL_MED  = "https://pastefy.app/ji38FSCI/raw"
 
--- ฟังก์ชันรัน Script ปลอดภัย
-local function SafeLoad(url, name)
+-- ฟังก์ชันรันเงียบ (ลบ Notify รัว ๆ!)
+local function SilentLoad(url)
 	task.spawn(function()
-		local success, err = pcall(function()
+		pcall(function()
 			loadstring(game:HttpGet(url))()
 		end)
-		if not success then
-			Notify.new({Title="⚠️ "..name.." ล้มเหลว", Description="URL ตายหรือ Error", Duration=4, Icon="rbxassetid://7733993369"})
-		else
-			Notify.new({Title="✅ "..name.." รันแล้ว!", Description="ทำงาน!", Duration=2})
-		end
 	end)
 end
 
--- ====================== Toggle ฟาร์มทั้ง 3 (รันจริง!) ======================
+-- ====================== Toggle ฟาร์ม (เงียบสนิท!) ======================
 local FarmLoop = nil; local IsFarming = false
 LeftSec:NewToggle({
 	Title = "⚡ Auto farm(ซื้อบ้านก่อน)(ปิง)",
@@ -73,17 +68,17 @@ LeftSec:NewToggle({
 	Callback = function(state)
 		if state then
 			IsFarming = true
-			Notify.new({Title="🚀 FARM ON", Description="ซื้อบ้านก่อน! ฟาร์มทุก 0.05s", Duration=3})
-			SafeLoad(URL_FARM, "Auto Farm")
+			Notify.new({Title="🚀 FARM ON", Description="ฟาร์ม Sell ทุก 0.05s (City Thailand 2)", Duration=2})
+			SilentLoad(URL_FARM)
 			FarmLoop = game:GetService("RunService").Heartbeat:Connect(function()
 				if not IsFarming then return end
-				SafeLoad(URL_FARM, "Auto Farm")
+				SilentLoad(URL_FARM)
 				task.wait(0.05)
 			end)
 		else
 			IsFarming = false
 			if FarmLoop then FarmLoop:Disconnect() FarmLoop = nil end
-			Notify.new({Title="🛑 FARM OFF", Description="หยุดทันที", Duration=3})
+			Notify.new({Title="🛑 FARM OFF", Description="หยุด!", Duration=2})
 		end
 	end,
 })
@@ -95,18 +90,18 @@ LeftSec:NewToggle({
 	Callback = function(state)
 		if state then
 			IsSendingBox = true
-			Notify.new({Title="📦 BOX ON", Description="ส่งทุก 15s", Duration=3})
-			SafeLoad(URL_BOX, "ส่งกล่อง")
+			Notify.new({Title="📦 BOX ON", Description="ส่งทุก 15s (City Thailand 2)", Duration=2})
+			SilentLoad(URL_BOX)
 			task.spawn(function()
 				while IsSendingBox do
 					task.wait(15)
 					if not IsSendingBox then break end
-					SafeLoad(URL_BOX, "ส่งกล่อง")
+					SilentLoad(URL_BOX)
 				end
 			end)
 		else
 			IsSendingBox = false
-			Notify.new({Title="🛑 BOX OFF", Description="หยุดส่ง!", Duration=3})
+			Notify.new({Title="🛑 BOX OFF", Description="หยุด!", Duration=2})
 		end
 	end,
 })
@@ -118,18 +113,18 @@ LeftSec:NewToggle({
 	Callback = function(state)
 		if state then
 			IsMedicine = true
-			Notify.new({Title="💊 MEDICINE ON", Description="จ่ายทุก 1s (อาจแล็ค)", Duration=3})
-			SafeLoad(URL_MED, "จ่ายยา")
+			Notify.new({Title="💊 MEDICINE ON", Description="จ่ายทุก 1s (City Thailand 2)", Duration=2})
+			SilentLoad(URL_MED)
 			task.spawn(function()
 				while IsMedicine do
 					task.wait(1)
 					if not IsMedicine then break end
-					SafeLoad(URL_MED, "จ่ายยา")
+					SilentLoad(URL_MED)
 				end
 			end)
 		else
 			IsMedicine = false
-			Notify.new({Title="🛑 MEDICINE OFF", Description="หยุดจ่าย!", Duration=3})
+			Notify.new({Title="🛑 MEDICINE OFF", Description="หยุด!", Duration=2})
 		end
 	end,
 })
@@ -172,19 +167,19 @@ RightSec:NewKeybind({
 })
 
 -- ====================== Info ======================
-InfoSec:NewTitle("👑 TOU HUB v18 😈")
+InfoSec:NewTitle("👑 TOU HUB v20 🇹🇭 City Thailand 2")
 InfoSec:NewButton({
 	Title = "📱 Discord (แท้)",
 	Callback = function()
 		setclipboard("https://discord.gg/cj93WrHEaf")
-		Notify.new({Title="📋 คัดลอกแล้ว!", Description="https://discord.gg/cj93WrHEaf", Duration=4})
+		Notify.new({Title="📋 คัดลอกแล้ว!", Description="https://discord.gg/cj93WrHEaf", Duration=3})
 	end,
 })
 
--- ====================== แท็บ วาปไปทีต่างๆ ======================
+-- ====================== แท็บ วาป City Thailand 2 ======================
 local WarpTab = Windows:NewTab({
 	Title = "🌌 วาปไปทีต่างๆ",
-	Description = "Da Hood วาปด่วน 11 จุดลับ!",
+	Description = "City Thailand 2 วาป 11 จุดไทยลับ!",
 	Icon = "rbxassetid://7743866277"
 })
 
@@ -194,7 +189,7 @@ local WarpQuick = WarpTab:NewSection({
 	Position = "Left"
 })
 
--- ฟังก์ชันวาปปลอดภัย
+-- ฟังก์ชันวาป (Noclip ชั่วคราว Anti-TP)
 local function TeleportTo(pos, desc)
 	local char = game.Players.LocalPlayer.Character
 	if char and char:FindFirstChild("HumanoidRootPart") then
@@ -209,13 +204,13 @@ local function TeleportTo(pos, desc)
 		char.HumanoidRootPart.CFrame = CFrame.new(pos)
 		task.wait(0.4)
 		for p, c in pairs(old) do if p and p.Parent then p.CanCollide = c end end
-		Notify.new({Title="🚀 วาปแล้ว!", Description=desc, Duration=2})
+		Notify.new({Title="🚀 วาปแล้ว!", Description=desc, Duration=1.5})
 	else
 		Notify.new({Title="❌ Error", Description="Respawn ก่อน!", Duration=2})
 	end
 end
 
--- วาป 11 จุด
+-- วาป 11 จุด City Thailand 2 (Vector3 จากคุณ!)
 local warps = {
 	{"👮‍♂️ วาปไปสถานีตำรวจ", Vector3.new(173.66, 177.31, 248.56), "สถานีตำรวจ"},
 	{"🏠 วาปไปบ้าน", Vector3.new(251.54, 167.46, 104.53), "บ้าน"},
