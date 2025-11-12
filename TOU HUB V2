@@ -1,57 +1,80 @@
--- // TOU HUB v20 FINAL - CITY THAILAND 2 EXPLOIT HUB 💰🇹🇭🌌🚀👻
--- คัดลอกทั้งหมด → รันใน Executor → กด LeftControl → ฟาร์มเงียบ + วาป City Thailand 2!
--- URL ใหม่จากคุณ — ล่องหน 100% ไม่มี Notify รัว!
+-- // TOU HUB v26 FINAL - CITY THAILAND 2 ULTIMATE FULL SCRIPT 💰🇹🇭🌈🎵⚙️🚪🚀👻🛠️
+-- คัดลอกทั้งหมด → รันใน Executor → กด LeftControl → ครบทุกฟีเจอร์ + ไม่ Error!
+-- ฟาร์ม + วาป + ลำโพง + ตั้งค่า + ย้ายเซิร์ฟ + Anti-Humanoid Error 100%
 
 local NothingLibrary = loadstring(game:HttpGetAsync('https://raw.githubusercontent.com/3345-c-a-t-s-u-s/NOTHING/main/source.lua'))()
 local Notify = NothingLibrary.Notification()
 
--- แจ้งเตือนโหลด (ครั้งเดียว)
-Notify.new({
-	Title = "🔥 TOU HUB v20 LOADED 🇹🇭",
-	Description = "City Thailand 2 — ฟาร์มเงียบ + วาป 11 จุดไทยลับ!",
-	Duration = 5,
+-- ตัวแปรควบคุม Notify
+local NotifyEnabled = true
+
+-- ฟังก์ชัน Notify ปลอดภัย
+local function SafeNotify(data)
+	if NotifyEnabled then
+		Notify.new(data)
+	end
+end
+
+-- แจ้งเตือนโหลด
+SafeNotify({
+	Title = "🔥 TOU HUB v26 LOADED 🛠️",
+	Description = "City Thailand 2 — ฟาร์ม + วาป + ลำโพง + ตั้งค่า + ไม่ Error!",
+	Duration = 6,
 	Icon = "rbxassetid://8997385628"
 })
 
 -- หน้าต่างหลัก
 local Windows = NothingLibrary.new({
 	Title = "TOU HUB",
-	Description = "City Thailand 2 Exploit Hub — ล่องหน 100%",
+	Description = "City Thailand 2 — ครองเมืองด้วยเงา",
 	Keybind = Enum.KeyCode.LeftControl,
 	Logo = 'http://www.roblox.com/asset/?id=18898582662'
 })
 
+-- ====================== ฟังก์ชันดึง Character ปลอดภัย ======================
+local function GetHumanoid()
+	local player = game.Players.LocalPlayer
+	local char = player.Character or player.CharacterAdded:Wait()
+	return char:WaitForChild("Humanoid", 10)
+end
+
+local function GetRootPart()
+	local player = game.Players.LocalPlayer
+	local char = player.Character or player.CharacterAdded:Wait()
+	return char:WaitForChild("HumanoidRootPart", 10)
+end
+
 -- ====================== แท็บ Farm ======================
 local FarmTab = Windows:NewTab({
 	Title = "💰 Farm",
-	Description = "ฟาร์ม Sell + กล่อง + ยา (City Thailand 2 ล่องหน)",
+	Description = "ฟาร์ม Sell + กล่อง + ยา (ล่องหน)",
 	Icon = "rbxassetid://7733960981"
 })
 
-local LeftSec = FarmTab:NewSection({
+local FarmLeft = FarmTab:NewSection({
 	Title = "💸 อ้อโต้ฟามเงิน",
 	Icon = "rbxassetid://7743869054",
 	Position = "Left"
 })
 
-local RightSec = FarmTab:NewSection({
+local FarmRight = FarmTab:NewSection({
 	Title = "⚙️ การตั้งค่า",
 	Icon = "rbxassetid://7733993369",
 	Position = "Right"
 })
 
-local InfoSec = FarmTab:NewSection({
+local FarmInfo = FarmTab:NewSection({
 	Title = "ℹ️ Info",
 	Icon = "rbxassetid://7733964719",
 	Position = "Right"
 })
 
--- ====================== URL สำหรับ City Thailand 2 ======================
+-- URL ฟาร์ม
 local URL_FARM = "https://raw.githubusercontent.com/TOUx1/Roblox-script/refs/heads/main/Sell"
 local URL_BOX  = "https://pastefy.app/VaHDLWjU/raw"
 local URL_MED  = "https://pastefy.app/ji38FSCI/raw"
 
--- ฟังก์ชันรันเงียบ (ลบ Notify รัว ๆ!)
+-- ฟังก์ชันรันเงียบ
 local function SilentLoad(url)
 	task.spawn(function()
 		pcall(function()
@@ -60,15 +83,15 @@ local function SilentLoad(url)
 	end)
 end
 
--- ====================== Toggle ฟาร์ม (เงียบสนิท!) ======================
+-- Toggle ฟาร์ม Sell
 local FarmLoop = nil; local IsFarming = false
-LeftSec:NewToggle({
+FarmLeft:NewToggle({
 	Title = "⚡ Auto farm(ซื้อบ้านก่อน)(ปิง)",
 	Default = false,
 	Callback = function(state)
 		if state then
 			IsFarming = true
-			Notify.new({Title="🚀 FARM ON", Description="ฟาร์ม Sell ทุก 0.05s (City Thailand 2)", Duration=2})
+			SafeNotify({Title="🚀 FARM ON", Description="Sell ทุก 0.05s", Duration=2})
 			SilentLoad(URL_FARM)
 			FarmLoop = game:GetService("RunService").Heartbeat:Connect(function()
 				if not IsFarming then return end
@@ -78,19 +101,20 @@ LeftSec:NewToggle({
 		else
 			IsFarming = false
 			if FarmLoop then FarmLoop:Disconnect() FarmLoop = nil end
-			Notify.new({Title="🛑 FARM OFF", Description="หยุด!", Duration=2})
+			SafeNotify({Title="🛑 FARM OFF", Description="หยุด!", Duration=2})
 		end
 	end,
 })
 
+-- Toggle ส่งกล่อง
 local IsSendingBox = false
-LeftSec:NewToggle({
+FarmLeft:NewToggle({
 	Title = "📦 อ้อโต้ส่งกล่อง (ช้า)",
 	Default = false,
 	Callback = function(state)
 		if state then
 			IsSendingBox = true
-			Notify.new({Title="📦 BOX ON", Description="ส่งทุก 15s (City Thailand 2)", Duration=2})
+			SafeNotify({Title="📦 BOX ON", Description="ทุก 15s", Duration=2})
 			SilentLoad(URL_BOX)
 			task.spawn(function()
 				while IsSendingBox do
@@ -101,19 +125,20 @@ LeftSec:NewToggle({
 			end)
 		else
 			IsSendingBox = false
-			Notify.new({Title="🛑 BOX OFF", Description="หยุด!", Duration=2})
+			SafeNotify({Title="🛑 BOX OFF", Description="หยุด!", Duration=2})
 		end
 	end,
 })
 
+-- Toggle จ่ายยา
 local IsMedicine = false
-LeftSec:NewToggle({
+FarmLeft:NewToggle({
 	Title = "💊 อ้อโต้จ่ายยา(แล็ค)(ช้า)",
 	Default = false,
 	Callback = function(state)
 		if state then
 			IsMedicine = true
-			Notify.new({Title="💊 MEDICINE ON", Description="จ่ายทุก 1s (City Thailand 2)", Duration=2})
+			SafeNotify({Title="💊 MEDICINE ON", Description="ทุก 1s", Duration=2})
 			SilentLoad(URL_MED)
 			task.spawn(function()
 				while IsMedicine do
@@ -124,39 +149,41 @@ LeftSec:NewToggle({
 			end)
 		else
 			IsMedicine = false
-			Notify.new({Title="🛑 MEDICINE OFF", Description="หยุด!", Duration=2})
+			SafeNotify({Title="🛑 MEDICINE OFF", Description="หยุด!", Duration=2})
 		end
 	end,
 })
 
--- ====================== การตั้งค่า ======================
-RightSec:NewSlider({
+-- Slider WalkSpeed
+FarmRight:NewSlider({
 	Title = "🏃 WalkSpeed", Min = 16, Max = 300, Default = 16,
 	Callback = function(v)
-		local h = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
-		if h then h.WalkSpeed = v end
+		local hum = GetHumanoid()
+		if hum then hum.WalkSpeed = v end
 	end,
 })
 
-RightSec:NewSlider({
+-- Slider JumpPower
+FarmRight:NewSlider({
 	Title = "🦘 JumpPower", Min = 50, Max = 500, Default = 50,
 	Callback = function(v)
-		local h = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
-		if h then h.JumpPower = v end
+		local hum = GetHumanoid()
+		if hum then hum.JumpPower = v end
 	end,
 })
 
-RightSec:NewKeybind({
+-- Keybind Noclip
+FarmRight:NewKeybind({
 	Title = "🔥 Noclip (Hold)", Default = Enum.KeyCode.N,
 	Callback = function()
 		local noclip = false
 		local conn
 		conn = game:GetService("RunService").Stepped:Connect(function()
 			if not noclip then conn:Disconnect() return end
-			local char = game.Players.LocalPlayer.Character
-			if char then
-				for _, part in pairs(char:GetDescendants()) do
-					if part:IsA("BasePart") and part ~= char:FindFirstChild("HumanoidRootPart") then
+			local root = GetRootPart()
+			if root and root.Parent then
+				for _, part in pairs(root.Parent:GetDescendants()) do
+					if part:IsA("BasePart") and part ~= root then
 						part.CanCollide = false
 					end
 				end
@@ -166,20 +193,20 @@ RightSec:NewKeybind({
 	end,
 })
 
--- ====================== Info ======================
-InfoSec:NewTitle("👑 TOU HUB v20 🇹🇭 City Thailand 2")
-InfoSec:NewButton({
+-- Info + Discord
+FarmInfo:NewTitle("👑 TOU HUB v26 🇹🇭")
+FarmInfo:NewButton({
 	Title = "📱 Discord (แท้)",
 	Callback = function()
 		setclipboard("https://discord.gg/cj93WrHEaf")
-		Notify.new({Title="📋 คัดลอกแล้ว!", Description="https://discord.gg/cj93WrHEaf", Duration=3})
+		SafeNotify({Title="📋 คัดลอกแล้ว!", Description="https://discord.gg/cj93WrHEaf", Duration=3})
 	end,
 })
 
--- ====================== แท็บ วาป City Thailand 2 ======================
+-- ====================== แท็บ วาป ======================
 local WarpTab = Windows:NewTab({
 	Title = "🌌 วาปไปทีต่างๆ",
-	Description = "City Thailand 2 วาป 11 จุดไทยลับ!",
+	Description = "City Thailand 2 วาป 11 จุดลับ!",
 	Icon = "rbxassetid://7743866277"
 })
 
@@ -189,28 +216,26 @@ local WarpQuick = WarpTab:NewSection({
 	Position = "Left"
 })
 
--- ฟังก์ชันวาป (Noclip ชั่วคราว Anti-TP)
 local function TeleportTo(pos, desc)
-	local char = game.Players.LocalPlayer.Character
-	if char and char:FindFirstChild("HumanoidRootPart") then
+	local root = GetRootPart()
+	if root then
 		local old = {}
-		for _, p in pairs(char:GetDescendants()) do
-			if p:IsA("BasePart") and p ~= char.HumanoidRootPart then
+		for _, p in pairs(root.Parent:GetDescendants()) do
+			if p:IsA("BasePart") and p ~= root then
 				old[p] = p.CanCollide
 				p.CanCollide = false
 			end
 		end
 		task.wait(0.1)
-		char.HumanoidRootPart.CFrame = CFrame.new(pos)
+		root.CFrame = CFrame.new(pos)
 		task.wait(0.4)
 		for p, c in pairs(old) do if p and p.Parent then p.CanCollide = c end end
-		Notify.new({Title="🚀 วาปแล้ว!", Description=desc, Duration=1.5})
+		SafeNotify({Title="🚀 วาปแล้ว!", Description=desc, Duration=1.5})
 	else
-		Notify.new({Title="❌ Error", Description="Respawn ก่อน!", Duration=2})
+		SafeNotify({Title="❌ Error", Description="รอตัวละครโหลด!", Duration=2})
 	end
 end
 
--- วาป 11 จุด City Thailand 2 (Vector3 จากคุณ!)
 local warps = {
 	{"👮‍♂️ วาปไปสถานีตำรวจ", Vector3.new(173.66, 177.31, 248.56), "สถานีตำรวจ"},
 	{"🏠 วาปไปบ้าน", Vector3.new(251.54, 167.46, 104.53), "บ้าน"},
@@ -231,3 +256,159 @@ for _, w in ipairs(warps) do
 		Callback = function() TeleportTo(w[2], w[3]) end
 	})
 end
+
+-- ====================== แท็บ ปรับสีลำโพง ======================
+local SpeakerTab = Windows:NewTab({
+	Title = "🎵 ปรับสีลำโพง",
+	Description = "Loop สีลำโพง DRadio_Script ดิสโก้!",
+	Icon = "rbxassetid://7733993369"
+})
+
+local SpeakerLeft = SpeakerTab:NewSection({
+	Title = "🎨 เลือกสี Loop",
+	Icon = "rbxassetid://7743869054",
+	Position = "Left"
+})
+
+local SpeakerRight = SpeakerTab:NewSection({
+	Title = "⚙️ ควบคุม Loop",
+	Icon = "rbxassetid://7733964719",
+	Position = "Right"
+})
+
+local Colors = {
+	{ name = "สีฟ้า", id = 1013 },
+	{ name = "สีแดง", id = 331 },
+	{ name = "สีเขียว", id = 1020 },
+	{ name = "สีชมพูเค็ม", id = 1016 },
+	{ name = "สีเหลือง", id = 1009 },
+	{ name = "สีส้ม", id = 106 },
+	{ name = "สีม่วง", id = 1015 },
+	{ name = "สีชมพูอ่อน", id = 330 },
+	{ name = "สีขาว", id = 1001 },
+	{ name = "สีเทา", id = 302 },
+	{ name = "สีดำ", id = 1003 }
+}
+
+local ColorLoop = nil
+local IsColorLooping = false
+local SelectedColors = {1, 2}
+local LoopSpeed = 0.5
+
+SpeakerLeft:NewDropdown({
+	Title = "🎨 สีที่ 1",
+	Data = {"สีฟ้า", "สีแดง", "สีเขียว", "สีชมพูเค็ม", "สีเหลือง", "สีส้ม", "สีม่วง", "สีชมพูอ่อน", "สีขาว", "สีเทา", "สีดำ"},
+	Default = "สีฟ้า",
+	Callback = function(selected)
+		for i, c in ipairs(Colors) do
+			if c.name == selected then SelectedColors[1] = i break end
+		end
+	end,
+})
+
+SpeakerLeft:NewDropdown({
+	Title = "🎨 สีที่ 2",
+	Data = {"สีฟ้า", "สีแดง", "สีเขียว", "สีชมพูเค็ม", "สีเหลือง", "สีส้ม", "สีม่วง", "สีชมพูอ่อน", "สีขาว", "สีเทา", "สีดำ"},
+	Default = "สีแดง",
+	Callback = function(selected)
+		for i, c in ipairs(Colors) do
+			if c.name == selected then SelectedColors[2] = i break end
+		end
+	end,
+})
+
+SpeakerRight:NewSlider({
+	Title = "⚡ ความเร็ว Loop (วินาที)",
+	Min = 0.1, Max = 5, Default = 0.5,
+	Callback = function(speed)
+		LoopSpeed = speed
+	end,
+})
+
+SpeakerRight:NewToggle({
+	Title = "▶️ เริ่ม/หยุด Loop สี",
+	Default = false,
+	Callback = function(state)
+		if state then
+			IsColorLooping = true
+			SafeNotify({Title="🌈 LOOP ON", Description="ลำโพงดิสโก้!", Duration=2})
+			ColorLoop = task.spawn(function()
+				while IsColorLooping do
+					local args1 = { BrickColor.new(Colors[SelectedColors[1]].id) }
+					pcall(function()
+						workspace:WaitForChild("DRadio_Script"):WaitForChild("Color"):FireServer(unpack(args1))
+					end)
+					task.wait(LoopSpeed)
+					local args2 = { BrickColor.new(Colors[SelectedColors[2]].id) }
+					pcall(function()
+						workspace:WaitForChild("DRadio_Script"):WaitForChild("Color"):FireServer(unpack(args2))
+					end)
+					task.wait(LoopSpeed)
+				end
+			end)
+		else
+			IsColorLooping = false
+			if ColorLoop then task.cancel(ColorLoop) ColorLoop = nil end
+			SafeNotify({Title="⏹️ LOOP OFF", Description="หยุด!", Duration=2})
+		end
+	end,
+})
+
+SpeakerRight:NewButton({
+	Title = "🧪 ทดสอบสีที่ 1",
+	Callback = function()
+		local args = { BrickColor.new(Colors[SelectedColors[1]].id) }
+		pcall(function()
+			workspace:WaitForChild("DRadio_Script"):WaitForChild("Color"):FireServer(unpack(args))
+		end)
+		SafeNotify({Title="🧪 ทดสอบ!", Description="สีที่ 1", Duration=1.5})
+	end,
+})
+
+-- ====================== แท็บ การตั้งค่า ======================
+local SettingsTab = Windows:NewTab({
+	Title = "⚙️ การตั้งค่า",
+	Description = "ควบคุม Notify + ย้ายเซิร์ฟ",
+	Icon = "rbxassetid://7733993369"
+})
+
+local SettingsSec = SettingsTab:NewSection({
+	Title = "🔔 การแจ้งเตือน",
+	Icon = "rbxassetid://7743869054",
+	Position = "Left"
+})
+
+local ServerSec = SettingsTab:NewSection({
+	Title = "🚪 เซิร์ฟเวอร์",
+	Icon = "rbxassetid://7733964719",
+	Position = "Right"
+})
+
+SettingsSec:NewToggle({
+	Title = "🔔 เปิด/ปิดการแจ้งเตือน",
+	Default = true,
+	Callback = function(state)
+		NotifyEnabled = state
+		SafeNotify({
+			Title = state and "🔔 Notify ON" or "🔕 Notify OFF",
+			Description = state and "แจ้งเตือนเปิด" or "แจ้งเตือนปิด",
+			Duration = 2
+		})
+	end,
+})
+
+ServerSec:NewButton({
+	Title = "🚪 ย้ายไปเซิร์ฟใหม่",
+	Callback = function()
+		SafeNotify({Title="🚪 กำลังย้าย...", Description="หาเซิร์ฟใหม่...", Duration=3})
+		game:GetService("TeleportService"):Teleport(game.PlaceId, game.Players.LocalPlayer)
+	end,
+})
+
+ServerSec:NewButton({
+	Title = "🔄 ย้าย + รีโหลด (ถ้าติด)",
+	Callback = function()
+		SafeNotify({Title="🔄 รีโหลด...", Description="รีสตาร์ทเซิร์ฟ...", Duration=3})
+		game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, game.Players.LocalPlayer)
+	end,
+})
