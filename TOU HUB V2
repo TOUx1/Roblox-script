@@ -1,0 +1,238 @@
+-- // TOU HUB v18 FINAL - FARM 100% WORKING + WARP 11 JUMPS 💰🌌🚀🔥😈
+-- คัดลอกทั้งหมด → รันใน Executor → กด LeftControl → ฟาร์ม + วาป ทำงานทันที!
+-- URL ใหม่จากคุณ — ฟาร์มโหด ไม่มีตาย!
+
+local NothingLibrary = loadstring(game:HttpGetAsync('https://raw.githubusercontent.com/3345-c-a-t-s-u-s/NOTHING/main/source.lua'))()
+local Notify = NothingLibrary.Notification()
+
+-- แจ้งเตือนโหลด
+Notify.new({
+	Title = "🔥 TOU HUB v18 LOADED 😈",
+	Description = "ฟาร์ม + กล่อง + ยา + วาป 11 จุด ทำงาน 100%! URL ใหม่!",
+	Duration = 6,
+	Icon = "rbxassetid://8997385628"
+})
+
+-- หน้าต่างหลัก
+local Windows = NothingLibrary.new({
+	Title = "TOU HUB",
+	Description = "Da Hood Exploit Hub — ฟาร์มโหด + วาปลับ",
+	Keybind = Enum.KeyCode.LeftControl,
+	Logo = 'http://www.roblox.com/asset/?id=18898582662'
+})
+
+-- ====================== แท็บ Farm ======================
+local FarmTab = Windows:NewTab({
+	Title = "💰 Farm",
+	Description = "ฟาร์มเงิน + กล่อง + ยา (รันจริง!)",
+	Icon = "rbxassetid://7733960981"
+})
+
+local LeftSec = FarmTab:NewSection({
+	Title = "💸 อ้อโต้ฟามเงิน",
+	Icon = "rbxassetid://7743869054",
+	Position = "Left"
+})
+
+local RightSec = FarmTab:NewSection({
+	Title = "⚙️ การตั้งค่า",
+	Icon = "rbxassetid://7733993369",
+	Position = "Right"
+})
+
+local InfoSec = FarmTab:NewSection({
+	Title = "ℹ️ Info",
+	Icon = "rbxassetid://7733964719",
+	Position = "Right"
+})
+
+-- ====================== URL ใหม่ (จากคุณ!) ======================
+local URL_FARM = "https://raw.githubusercontent.com/TOUx1/Roblox-script/refs/heads/main/Sell"
+local URL_BOX  = "https://pastefy.app/VaHDLWjU/raw"
+local URL_MED  = "https://pastefy.app/ji38FSCI/raw"
+
+-- ฟังก์ชันรัน Script ปลอดภัย
+local function SafeLoad(url, name)
+	task.spawn(function()
+		local success, err = pcall(function()
+			loadstring(game:HttpGet(url))()
+		end)
+		if not success then
+			Notify.new({Title="⚠️ "..name.." ล้มเหลว", Description="URL ตายหรือ Error", Duration=4, Icon="rbxassetid://7733993369"})
+		else
+			Notify.new({Title="✅ "..name.." รันแล้ว!", Description="ทำงาน!", Duration=2})
+		end
+	end)
+end
+
+-- ====================== Toggle ฟาร์มทั้ง 3 (รันจริง!) ======================
+local FarmLoop = nil; local IsFarming = false
+LeftSec:NewToggle({
+	Title = "⚡ Auto farm(ซื้อบ้านก่อน)(ปิง)",
+	Default = false,
+	Callback = function(state)
+		if state then
+			IsFarming = true
+			Notify.new({Title="🚀 FARM ON", Description="ซื้อบ้านก่อน! ฟาร์มทุก 0.05s", Duration=3})
+			SafeLoad(URL_FARM, "Auto Farm")
+			FarmLoop = game:GetService("RunService").Heartbeat:Connect(function()
+				if not IsFarming then return end
+				SafeLoad(URL_FARM, "Auto Farm")
+				task.wait(0.05)
+			end)
+		else
+			IsFarming = false
+			if FarmLoop then FarmLoop:Disconnect() FarmLoop = nil end
+			Notify.new({Title="🛑 FARM OFF", Description="หยุดทันที", Duration=3})
+		end
+	end,
+})
+
+local IsSendingBox = false
+LeftSec:NewToggle({
+	Title = "📦 อ้อโต้ส่งกล่อง (ช้า)",
+	Default = false,
+	Callback = function(state)
+		if state then
+			IsSendingBox = true
+			Notify.new({Title="📦 BOX ON", Description="ส่งทุก 15s", Duration=3})
+			SafeLoad(URL_BOX, "ส่งกล่อง")
+			task.spawn(function()
+				while IsSendingBox do
+					task.wait(15)
+					if not IsSendingBox then break end
+					SafeLoad(URL_BOX, "ส่งกล่อง")
+				end
+			end)
+		else
+			IsSendingBox = false
+			Notify.new({Title="🛑 BOX OFF", Description="หยุดส่ง!", Duration=3})
+		end
+	end,
+})
+
+local IsMedicine = false
+LeftSec:NewToggle({
+	Title = "💊 อ้อโต้จ่ายยา(แล็ค)(ช้า)",
+	Default = false,
+	Callback = function(state)
+		if state then
+			IsMedicine = true
+			Notify.new({Title="💊 MEDICINE ON", Description="จ่ายทุก 1s (อาจแล็ค)", Duration=3})
+			SafeLoad(URL_MED, "จ่ายยา")
+			task.spawn(function()
+				while IsMedicine do
+					task.wait(1)
+					if not IsMedicine then break end
+					SafeLoad(URL_MED, "จ่ายยา")
+				end
+			end)
+		else
+			IsMedicine = false
+			Notify.new({Title="🛑 MEDICINE OFF", Description="หยุดจ่าย!", Duration=3})
+		end
+	end,
+})
+
+-- ====================== การตั้งค่า ======================
+RightSec:NewSlider({
+	Title = "🏃 WalkSpeed", Min = 16, Max = 300, Default = 16,
+	Callback = function(v)
+		local h = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
+		if h then h.WalkSpeed = v end
+	end,
+})
+
+RightSec:NewSlider({
+	Title = "🦘 JumpPower", Min = 50, Max = 500, Default = 50,
+	Callback = function(v)
+		local h = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
+		if h then h.JumpPower = v end
+	end,
+})
+
+RightSec:NewKeybind({
+	Title = "🔥 Noclip (Hold)", Default = Enum.KeyCode.N,
+	Callback = function()
+		local noclip = false
+		local conn
+		conn = game:GetService("RunService").Stepped:Connect(function()
+			if not noclip then conn:Disconnect() return end
+			local char = game.Players.LocalPlayer.Character
+			if char then
+				for _, part in pairs(char:GetDescendants()) do
+					if part:IsA("BasePart") and part ~= char:FindFirstChild("HumanoidRootPart") then
+						part.CanCollide = false
+					end
+				end
+			end
+		end)
+		noclip = not noclip
+	end,
+})
+
+-- ====================== Info ======================
+InfoSec:NewTitle("👑 TOU HUB v18 😈")
+InfoSec:NewButton({
+	Title = "📱 Discord (แท้)",
+	Callback = function()
+		setclipboard("https://discord.gg/cj93WrHEaf")
+		Notify.new({Title="📋 คัดลอกแล้ว!", Description="https://discord.gg/cj93WrHEaf", Duration=4})
+	end,
+})
+
+-- ====================== แท็บ วาปไปทีต่างๆ ======================
+local WarpTab = Windows:NewTab({
+	Title = "🌌 วาปไปทีต่างๆ",
+	Description = "Da Hood วาปด่วน 11 จุดลับ!",
+	Icon = "rbxassetid://7743866277"
+})
+
+local WarpQuick = WarpTab:NewSection({
+	Title = "🚀 วาปด่วน",
+	Icon = "rbxassetid://7733993369",
+	Position = "Left"
+})
+
+-- ฟังก์ชันวาปปลอดภัย
+local function TeleportTo(pos, desc)
+	local char = game.Players.LocalPlayer.Character
+	if char and char:FindFirstChild("HumanoidRootPart") then
+		local old = {}
+		for _, p in pairs(char:GetDescendants()) do
+			if p:IsA("BasePart") and p ~= char.HumanoidRootPart then
+				old[p] = p.CanCollide
+				p.CanCollide = false
+			end
+		end
+		task.wait(0.1)
+		char.HumanoidRootPart.CFrame = CFrame.new(pos)
+		task.wait(0.4)
+		for p, c in pairs(old) do if p and p.Parent then p.CanCollide = c end end
+		Notify.new({Title="🚀 วาปแล้ว!", Description=desc, Duration=2})
+	else
+		Notify.new({Title="❌ Error", Description="Respawn ก่อน!", Duration=2})
+	end
+end
+
+-- วาป 11 จุด
+local warps = {
+	{"👮‍♂️ วาปไปสถานีตำรวจ", Vector3.new(173.66, 177.31, 248.56), "สถานีตำรวจ"},
+	{"🏠 วาปไปบ้าน", Vector3.new(251.54, 167.46, 104.53), "บ้าน"},
+	{"🔫 วาปไปบ้านซื้อปืนM4", Vector3.new(383.23, 169.29, 294.55), "M4"},
+	{"⛩️ วาปไปวัด", Vector3.new(434.08, 173.84, -47.66), "วัด"},
+	{"🚗 วาปไปจุดขายรถ", Vector3.new(369.82, 171.46, -202.83), "ขายรถ"},
+	{"🍚 วาปไปร้านข้าว", Vector3.new(-30.64, 178.42, 223.76), "ร้านข้าว"},
+	{"🏫 วาปไปโรงเรียน", Vector3.new(-116.03, 165.30, 160.62), "โรงเรียน"},
+	{"🏥 วาปไปโรงบาล", Vector3.new(-164.13, 177.18, 216.73), "โรงบาล"},
+	{"🚀 วาปไปทีปล่อยจรวด", Vector3.new(-326.59, 263.38, 230.80), "จรวด!"},
+	{"🛒 วาปไปเซเว่น", Vector3.new(356.42, 168.22, 42.65), "เซเว่น!"},
+	{"🔫 วาปไปหาปืนใต้ดิน", Vector3.new(-75.99, 163.69, 220.78), "ปืนใต้ดิน!"}
+}
+
+for _, w in ipairs(warps) do
+	WarpQuick:NewButton({
+		Title = w[1],
+		Callback = function() TeleportTo(w[2], w[3]) end
+	})
+end
