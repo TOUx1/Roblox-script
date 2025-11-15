@@ -1,57 +1,49 @@
--- // TOU HUB v34 ULTIMATE FULL 100% - CITY THAILAND 2 + อ้อโต้ขายบ้าน 🏠💰🔥🇹🇭🌈🎵⚙️🚪🚀👻
--- คัดลอกทั้งหมด → รัน → LeftControl → ครบทุกอย่าง + ฟาร์มไม่หยุดแม้ Kick!
+-- TOU HUB v34 ULTIMATE — FINAL VERSION 2025
+-- City Thailand 2 | ชื่อเรนโบว์ 2 แบบ | ปิดแล้วหยุดจริง 100% | ฟาร์มไม่หยุดแม้ Kick
 
 local NothingLibrary = loadstring(game:HttpGetAsync('https://raw.githubusercontent.com/3345-c-a-t-s-u-s/NOTHING/main/source.lua'))()
 local Notify = NothingLibrary.Notification()
 
--- ตัวแปรควบคุม
 local NotifyEnabled = true
 local AutoRejoinEnabled = true
 local AutoResumeFarmEnabled = true
 
--- สถานะฟาร์ม
-local FarmStates = {
-	Sell = false,
-	Box = false,
-	Medicine = false
-}
-
--- Global Reference
+local FarmStates = { Sell = false, Box = false, Medicine = false }
 _G.SellToggle = nil
 _G.BoxToggle = nil
 _G.MedToggle = nil
 _G.FarmLoop = nil
 
+local IsWaveRainbow = false
+local IsMusicRainbow = false
+local WaveLoop = nil
+local MusicLoop = nil
+
+local Remote = game:GetService("ReplicatedStorage"):FindFirstChild("NameTagRemoteEvent")
+
 local function SafeNotify(data)
-	if NotifyEnabled then
-		Notify.new(data)
-	end
+	if NotifyEnabled then Notify.new(data) end
 end
 
-SafeNotify({
-	Title = "🔥 TOU HUB v34 LOADED เต็มระบบ!",
-	Description = "ขายบ้านรัว + ฟาร์มไม่หยุด + ครบทุกปุ่ม!",
-	Duration = 8,
-	Icon = "rbxassetid://8997385628"
-})
+SafeNotify({Title="TOU HUB v34 ULTIMATE 🌈", Description="โหลดสำเร็จ! ชื่อเรนโบว์ 2 แบบ + ปิดแล้วหยุดจริง + FE ดุเดือด 💥", Duration=10})
 
 local Windows = NothingLibrary.new({
-	Title = "TOU HUB v34",
-	Description = "City Thailand 2 — ฟาร์มไม่หยุดแม้ตาย",
+	Title = "TOU HUB v34 ULTIMATE 💜",
+	Description = "City Thailand 2 — ฟาร์มจนรวยล้นเซิร์ฟ ✨",
 	Keybind = Enum.KeyCode.LeftControl,
 	Logo = 'http://www.roblox.com/asset/?id=18898582662'
 })
 
 -- ====================== Character Safe ======================
 local function GetHumanoid()
-	local player = game.Players.LocalPlayer
-	local char = player.Character or player.CharacterAdded:Wait()
+	local plr = game.Players.LocalPlayer
+	local char = plr.Character or plr.CharacterAdded:Wait()
 	return char:WaitForChild("Humanoid", 10)
 end
 
 local function GetRootPart()
-	local player = game.Players.LocalPlayer
-	local char = player.Character or player.CharacterAdded:Wait()
+	local plr = game.Players.LocalPlayer
+	local char = plr.Character or plr.CharacterAdded:Wait()
 	return char:WaitForChild("HumanoidRootPart", 10)
 end
 
@@ -61,7 +53,7 @@ local PlaceId = game.PlaceId
 
 local function RejoinAndResume()
 	if not AutoRejoinEnabled then return end
-	SafeNotify({Title="🔄 ถูก Kick!", Description="Rejoin + รันฟาร์มใน 5 วินาที...", Duration=5})
+	SafeNotify({Title="โดน Kick! 😭", Description="กำลัง Rejoin + รันฟาร์มต่อใน 5 วิ... 💨", Duration=5})
 	task.wait(5)
 	TeleportService:Teleport(PlaceId, game.Players.LocalPlayer)
 end
@@ -78,17 +70,16 @@ game.Players.LocalPlayer.CharacterAdded:Connect(function()
 		if FarmStates.Sell and _G.SellToggle then _G.SellToggle:Callback(true) end
 		if FarmStates.Box and _G.BoxToggle then _G.BoxToggle:Callback(true) end
 		if FarmStates.Medicine and _G.MedToggle then _G.MedToggle:Callback(true) end
-		SafeNotify({Title="💰 กลับมาแล้ว!", Description="ฟาร์มรันต่ออัตโนมัติ!", Duration=3})
+		SafeNotify({Title="กลับมาแล้ว! 🥰", Description="ฟาร์มรันต่ออัตโนมัติ 💸", Duration=4})
 	end
 end)
 
--- ====================== Farm Tab + อ้อโต้ขายบ้าน ======================
-local FarmTab = Windows:NewTab({Title = "💰 Farm", Description = "ฟาร์ม + ขายบ้านรัว", Icon = "rbxassetid://7733960981"})
-
-local FarmLeft = FarmTab:NewSection({Title = "💸 อ้อโต้ฟามเงิน", Icon = "rbxassetid://7743869054", Position = "Left"})
-local AutoHouseSection = FarmTab:NewSection({Title = "🏠 อ้อโต้ขายบ้าน", Icon = "rbxassetid://7733993369", Position = "Right"})
-local FarmRight = FarmTab:NewSection({Title = "⚙️ การตั้งค่า", Icon = "rbxassetid://7733993369", Position = "Right"})
-local FarmInfo = FarmTab:NewSection({Title = "ℹ️ Info", Icon = "rbxassetid://7733964719", Position = "Right"})
+-- ====================== Farm Tab ======================
+local FarmTab = Windows:NewTab({Title = "ฟาร์มเงิน 💰", Icon = "rbxassetid://7733960981"})
+local FarmLeft = FarmTab:NewSection({Title = "อ้อโต้ฟาร์มเงิน 🚀", Position = "Left"})
+local AutoHouseSection = FarmTab:NewSection({Title = "อ้อโต้ขายบ้าน 🏠", Position = "Right"})
+local FarmRight = FarmTab:NewSection({Title = "การตั้งค่า ⚙️", Position = "Right"})
+local FarmInfo = FarmTab:NewSection({Title = "Info 📌", Position = "Right"})
 
 local URL_FARM = "https://raw.githubusercontent.com/TOUx1/Roblox-script/refs/heads/main/Sell"
 local URL_BOX  = "https://pastefy.app/VaHDLWjU/raw"
@@ -96,218 +87,213 @@ local URL_MED  = "https://pastefy.app/ji38FSCI/raw"
 
 local function SilentLoad(url)
 	task.spawn(function()
-		pcall(function()
-			loadstring(game:HttpGet(url))()
-		end)
+		pcall(function() loadstring(game:HttpGet(url))() end)
 	end)
 end
 
--- ปุ่มอ้อโต้ขายบ้าน (เพิ่มมาแล้ว!)
-AutoHouseSection:NewButton({
-	Title = "🏠 อ้อโต้ขายบ้าน",
-	Description = "กด = ขายบ้านรัว ๆ รวยทะลัก!",
-	Callback = function()
-		SafeNotify({Title="🏠 ขายบ้านเริ่มแล้ว!", Description="เงินไหลมาเทมา!", Duration=5})
-		pcall(function()
-			loadstring(game:HttpGet("https://pastefy.app/8V7h6QG3/raw"))()
-		end)
-	end
-})
-
--- Toggle Sell
-_G.SellToggle = FarmLeft:NewToggle({
-	Title = "⚡ Auto farm(ซื้อบ้านก่อน)(ปิง)",
-	Default = false,
-	Callback = function(state)
-		FarmStates.Sell = state
-		if state then
-			SafeNotify({Title="🚀 FARM ON", Description="Sell ทุก 0.05s", Duration=2})
-			SilentLoad(URL_FARM)
-			_G.FarmLoop = game:GetService("RunService").Heartbeat:Connect(function()
-				if not FarmStates.Sell then return end
-				SilentLoad(URL_FARM)
-				task.wait(0.05)
-			end)
-		else
-			if _G.FarmLoop then _G.FarmLoop:Disconnect() _G.FarmLoop = nil end
-			SafeNotify({Title="🛑 FARM OFF", Description="หยุด!", Duration=2})
-		end
-	end
-})
-
--- Toggle Box
-_G.BoxToggle = FarmLeft:NewToggle({
-	Title = "📦 อ้อโต้ส่งกล่อง (ช้า)",
-	Default = false,
-	Callback = function(state)
-		FarmStates.Box = state
-		if state then
-			SafeNotify({Title="📦 BOX ON", Description="ทุก 15s", Duration=2})
-			SilentLoad(URL_BOX)
-			task.spawn(function()
-				while FarmStates.Box do
-					task.wait(15)
-					if not FarmStates.Box then break end
-					SilentLoad(URL_BOX)
-				end
-			end)
-		else
-			SafeNotify({Title="🛑 BOX OFF", Description="หยุด!", Duration=2})
-		end
-	end
-})
-
--- Toggle Medicine
-_G.MedToggle = FarmLeft:NewToggle({
-	Title = "💊 อ้อโต้จ่ายยา(แล็ค)(ช้า)",
-	Default = false,
-	Callback = function(state)
-		FarmStates.Medicine = state
-		if state then
-			SafeNotify({Title="💊 MEDICINE ON", Description="ทุก 1s", Duration=2})
-			SilentLoad(URL_MED)
-			task.spawn(function()
-				while FarmStates.Medicine do
-					task.wait(1)
-					if not FarmStates.Medicine then break end
-					SilentLoad(URL_MED)
-				end
-			end)
-		else
-			SafeNotify({Title="🛑 MEDICINE OFF", Description="หยุด!", Duration=2})
-		end
-	end
-})
-
--- Slider + Noclip + Info
-FarmRight:NewSlider({Title = "🏃 WalkSpeed", Min = 16, Max = 300, Default = 16, Callback = function(v) local hum = GetHumanoid() if hum then hum.WalkSpeed = v end end})
-FarmRight:NewSlider({Title = "🦘 JumpPower", Min = 50, Max = 500, Default = 50, Callback = function(v) local hum = GetHumanoid() if hum then hum.JumpPower = v end end})
-FarmRight:NewKeybind({Title = "🔥 Noclip (Hold)", Default = Enum.KeyCode.N, Callback = function()
-	local noclip = false
-	local conn
-	conn = game:GetService("RunService").Stepped:Connect(function()
-		if not noclip then conn:Disconnect() return end
-		local root = GetRootPart()
-		if root and root.Parent then
-			for _, part in pairs(root.Parent:GetDescendants()) do
-				if part:IsA("BasePart") and part ~= root then
-					part.CanCollide = false
-				end
-			end
-		end
-	end)
-	noclip = not noclip
+AutoHouseSection:NewButton({Title = "อ้อโต้ขายบ้าน 🏠💥", Callback = function()
+	SafeNotify({Title="ขายบ้านเริ่มแล้ว! 🏠💥", Description="เงินไหลมาเทมา 🌊", Duration=5})
+	pcall(function() loadstring(game:HttpGet("https://pastefy.app/8V7h6QG3/raw"))() end)
 end})
 
-FarmInfo:NewTitle("👑 TOU HUB v34 🇹🇭")
-FarmInfo:NewButton({Title = "📱 Discord (แท้)", Callback = function() setclipboard("https://discord.gg/cj93WrHEaf") SafeNotify({Title="คัดลอกแล้ว!"}) end})
+_G.SellToggle = FarmLeft:NewToggle({Title = "Auto Farm (ซื้อบ้านก่อน) 💸", Default = false, Callback = function(state)
+	FarmStates.Sell = state
+	if state then
+		SafeNotify({Title="FARM ON 🔥", Description="ทุก 0.05 วิ เงินมาแน่! 💰", Duration=3})
+		SilentLoad(URL_FARM)
+		_G.FarmLoop = game:GetService("RunService").Heartbeat:Connect(function()
+			if not FarmStates.Sell then return end
+			SilentLoad(URL_FARM)
+			task.wait(0.05)
+		end)
+	else
+		if _G.FarmLoop then _G.FarmLoop:Disconnect() _G.FarmLoop = nil end
+		SafeNotify({Title="FARM OFF 😴", Duration=2})
+	end
+end})
 
--- ====================== วาป 11 จุด ======================
-local WarpTab = Windows:NewTab({Title = "🌌 วาปไปทีต่างๆ", Description = "11 จุดลับ!", Icon = "rbxassetid://7743866277"})
-local WarpQuick = WarpTab:NewSection({Title = "🚀 วาปด่วน", Position = "Left"})
+_G.BoxToggle = FarmLeft:NewToggle({Title = "อ้อโต้ส่งกล่อง 📦", Default = false, Callback = function(state)
+	FarmStates.Box = state
+	if state then
+		SafeNotify({Title="BOX ON 📦", Description="ทุก 15 วิ ส่งของรัว ๆ!", Duration=3})
+		SilentLoad(URL_BOX)
+		task.spawn(function()
+			while FarmStates.Box do
+				task.wait(15)
+				if not FarmStates.Box then break end
+				SilentLoad(URL_BOX)
+			end
+		end)
+	else
+		SafeNotify({Title="BOX OFF 📭", Duration=2})
+	end
+end})
 
-local function TeleportTo(pos, desc)
+_G.MedToggle = FarmLeft:NewToggle({Title = "อ้อโต้จ่ายยา 💉", Default = false, Callback = function(state)
+	FarmStates.Medicine = state
+	if state then
+		SafeNotify({Title="MED ON 💉", Description="ทุก 1 วิ ไม่หยุด!", Duration=3})
+		SilentLoad(URL_MED)
+		task.spawn(function()
+			while FarmStates.Medicine do
+				task.wait(1)
+				if not FarmStates.Medicine then break end
+				SilentLoad(URL_MED)
+			end
+		end)
+	else
+		SafeNotify({Title="MED OFF 💊", Duration=2})
+	end
+end})
+
+FarmRight:NewSlider({Title = "WalkSpeed 🏃", Min = 16, Max = 300, Default = 16, Callback = function(v) local hum = GetHumanoid() if hum then hum.WalkSpeed = v end end})
+FarmRight:NewSlider({Title = "JumpPower 🦘", Min = 50, Max = 500, Default = 50, Callback = function(v) local hum = GetHumanoid() if hum then hum.JumpPower = v end end})
+
+FarmInfo:NewTitle("TOU HUB v34 ULTIMATE 💎")
+FarmInfo:NewButton({Title = "Discord 🎮", Callback = function() setclipboard("https://discord.gg/cj93WrHEaf") SafeNotify({Title="คัดลอกแล้ว! ✅"}) end})
+
+-- ====================== Warp Tab ======================
+local WarpTab = Windows:NewTab({Title = "วาปด่วน 11 จุด 🚀", Icon = "rbxassetid://7743866277"})
+local WarpSection = WarpTab:NewSection({Title = "วาปจุดสำคัญ ⚡", Position = "Left"})
+
+local function TeleportTo(pos, name)
 	local root = GetRootPart()
 	if root then
 		local old = {}
 		for _, p in pairs(root.Parent:GetDescendants()) do
-			if p:IsA("BasePart") and p ~= root then
-				old[p] = p.CanCollide
-				p.CanCollide = false
-			end
+			if p:IsA("BasePart") and p ~= root then old[p] = p.CanCollide p.CanCollide = false end
 		end
 		task.wait(0.1)
 		root.CFrame = CFrame.new(pos)
 		task.wait(0.4)
 		for p, c in pairs(old) do if p and p.Parent then p.CanCollide = c end end
-		SafeNotify({Title="🚀 วาปแล้ว!", Description=desc, Duration=1.5})
+		SafeNotify({Title="วาปสำเร็จ! ✨", Description="ไป "..name.." แล้ว 🚀", Duration=2})
 	end
 end
 
 local warps = {
-	{"👮‍♂️ สถานีตำรวจ", Vector3.new(173.66, 177.31, 248.56), "สถานีตำรวจ"},
-	{"🏠 บ้าน", Vector3.new(251.54, 167.46, 104.53), "บ้าน"},
-	{"🔫 บ้านซื้อปืนM4", Vector3.new(383.23, 169.29, 294.55), "M4"},
-	{"⛩️ วัด", Vector3.new(434.08, 173.84, -47.66), "วัด"},
-	{"🚗 ขายรถ", Vector3.new(369.82, 171.46, -202.83), "ขายรถ"},
-	{"🍚 ร้านข้าว", Vector3.new(-30.64, 178.42, 223.76), "ร้านข้าว"},
-	{"🏫 โรงเรียน", Vector3.new(-116.03, 165.30, 160.62), "โรงเรียน"},
-	{"🏥 โรงบาล", Vector3.new(-164.13, 177.18, 216.73), "โรงบาล"},
-	{"🚀 ปล่อยจรวด", Vector3.new(-326.59, 263.38, 230.80), "จรวด"},
-	{"🛒 เซเว่น", Vector3.new(356.42, 168.22, 42.65), "เซเว่น"},
-	{"🔫 ปืนใต้ดิน", Vector3.new(-75.99, 163.69, 220.78), "ปืนใต้ดิน"}
+	{"สถานีตำรวจ 👮", Vector3.new(173.66, 177.31, 248.56)},
+	{"บ้าน 🏡", Vector3.new(251.54, 167.46, 104.53)},
+	{"บ้านซื้อปืนM4 🔫", Vector3.new(383.23, 169.29, 294.55)},
+	{"วัด 🛕", Vector3.new(434.08, 173.84, -47.66)},
+	{"ขายรถ 🚗", Vector3.new(369.82, 171.46, -202.83)},
+	{"ร้านข้าว 🍚", Vector3.new(-30.64, 178.42, 223.76)},
+	{"โรงเรียน 🏫", Vector3.new(-116.03, 165.30, 160.62)},
+	{"โรงพยาบาล 🏥", Vector3.new(-164.13, 177.18, 216.73)},
+	{"ปล่อยจรวด 🚀", Vector3.new(-326.59, 263.38, 230.80)},
+	{"เซเว่น 🏪", Vector3.new(356.42, 168.22, 42.65)},
+	{"ปืนใต้ดิน 🔪", Vector3.new(-75.99, 163.69, 220.78)}
 }
 
 for _, w in ipairs(warps) do
-	WarpQuick:NewButton({Title = w[1], Callback = function() TeleportTo(w[2], w[3]) end})
+	WarpSection:NewButton({Title = w[1], Callback = function() TeleportTo(w[2], w[1]) end})
 end
 
--- ====================== ลำโพงดิสโก้ ======================
-local SpeakerTab = Windows:NewTab({Title = "🎵 ปรับสีลำโพง", Description = "Loop + ทดสอบสี", Icon = "rbxassetid://7733993369"})
-local SpeakerLeft = SpeakerTab:NewSection({Title = "🎨 เลือกสี Loop", Position = "Left"})
-local SpeakerRight = SpeakerTab:NewSection({Title = "⚙️ ควบคุม Loop", Position = "Right"})
+-- ====================== FE TAB ======================
+local FETab = Windows:NewTab({Title = "FE ดุเดือด 🔥", Description = "ลำโพง + ชื่อเรนโบว์ 2 แบบ", Icon = "rbxassetid://7733993369"})
+local SpeakerSection = FETab:NewSection({Title = "ลำโพงดิสโก้ 🪩", Position = "Left"})
+local NameSection = FETab:NewSection({Title = "ชื่อเรนโบว์ทั้งหมด 🌈", Position = "Right"})
 
-local Colors = {
-	{ name = "สีฟ้า", id = 1013 },
-	{ name = "สีแดง", id = 331 },
-	{ name = "สีเขียว", id = 1020 },
-	{ name = "สีชมพูเค็ม", id = 1016 },
-	{ name = "สีเหลือง", id = 1009 },
-	{ name = "สีส้ม", id = 106 },
-	{ name = "สีม่วง", id = 1015 },
-	{ name = "สีชมพูอ่อน", id = 330 },
-	{ name = "สีขาว", id = 1001 },
-	{ name = "สีเทา", id = 302 },
-	{ name = "สีดำ", id = 1003 }
-}
+-- ลำโพงดิสโก้
+local Colors = {{name="ฟ้า",id=1013},{name="แดง",id=331},{name="เขียว",id=1020},{name="ชมพู",id=1016},{name="เหลือง",id=1009},{name="ส้ม",id=106},{name="ม่วง",id=1015}}
+local Sel1, Sel2 = 1, 2
+local Speed = 0.5
+local DiscoOn = false
+local DiscoLoop = nil
 
-local SelectedColors = {1, 2}
-local LoopSpeed = 0.5
-local IsColorLooping = false
-local ColorLoop = nil
+SpeakerSection:NewDropdown({Title="สีที่ 1", Data={"ฟ้า","แดง","เขียว","ชมพู","เหลือง","ส้ม","ม่วง"}, Default="ฟ้า", Callback=function(v) for i,c in ipairs(Colors) do if c.name==v then Sel1=i break end end end})
+SpeakerSection:NewDropdown({Title="สีที่ 2", Data={"ฟ้า","แดง","เขียว","ชมพู","เหลือง","ส้ม","ม่วง"}, Default="แดง", Callback=function(v) for i,c in ipairs(Colors) do if c.name==v then Sel2=i break end end end})
+SpeakerSection:NewSlider({Title="ความเร็ว ⚡", Min=0.05, Max=3, Default=0.5, Callback=function(v) Speed=v end})
 
-SpeakerLeft:NewDropdown({Title = "🎨 สีที่ 1", Data = {"สีฟ้า","สีแดง","สีเขียว","สีชมพูเค็ม","สีเหลือง","สีส้ม","สีม่วง","สีชมพูอ่อน","สีขาว","สีเทา","สีดำ"}, Default = "สีฟ้า", Callback = function(selected) for i,c in ipairs(Colors) do if c.name == selected then SelectedColors[1] = i break end end end})
-SpeakerLeft:NewDropdown({Title = "🎨 สีที่ 2", Data = {"สีฟ้า","สีแดง","สีเขียว","สีชมพูเค็ม","สีเหลือง","สีส้ม","สีม่วง","สีชมพูอ่อน","สีขาว","สีเทา","สีดำ"}, Default = "สีแดง", Callback = function(selected) for i,c in ipairs(Colors) do if c.name == selected then SelectedColors[2] = i break end end end})
-
-SpeakerRight:NewSlider({Title = "⚡ ความเร็ว Loop", Min = 0.1, Max = 5, Default = 0.5, Callback = function(speed) LoopSpeed = speed end})
-
-SpeakerRight:NewToggle({Title = "▶️ เริ่ม/หยุด Loop สี", Default = false, Callback = function(state)
+SpeakerSection:NewToggle({Title="เปิด/ปิด ดิสโก้ลำโพง 🪩", Default=false, Callback=function(state)
+	DiscoOn = state
 	if state then
-		IsColorLooping = true
-		SafeNotify({Title="🌈 LOOP ON", Description="ลำโพงดิสโก้!", Duration=2})
-		ColorLoop = task.spawn(function()
-			while IsColorLooping do
-				pcall(function() workspace:WaitForChild("DRadio_Script"):WaitForChild("Color"):FireServer(BrickColor.new(Colors[SelectedColors[1]].id)) end)
-				task.wait(LoopSpeed)
-				pcall(function() workspace:WaitForChild("DRadio_Script"):WaitForChild("Color"):FireServer(BrickColor.new(Colors[SelectedColors[2]].id)) end)
-				task.wait(LoopSpeed)
+		SafeNotify({Title="ลำโพงดิสโก้ ON! 🪩", Description="กระพริบรัว ๆ สีสวยมากกก!", Duration=4})
+		DiscoLoop = task.spawn(function()
+			while DiscoOn do
+				pcall(function() workspace.DRadio_Script.Color:FireServer(BrickColor.new(Colors[Sel1].id)) end)
+				task.wait(Speed)
+				pcall(function() workspace.DRadio_Script.Color:FireServer(BrickColor.new(Colors[Sel2].id)) end)
+				task.wait(Speed)
 			end
 		end)
 	else
-		IsColorLooping = false
-		if ColorLoop then task.cancel(ColorLoop) end
-		SafeNotify({Title="⏹️ LOOP OFF", Duration=2})
+		if DiscoLoop then task.cancel(DiscoLoop) DiscoLoop=nil end
+		SafeNotify({Title="ลำโพง OFF 🔇", Duration=2})
 	end
 end})
 
-SpeakerRight:NewButton({Title = "🧪 ทดสอบสีที่ 1", Callback = function()
-	pcall(function() workspace:WaitForChild("DRadio_Script"):WaitForChild("Color"):FireServer(BrickColor.new(Colors[SelectedColors[1]].id)) end)
+-- ชื่อคลื่นเสียงเรนโบว์ (แก้แล้ว ทำงาน 100%)
+local waveFrames = {
+	{"#\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136####", Color3.new(1,0,0),15},
+	{"##\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136###", Color3.new(1,0.65,0),15},
+	{"###\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136##", Color3.new(0,1,0),15},
+	{"####\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#", Color3.new(0,0.7,1),15},
+	{"#####\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136", Color3.new(0.6,0,1),15}
+}
+
+NameSection:NewToggle({Title = "ชื่อคลื่นเสียงเรนโบว์ 🌊", Default = false, Callback = function(state)
+	IsWaveRainbow = state
+	if state then
+		SafeNotify({Title="ชื่อคลื่นเสียง ON! 🌊", Description="วิ่งเป็นคลื่นสวย ๆ!", Duration=4})
+		WaveLoop = task.spawn(function()
+			while IsWaveRainbow do
+				for i=1,#waveFrames do if not IsWaveRainbow then break end pcall(function() Remote:FireServer(unpack(waveFrames[i])) end) task.wait(0.1) end
+				for i=#waveFrames,1,-1 do if not IsWaveRainbow then break end pcall(function() Remote:FireServer(unpack(waveFrames[i])) end) task.wait(0.1) end
+			end
+		end)
+	else
+		if WaveLoop then task.cancel(WaveLoop) WaveLoop=nil end
+		SafeNotify({Title="ชื่อคลื่นเสียง OFF 🌙", Duration=2})
+	end
 end})
 
-SpeakerRight:NewButton({Title = "🧪 ทดสอบสีที่ 2", Callback = function()
-	pcall(function() workspace:WaitForChild("DRadio_Script"):WaitForChild("Color"):FireServer(BrickColor.new(Colors[SelectedColors[2]].id)) end)
+-- ชื่อเรนจังหวะเพลง (แก้แล้ว ทำงาน 100%)
+local musicSets = {
+	{"#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136#\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136#", Color3.new(1,0,0),15},
+	{"#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136", Color3.new(1,0.65,0.1),15},
+	{"#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136", Color3.new(0,1,0.3),15},
+	{"#\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136#\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136#\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136#\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136", Color3.new(0,0.6,1),15},
+	{"#\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136", Color3.new(0.7,0,1),15},
+	{"#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136##\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136", Color3.new(1,0,1),15}
+}
+
+NameSection:NewToggle({Title = "ชื่อเรนจังหวะเพลง 🎶", Default = false, Callback = function(state)
+	IsMusicRainbow = state
+	if state then
+		SafeNotify({Title="ชื่อจังหวะเพลง ON! 🎶", Description="วิ่งตามบีทสุดเท่!", Duration=4})
+		MusicLoop = task.spawn(function()
+			while IsMusicRainbow do
+				for i=1,#musicSets do
+					if not IsMusicRainbow then break end
+					pcall(function() Remote:FireServer(unpack(musicSets[i])) end)
+					task.wait(0.1)
+				end
+				for i=#musicSets,1,-1 do
+					if not IsMusicRainbow then break end
+					pcall(function() Remote:FireServer(unpack(musicSets[i])) end)
+					task.wait(0.1)
+				end
+			end
+		end)
+	else
+		if MusicLoop then task.cancel(MusicLoop) MusicLoop = nil end
+		SafeNotify({Title="ชื่อจังหวะเพลง OFF 🛑", Description="หยุดวิ่งแล้วน้า~", Duration=2})
+		pcall(function() Remote:FireServer("ชื่อปกติ", Color3.new(1,1,1), 15) end)
+	end
 end})
 
--- ====================== การตั้งค่า ======================
-local SettingsTab = Windows:NewTab({Title = "⚙️ การตั้งค่า", Description = "Rejoin + Resume + Notify", Icon = "rbxassetid://7733993369"})
-local SettingsSec = SettingsTab:NewSection({Title = "🔔 การแจ้งเตือน", Position = "Left"})
-local ServerSec = SettingsTab:NewSection({Title = "🚪 เซิร์ฟเวอร์", Position = "Right"})
+-- ====================== Settings Tab ======================
+local SettingsTab = Windows:NewTab({Title = "การตั้งค่า ⚙️", Icon = "rbxassetid://7733993369"})
+local SettingsSec = SettingsTab:NewSection({Title = "การแจ้งเตือน 🔔", Position = "Left"})
+local ServerSec = SettingsTab:NewSection({Title = "เซิร์ฟเวอร์ 🌐", Position = "Right"})
 
-SettingsSec:NewToggle({Title = "🔔 เปิด/ปิดการแจ้งเตือน", Default = true, Callback = function(state) NotifyEnabled = state end})
-SettingsSec:NewToggle({Title = "🔄 Auto Rejoin ถ้า Kick", Default = true, Callback = function(state) AutoRejoinEnabled = state end})
-SettingsSec:NewToggle({Title = "💰 Auto Resume ฟาร์มหลังกลับมา", Default = true, Callback = function(state) AutoResumeFarmEnabled = state end})
+SettingsSec:NewToggle({Title = "เปิด/ปิด Notify 🔔", Default = true, Callback = function(state) NotifyEnabled = state end})
+SettingsSec:NewToggle({Title = "Auto Rejoin เมื่อ Kick 🔄", Default = true, Callback = function(state) AutoRejoinEnabled = state end})
+SettingsSec:NewToggle({Title = "Auto Resume ฟาร์ม ⏩", Default = true, Callback = function(state) AutoResumeFarmEnabled = state end})
 
-ServerSec:NewButton({Title = "🚪 ย้ายไปเซิร์ฟใหม่", Callback = function() TeleportService:Teleport(PlaceId, game.Players.LocalPlayer) end})
-ServerSec:NewButton({Title = "🔄 ย้าย + รีโหลด", Callback = function() TeleportService:TeleportToPlaceInstance(PlaceId, game.JobId, game.Players.LocalPlayer) end})
+ServerSec:NewButton({Title = "ย้ายเซิร์ฟใหม่ 🔀", Callback = function() TeleportService:Teleport(PlaceId, game.Players.LocalPlayer) end})
 
 loadstring(game:HttpGet("https://raw.githubusercontent.com/TOUxIllIll0O00OO/RobloxscriptTOU/refs/heads/main/Report%20a%20message"))()
+
+SafeNotify({Title="TOU HUB v34 ULTIMATE 💎", Description="พร้อมลุยเต็มระบบ 100% — 15 พ.ย. 2025 🎉", Duration=10})
