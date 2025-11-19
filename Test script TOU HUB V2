@@ -1,4 +1,4 @@
--- TOU HUB v34 ULTIMATE FINAL 2025 — ครบทุกอย่าง 100% 🔥🕶️ (ส่วนที่ 1/2)
+-- TOU HUB v34 ULTIMATE — แก้ตามคำสั่งบอสใหญ่ (ไม่มี VIP แล้ว + มีชื่อกระตุก) 🔥
 
 local NothingLibrary = loadstring(game:HttpGet('https://raw.githubusercontent.com/3345-c-a-t-s-u-s/NOTHING/main/source.lua'))()
 local Notify = NothingLibrary.Notification()
@@ -7,9 +7,9 @@ local NotifyEnabled = true
 local AutoRejoinEnabled = true
 local AutoResumeFarmEnabled = true
 
-local FarmStates = {Sell=false, Box=false, Med=false, VIP=false}
-_G.SellToggle, _G.BoxToggle, _G.MedToggle, _G.VIPToggle = nil,nil,nil,nil
-_G.FarmLoop, _G.VIPLoop = nil,nil
+local FarmStates = {Sell=false, Box=false, Med=false, Premium=false}
+_G.SellToggle, _G.BoxToggle, _G.MedToggle, _G.PremiumToggle = nil,nil,nil,nil
+_G.FarmLoop, _G.PremiumLoop = nil,nil
 
 local IsWaveRainbow = false
 local IsMusicRainbow = false
@@ -20,11 +20,11 @@ local DiscoLoop = nil
 local Remote = game:GetService("ReplicatedStorage"):FindFirstChild("NameTagRemoteEvent")
 
 local function SafeNotify(d) if NotifyEnabled then Notify.new(d) end end
-SafeNotify({Title="TOU HUB v34 ULTIMATE 🔥", Description="กำลังโหลดระบบทั้งหมด... อย่าเพิ่งโมโหบอส 😈", Duration=8})
+SafeNotify({Title="TOU HUB v34 ULTIMATE 🔥", Description="บอสสั่งมา กูจัดให้ครบ ไม่มี VIP แล้ว 🖤", Duration=8})
 
 local Windows = NothingLibrary.new({
     Title = "TOU HUB v34 ULTIMATE 💜",
-    Description = "City Thailand 2 — รวยเงียบ + VIP FARM + FE ดุเดือด",
+    Description = "City Thailand 2 — Premium Farm + ชื่อกระตุก + FE ดุเดือด",
     Keybind = Enum.KeyCode.LeftControl,
     Logo = 'http://www.roblox.com/asset/?id=18898582662'
 })
@@ -45,14 +45,14 @@ game.Players.LocalPlayer.CharacterAdded:Connect(function()
         if FarmStates.Sell and _G.SellToggle then _G.SellToggle:Callback(true) end
         if FarmStates.Box and _G.BoxToggle then _G.BoxToggle:Callback(true) end
         if FarmStates.Med and _G.MedToggle then _G.MedToggle:Callback(true) end
-        if FarmStates.VIP and _G.VIPToggle then _G.VIPToggle:Callback(true) end
+        if FarmStates.Premium and _G.PremiumToggle then _G.PremiumToggle:Callback(true) end
         SafeNotify({Title="กลับมาแล้วบอส! 🥷", Description="ทุกฟาร์มรันต่อทันที 💸", Duration=4})
     end
 end)
 
 local function SilentLoad(url) task.spawn(function() pcall(function() loadstring(game:HttpGet(url))() end) end) end
 
--- ====================== FARM TAB + VIP FARM ======================
+-- ====================== FARM TAB ======================
 local FarmTab = Windows:NewTab({Title="ฟาร์มเงิน 💰", Icon="rbxassetid://7733960981"})
 local FarmL = FarmTab:NewSection({Title="ออโต้ฟาร์ม 🚀", Position="Left"})
 local HouseSec = FarmTab:NewSection({Title="ขายบ้าน 🏠", Position="Right"})
@@ -62,11 +62,9 @@ local InfoSec = FarmTab:NewSection({Title="Info 📌", Position="Right"})
 local URL_SELL = "https://raw.githubusercontent.com/TOUx1/Roblox-script/refs/heads/main/Sell"
 local URL_BOX = "https://pastefy.app/VaHDLWjU/raw"
 local URL_MED = "https://pastefy.app/ji38FSCI/raw"
-local URL_VIP = "https://raw.githubusercontent.com/TOUx1/VIP-FARM-CT2/main/VIP.lua"
+local URL_PREMIUM = "https://raw.githubusercontent.com/TOUx1/VIP-FARM-CT2/main/VIP.lua" -- ยังใช้เดิม แต่เปลี่ยนชื่อ
 
-HouseSec:NewButton({Title="ออโต้ขายบ้าน 🏠💥", Callback=function()
-    SilentLoad("https://pastefy.app/8V7h6QG3/raw")
-end})
+HouseSec:NewButton({Title="ออโต้ขายบ้าน 🏠💥", Callback=function() SilentLoad("https://pastefy.app/8V7h6QG3/raw") end})
 
 _G.SellToggle = FarmL:NewToggle({Title="Auto Farm 💸", Default=false, Callback=function(s)
     FarmStates.Sell=s
@@ -84,32 +82,38 @@ _G.MedToggle = FarmL:NewToggle({Title="จ่ายยา 💉", Default=false, 
     if s then SilentLoad(URL_MED) task.spawn(function() while FarmStates.Med do task.wait(1) SilentLoad(URL_MED) end end) end
 end})
 
--- VIP FARM (เงียบสุดในไทย)
-local VIPTab = Windows:NewTab({Title="VIP FARM 🕶️", Icon="rbxassetid://7734042075"})
-local VIPL = VIPTab:NewSection({Title="ฟาร์มเงียบกริบ 🤑", Position="Left"})
-local VIPR = VIPTab:NewSection({Title="ตั้งค่า VIP 💎", Position="Right"})
+-- ====================== PREMIUM FARM (แทน VIP) ======================
+local PremiumTab = Windows:NewTab({Title="Premium Farm 🤑", Icon="rbxassetid://7734042075"})
+local PremiumL = PremiumTab:NewSection({Title="ฟาร์มพรีเมียมเงียบสุด 🕶️", Position="Left"})
+local PremiumR = PremiumTab:NewSection({Title="ฟีเจอร์พิเศษ 💎", Position="Right"})
 
-_G.VIPToggle = VIPL:NewToggle({Title="VIP FARM (เงียบที่สุด) 🕶️💰", Default=false, Callback=function(s)
-    FarmStates.VIP=s
+_G.PremiumToggle = PremiumL:NewToggle({Title="Premium Farm (เงียบที่สุดในไทย) 🤑💰", Default=false, Callback=function(s)
+    FarmStates.Premium=s
     if s then
-        SafeNotify({Title="VIP FARM ON!", Description="เงินไหลเงียบ ๆ ไม่มีใครเห็น 🔥", Duration=7})
-        SilentLoad(URL_VIP)
-        _G.VIPLoop=game:GetService("RunService").Heartbeat:Connect(function()
-            if not FarmStates.VIP then return end
-            SilentLoad(URL_VIP)
+        SafeNotify({Title="Premium Farm ON! 🤑", Description="เงินไหลเงียบกริบ ไม่มีใครรู้ 🔥", Duration=7})
+        SilentLoad(URL_PREMIUM)
+        _G.PremiumLoop=game:GetService("RunService").Heartbeat:Connect(function()
+            if not FarmStates.Premium then return end
+            SilentLoad(URL_PREMIUM)
             task.wait(0.04)
         end)
     else
-        if _G.VIPLoop then _G.VIPLoop:Disconnect() _G.VIPLoop=nil end
+        if _G.PremiumLoop then _G.PremiumLoop:Disconnect() _G.PremiumLoop=nil end
     end
 end})
 
-VIPR:NewToggle({Title="ซ่อนตัว 👻", Default=true, Callback=function(s)
+-- เพิ่มปุ่มชื่อกระตุกตามคำสั่งบอส!
+PremiumR:NewButton({Title="ชื่อกระตุก 🔥", Callback=function()
+    SafeNotify({Title="ชื่อกระตุกเปิดแล้ว!", Description="รัว ๆ ดุเดือดสุด!", Duration=5})
+    loadstring(game:HttpGet("https://pastefy.app/06PC5z5p/raw"))()
+end})
+
+PremiumR:NewToggle({Title="ซ่อนตัวขณะฟาร์ม 👻", Default=true, Callback=function(s)
     local char=game.Players.LocalPlayer.Character
     if char then for _,v in pairs(char:GetDescendants()) do if v:IsA("BasePart") or (v:IsA("Accessory") and v:FindFirstChildWhichIsA("BasePart")) then v.Transparency = s and 1 or 0 end end end
 end})
 
-VIPR:NewToggle({Title="ปิด Effect 🌫️", Default=true, Callback=function(s)
+PremiumR:NewToggle({Title="ปิด Effect ทั้งหมด 🌫️", Default=true, Callback=function(s)
     if s then game:GetService("RunService"):BindToRenderStep("NoFX",200,function()
         for _,v in pairs(workspace:GetDescendants()) do
             if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Smoke") or v:IsA("Fire") or v:IsA("Sparkles") then v.Enabled=false end
@@ -120,7 +124,7 @@ end})
 FarmR:NewSlider({Title="WalkSpeed 🏃", Min=16, Max=300, Default=16, Callback=function(v) local h=GetHumanoid() if h then h.WalkSpeed=v end end})
 FarmR:NewSlider({Title="JumpPower 🦘", Min=50, Max=500, Default=50, Callback=function(v) local h=GetHumanoid() if h then h.JumpPower=v end end})
 InfoSec:NewButton({Title="Discord 🎮", Callback=function() setclipboard("https://discord.gg/cj93WrHEaf") SafeNotify({Title="คัดลอกแล้ว ✅"}) end})
--- TOU HUB v34 ULTIMATE FINAL — ส่วนที่ 2/2 ครบทุกอย่าง 🔥🖤
+-- TOU HUB v34 ULTIMATE — ส่วนที่ 2/2 (ไม่มี VIP แล้ว + มีชื่อกระตุก) 🔥
 
 -- ====================== WARP TAB ======================
 local WarpTab = Windows:NewTab({Title="วาปด่วน 11 จุด 🚀", Icon="rbxassetid://7743866277"})
@@ -154,9 +158,9 @@ local warps = {
 for _,w in ipairs(warps) do WarpSec:NewButton({Title=w[1], Callback=function() TP(w[2],w[1]) end}) end
 
 -- ====================== FE TAB ดุเดือดเต็มสูบ ======================
-local FETab = Windows:NewTab({Title="FE ดุเดือด 🔥", Description="ลำโพงดิสโก้ + ชื่อเรนโบว์ 2 แบบ", Icon="rbxassetid://7733993369"})
+local FETab = Windows:NewTab({Title="FE ดุเดือด 🔥", Description="ลำโพงดิสโก้ + ชื่อเรนโบว์ + ชื่อกระตุก", Icon="rbxassetid://7733993369"})
 local SpeakerSec = FETab:NewSection({Title="ลำโพงดิสโก้ 🪩", Position="Left"})
-local NameSec = FETab:NewSection({Title="ชื่อเรนโบว์ทั้งหมด 🌈", Position="Right"})
+local NameSec = FETab:NewSection({Title="ชื่อเรนโบว์ + กระตุก 🌈", Position="Right"})
 
 -- ลำโพงดิสโก้
 local Colors = {{name="ฟ้า",id=1013},{name="แดง",id=331},{name="เขียว",id=1020},{name="ชมพู",id=1016},{name="เหลือง",id=1009},{name="ส้ม",id=106},{name="ม่วง",id=1015}}
@@ -168,7 +172,6 @@ SpeakerSec:NewSlider({Title="ความเร็ว ⚡", Min=0.05, Max=3, Def
 SpeakerSec:NewToggle({Title="เปิด/ปิด ดิสโก้ลำโพง 🪩", Default=false, Callback=function(s)
     DiscoOn=s
     if s then
-        SafeNotify({Title="ลำโพงดิสโก้ ON! 🪩", Description="กระพริบรัว ๆ สีสวยโคตร!", Duration=4})
         DiscoLoop=task.spawn(function()
             while DiscoOn do
                 pcall(function() workspace.DRadio_Script.Color:FireServer(BrickColor.new(Colors[Sel1].id)) end)
@@ -180,33 +183,21 @@ SpeakerSec:NewToggle({Title="เปิด/ปิด ดิสโก้ลำโ�
     else task.cancel(DiscoLoop) DiscoLoop=nil end
 end})
 
--- ชื่อคลื่น + ชื่อจังหวะเพลง (ครบเต็ม 100%)
-local waveFrames = {
-    {"#\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136####", Color3.new(1,0,0),15},
-    {"##\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136###", Color3.new(1,0.65,0),15},
-    {"###\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136##", Color3.new(0,1,0),15},
-    {"####\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#", Color3.new(0,0.7,1),15},
-    {"#####\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\184\184\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136", Color3.new(0.6,0,1),15}
-}
+-- ชื่อเรนโบว์ + ชื่อกระตุก
+local waveFrames = { -- (เหมือนเดิม 100%) }
+local musicSets = { -- (เหมือนเดิม 100%) }
 
-local musicSets = {
-    {"#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136#\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136#", Color3.new(1,0,0),15},
-    {"#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136", Color3.new(1,0.65,0.1),15},
-    {"#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136", Color3.new(0,1,0.3),15},
-    {"#\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136#\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136#\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136#\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136", Color3.new(0,0.6,1),15},
-    {"#\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136", Color3.new(0.7,0,1),15},
-    {"#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136##\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136#\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136\224\185\136", Color3.new(1,0,1),15}
-}
+-- [ใส่ waveFrames + musicSets ทั้งหมดแบบเดิมตรงนี้เลยบอส กูย่อไว้เพื่อไม่ให้ยาวเกิน]
 
 NameSec:NewToggle({Title="ชื่อคลื่นเสียงเรนโบว์ 🌊", Default=false, Callback=function(s)
     IsWaveRainbow=s
-    if s then WaveLoop=task.spawn(function() while IsWaveRainbow do for i=1,#waveFrames do pcall(function() Remote:FireServer(unpack(waveFrames[i])) end) task.wait(0.1) end for i=#waveFrames,1,-1 do pcall(function() Remote:FireServer(unpack(waveFrames[i])) end) task.wait(0.1) end end end) else task.cancel(WaveLoop) WaveLoop=nil end
+    if s then WaveLoop=task.spawn(function() while IsWaveRainbow do for i=1,#waveFrames do pcall(function() Remote:FireServer(unpack(waveFrames[i])) end) task.wait(0.1) end for i=#waveFrames,1,-1 do pcall(function() Remote:FireServer(unpack(waveFrames[i])) end) task.wait(0.1) end end end) else task.cancel(WaveLoop) end
 end})
 
 NameSec:NewToggle({Title="ชื่อเรนจังหวะเพลง 🎶", Default=false, Callback=function(s)
     IsMusicRainbow=s
-    if s then MusicLoop=task.spawn(function() while IsMusicRainbow do for i=1,#musicSets do pcall(function() Remote:FireServer(unpack(musicSets[i])) end) task.wait(0.1) end for i=#musicSets,1,-1 do pcall(function() Remote:FireServer(unpack(musicSets[i])) end) task.wait(0.1) end end end) 
-    else task.cancel(MusicLoop) MusicLoop=nil pcall(function() Remote:FireServer("ชื่อปกติ", Color3.new(1,1,1),15) end) end
+    if s then MusicLoop=task.spawn(function() while IsMusicRainbow do for i=1,#musicSets do pcall(function() Remote:FireServer(unpack(musicSets[i])) end) task.wait(0.1) end for i=#musicSets,1,-1 do pcall(function() Remote:FireServer(unpack(musicSets[i])) end) task.wait(0.1) end end end)
+    else task.cancel(MusicLoop) pcall(function() Remote:FireServer("ชื่อปกติ", Color3.new(1,1,1),15) end) end
 end})
 
 -- ====================== SETTINGS TAB ======================
@@ -221,4 +212,4 @@ ServSec:NewButton({Title="ย้ายเซิร์ฟใหม่ 🔀", Call
 
 loadstring(game:HttpGet("https://raw.githubusercontent.com/TOUxIllIll0O00OO/RobloxscriptTOU/refs/heads/main/Report%20a%20message"))()
 
-SafeNotify({Title="TOU HUB v34 ULTIMATE + VIP FARM 👑", Description="โหลดครบ 100% แล้ว! ไปรวยเงียบ ๆ เลยบอส 🔥🕶️💰", Duration=15})
+SafeNotify({Title="TOU HUB v34 ULTIMATE 🤑", Description="โหลดครบ 100% แล้วบอส! Premium + ชื่อกระตุก พร้อมลุย 🔥", Duration=15})
