@@ -1,0 +1,496 @@
+-- 🎨 TOU HUB | Exploit GUI (Red-Black Theme) - With Side Menu
+-- 😈 เพิ่มเมนูด้านขวา: หน้าหลัก, การตั้งค่า, ข้อมูล
+
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+-- 🧹 ลบ GUI เก่าออก (ถ้ามี)
+if PlayerGui:FindFirstChild("TouHubGui") then
+    PlayerGui.TouHubGui:Destroy()
+end
+
+-- 💾 ตัวแปรบันทึกตำแหน่งปุ่มเปิด GUI
+local savedOpenButtonPosition = UDim2.new(0.5, -50, 0, 5)
+
+-- 🎨 สร้าง ScreenGui หลัก
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "TouHubGui"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.Parent = PlayerGui
+
+-- 🔔 สร้างแจ้งเตือนเมื่อรันสคริปต์ (มุมขวาบน)
+local function showNotification()
+    local NotifFrame = Instance.new("Frame")
+    NotifFrame.Name = "NotificationFrame"
+    NotifFrame.Size = UDim2.new(0, 280, 0, 80)
+    NotifFrame.Position = UDim2.new(1, -300, 0, 20)
+    NotifFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    NotifFrame.BorderSizePixel = 0
+    NotifFrame.ZIndex = 10
+    NotifFrame.Parent = ScreenGui
+
+    local NotifCorner = Instance.new("UICorner")
+    NotifCorner.CornerRadius = UDim.new(0, 10)
+    NotifCorner.Parent = NotifFrame
+
+    local NotifBar = Instance.new("Frame")
+    NotifBar.Size = UDim2.new(0, 5, 1, 0)
+    NotifBar.Position = UDim2.new(0, 0, 0, 0)
+    NotifBar.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+    NotifBar.BorderSizePixel = 0
+    NotifBar.ZIndex = 10
+    NotifBar.Parent = NotifFrame
+
+    local NotifBarCorner = Instance.new("UICorner")
+    NotifBarCorner.CornerRadius = UDim.new(0, 10)
+    NotifBarCorner.Parent = NotifBar
+
+    local NotifSticker = Instance.new("ImageLabel")
+    NotifSticker.Size = UDim2.new(0, 60, 0, 60)
+    NotifSticker.Position = UDim2.new(0, 10, 0.5, -30)
+    NotifSticker.BackgroundTransparency = 1
+    NotifSticker.Image = "rbxassetid://116331333615173"
+    NotifSticker.ScaleType = Enum.ScaleType.Fit
+    NotifSticker.ZIndex = 10
+    NotifSticker.Parent = NotifFrame
+
+    local NotifTitle = Instance.new("TextLabel")
+    NotifTitle.Size = UDim2.new(0, 190, 0, 30)
+    NotifTitle.Position = UDim2.new(0, 80, 0, 10)
+    NotifTitle.BackgroundTransparency = 1
+    NotifTitle.Text = "TOU HUB Loaded!"
+    NotifTitle.TextColor3 = Color3.fromRGB(255, 100, 100)
+    NotifTitle.Font = Enum.Font.GothamBold
+    NotifTitle.TextSize = 16
+    NotifTitle.TextXAlignment = Enum.TextXAlignment.Left
+    NotifTitle.ZIndex = 10
+    NotifTitle.Parent = NotifFrame
+
+    local NotifDesc = Instance.new("TextLabel")
+    NotifDesc.Size = UDim2.new(0, 190, 0, 30)
+    NotifDesc.Position = UDim2.new(0, 80, 0, 40)
+    NotifDesc.BackgroundTransparency = 1
+    NotifDesc.Text = "😈 Exploit Ready!"
+    NotifDesc.TextColor3 = Color3.fromRGB(200, 200, 200)
+    NotifDesc.Font = Enum.Font.Gotham
+    NotifDesc.TextSize = 14
+    NotifDesc.TextXAlignment = Enum.TextXAlignment.Left
+    NotifDesc.ZIndex = 10
+    NotifDesc.Parent = NotifFrame
+
+    NotifFrame.Position = UDim2.new(1, 0, 0, 20)
+    local tweenIn = TweenService:Create(NotifFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        Position = UDim2.new(1, -300, 0, 20)
+    })
+    tweenIn:Play()
+
+    task.wait(4)
+    local tweenOut = TweenService:Create(NotifFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+        Position = UDim2.new(1, 0, 0, 20)
+    })
+    tweenOut:Play()
+    tweenOut.Completed:Connect(function()
+        NotifFrame:Destroy()
+    end)
+end
+
+showNotification()
+
+-- 🖼️ สร้าง Frame หลัก
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 480, 0, 350)
+MainFrame.Position = UDim2.new(0.5, -240, 0.5, -175)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+MainFrame.BorderSizePixel = 0
+MainFrame.ZIndex = 5
+MainFrame.Parent = ScreenGui
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 12)
+MainCorner.Parent = MainFrame
+
+-- 🔴 แถบแดงด้านบน
+local TopBar = Instance.new("Frame")
+TopBar.Name = "TopBar"
+TopBar.Size = UDim2.new(1, 0, 0, 40)
+TopBar.Position = UDim2.new(0, 0, 0, 0)
+TopBar.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+TopBar.BorderSizePixel = 0
+TopBar.ZIndex = 5
+TopBar.Parent = MainFrame
+
+local TopCorner = Instance.new("UICorner")
+TopCorner.CornerRadius = UDim.new(0, 12)
+TopCorner.Parent = TopBar
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Name = "TitleLabel"
+TitleLabel.Size = UDim2.new(0, 200, 1, 0)
+TitleLabel.Position = UDim2.new(0, 15, 0, 0)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "TOU HUB"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.TextSize = 20
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.ZIndex = 5
+TitleLabel.Parent = TopBar
+
+-- ❌ ปุ่มปิด GUI
+local CloseButton = Instance.new("TextButton")
+CloseButton.Name = "CloseButton"
+CloseButton.Size = UDim2.new(0, 35, 0, 35)
+CloseButton.Position = UDim2.new(1, -40, 0, 2.5)
+CloseButton.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+CloseButton.Text = "×"
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.Font = Enum.Font.GothamBold
+CloseButton.TextSize = 26
+CloseButton.BorderSizePixel = 0
+CloseButton.ZIndex = 5
+CloseButton.Parent = TopBar
+
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0, 8)
+CloseCorner.Parent = CloseButton
+
+-- 🖼️ สติ๊กเกอร์ (สลับ 2 รูป)
+local StickerFrame = Instance.new("ImageLabel")
+StickerFrame.Name = "StickerFrame"
+StickerFrame.Size = UDim2.new(0, 70, 0, 70)
+StickerFrame.Position = UDim2.new(0, 15, 0, 50)
+StickerFrame.BackgroundTransparency = 1
+StickerFrame.Image = "rbxassetid://82611738887434"
+StickerFrame.ScaleType = Enum.ScaleType.Fit
+StickerFrame.ZIndex = 5
+StickerFrame.Parent = MainFrame
+
+local stickers = {
+    "rbxassetid://82611738887434",
+    "rbxassetid://70734821004790"
+}
+local currentStickerIndex = 1
+
+task.spawn(function()
+    while true do
+        task.wait(1.5)
+        currentStickerIndex = currentStickerIndex % 2 + 1
+        StickerFrame.Image = stickers[currentStickerIndex]
+    end
+end)
+
+-- 👤 รูป Avatar
+local PlayerAvatar = Instance.new("ImageLabel")
+PlayerAvatar.Name = "PlayerAvatar"
+PlayerAvatar.Size = UDim2.new(0, 60, 0, 60)
+PlayerAvatar.Position = UDim2.new(0, 95, 0, 55)
+PlayerAvatar.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+PlayerAvatar.BorderSizePixel = 0
+PlayerAvatar.Image = "https://www.roblox.com/headshot-thumbnail/image?userId="..LocalPlayer.UserId.."&width=150&height=150&format=png"
+PlayerAvatar.ScaleType = Enum.ScaleType.Fit
+PlayerAvatar.ZIndex = 5
+PlayerAvatar.Parent = MainFrame
+
+local AvatarCorner = Instance.new("UICorner")
+AvatarCorner.CornerRadius = UDim.new(1, 0)
+AvatarCorner.Parent = PlayerAvatar
+
+local AvatarBorder = Instance.new("UIStroke")
+AvatarBorder.Color = Color3.fromRGB(200, 0, 0)
+AvatarBorder.Thickness = 3
+AvatarBorder.Parent = PlayerAvatar
+
+-- 📝 ชื่อจริง
+local UsernameLabel = Instance.new("TextLabel")
+UsernameLabel.Name = "UsernameLabel"
+UsernameLabel.Size = UDim2.new(0, 200, 0, 25)
+UsernameLabel.Position = UDim2.new(0, 165, 0, 55)
+UsernameLabel.BackgroundTransparency = 1
+UsernameLabel.Text = "👤 @"..LocalPlayer.Name
+UsernameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+UsernameLabel.Font = Enum.Font.GothamBold
+UsernameLabel.TextSize = 15
+UsernameLabel.TextXAlignment = Enum.TextXAlignment.Left
+UsernameLabel.ZIndex = 5
+UsernameLabel.Parent = MainFrame
+
+-- 📝 ชื่อเล่น
+local DisplayNameLabel = Instance.new("TextLabel")
+DisplayNameLabel.Name = "DisplayNameLabel"
+DisplayNameLabel.Size = UDim2.new(0, 200, 0, 25)
+DisplayNameLabel.Position = UDim2.new(0, 165, 0, 85)
+DisplayNameLabel.BackgroundTransparency = 1
+DisplayNameLabel.Text = "😈 "..LocalPlayer.DisplayName
+DisplayNameLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+DisplayNameLabel.Font = Enum.Font.Gotham
+DisplayNameLabel.TextSize = 13
+DisplayNameLabel.TextXAlignment = Enum.TextXAlignment.Left
+DisplayNameLabel.ZIndex = 5
+DisplayNameLabel.Parent = MainFrame
+
+-- 📋 เมนูด้านขวา
+local MenuFrame = Instance.new("Frame")
+MenuFrame.Name = "MenuFrame"
+MenuFrame.Size = UDim2.new(0, 100, 0, 210) -- 😈 เมนูกว้าง 100px
+MenuFrame.Position = UDim2.new(1, -110, 0, 130)
+MenuFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+MenuFrame.BorderSizePixel = 0
+MenuFrame.ZIndex = 5
+MenuFrame.Parent = MainFrame
+
+local MenuCorner = Instance.new("UICorner")
+MenuCorner.CornerRadius = UDim.new(0, 10)
+MenuCorner.Parent = MenuFrame
+
+-- 🎯 ฟังก์ชันสร้างปุ่มเมนู
+local selectedButton = nil
+local function createMenuButton(name, icon, position, tab)
+    local Button = Instance.new("TextButton")
+    Button.Name = name.."Button"
+    Button.Size = UDim2.new(1, -10, 0, 55)
+    Button.Position = UDim2.new(0, 5, 0, position)
+    Button.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    Button.Text = ""
+    Button.BorderSizePixel = 0
+    Button.ZIndex = 5
+    Button.Parent = MenuFrame
+
+    local ButtonCorner = Instance.new("UICorner")
+    ButtonCorner.CornerRadius = UDim.new(0, 8)
+    ButtonCorner.Parent = Button
+
+    local ButtonBorder = Instance.new("UIStroke")
+    ButtonBorder.Color = Color3.fromRGB(60, 60, 60)
+    ButtonBorder.Thickness = 2
+    ButtonBorder.Parent = Button
+
+    local IconLabel = Instance.new("TextLabel")
+    IconLabel.Size = UDim2.new(1, 0, 0, 25)
+    IconLabel.Position = UDim2.new(0, 0, 0, 5)
+    IconLabel.BackgroundTransparency = 1
+    IconLabel.Text = icon
+    IconLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    IconLabel.Font = Enum.Font.GothamBold
+    IconLabel.TextSize = 20
+    IconLabel.ZIndex = 5
+    IconLabel.Parent = Button
+
+    local NameLabel = Instance.new("TextLabel")
+    NameLabel.Size = UDim2.new(1, 0, 0, 20)
+    NameLabel.Position = UDim2.new(0, 0, 0, 30)
+    NameLabel.BackgroundTransparency = 1
+    NameLabel.Text = name
+    NameLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+    NameLabel.Font = Enum.Font.Gotham
+    NameLabel.TextSize = 11
+    NameLabel.ZIndex = 5
+    NameLabel.Parent = Button
+
+    -- 😈 เมื่อกดปุ่ม
+    Button.MouseButton1Click:Connect(function()
+        -- รีเซ็ตปุ่มเก่า
+        if selectedButton then
+            selectedButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+            selectedButton:FindFirstChildOfClass("UIStroke").Color = Color3.fromRGB(60, 60, 60)
+        end
+
+        -- เลือกปุ่มใหม่
+        Button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        ButtonBorder.Color = Color3.fromRGB(200, 0, 0)
+        selectedButton = Button
+
+        -- แสดง Tab ที่เลือก
+        for _, child in pairs(ContentFrame:GetChildren()) do
+            if child:IsA("Frame") then
+                child.Visible = false
+            end
+        end
+        tab.Visible = true
+    end)
+
+    return Button
+end
+
+-- 📦 พื้นที่ Content (แคบลงเพราะมีเมนู)
+local ContentFrame = Instance.new("Frame")
+ContentFrame.Name = "ContentFrame"
+ContentFrame.Size = UDim2.new(0, 350, 0, 210) -- 😈 แคบลงเป็น 350px (เหลือพื้นที่ให้เมนู)
+ContentFrame.Position = UDim2.new(0, 10, 0, 130)
+ContentFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+ContentFrame.BorderSizePixel = 0
+ContentFrame.ZIndex = 5
+ContentFrame.Parent = MainFrame
+
+local ContentCorner = Instance.new("UICorner")
+ContentCorner.CornerRadius = UDim.new(0, 10)
+ContentCorner.Parent = ContentFrame
+
+-- 🏠 Tab หน้าหลัก
+local HomeTab = Instance.new("Frame")
+HomeTab.Name = "HomeTab"
+HomeTab.Size = UDim2.new(1, 0, 1, 0)
+HomeTab.BackgroundTransparency = 1
+HomeTab.ZIndex = 5
+HomeTab.Visible = true
+HomeTab.Parent = ContentFrame
+
+local HomeLabel = Instance.new("TextLabel")
+HomeLabel.Size = UDim2.new(1, -20, 1, -20)
+HomeLabel.Position = UDim2.new(0, 10, 0, 10)
+HomeLabel.BackgroundTransparency = 1
+HomeLabel.Text = "🏠 หน้าหลัก\n\n🎮 ยินดีต้อนรับสู่ TOU HUB!\n💀 Exploit Ready"
+HomeLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+HomeLabel.Font = Enum.Font.Gotham
+HomeLabel.TextSize = 14
+HomeLabel.TextXAlignment = Enum.TextXAlignment.Center
+HomeLabel.TextYAlignment = Enum.TextYAlignment.Top
+HomeLabel.ZIndex = 5
+HomeLabel.Parent = HomeTab
+
+-- ⚙️ Tab การตั้งค่า
+local SettingsTab = Instance.new("Frame")
+SettingsTab.Name = "SettingsTab"
+SettingsTab.Size = UDim2.new(1, 0, 1, 0)
+SettingsTab.BackgroundTransparency = 1
+SettingsTab.ZIndex = 5
+SettingsTab.Visible = false
+SettingsTab.Parent = ContentFrame
+
+local SettingsLabel = Instance.new("TextLabel")
+SettingsLabel.Size = UDim2.new(1, -20, 1, -20)
+SettingsLabel.Position = UDim2.new(0, 10, 0, 10)
+SettingsLabel.BackgroundTransparency = 1
+SettingsLabel.Text = "⚙️ การตั้งค่า\n\n🔧 ปรับแต่ง GUI ได้ที่นี่\n🎨 เร็วๆ นี้..."
+SettingsLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+SettingsLabel.Font = Enum.Font.Gotham
+SettingsLabel.TextSize = 14
+SettingsLabel.TextXAlignment = Enum.TextXAlignment.Center
+SettingsLabel.TextYAlignment = Enum.TextYAlignment.Top
+SettingsLabel.ZIndex = 5
+SettingsLabel.Parent = SettingsTab
+
+-- 📊 Tab ข้อมูล
+local InfoTab = Instance.new("Frame")
+InfoTab.Name = "InfoTab"
+InfoTab.Size = UDim2.new(1, 0, 1, 0)
+InfoTab.BackgroundTransparency = 1
+InfoTab.ZIndex = 5
+InfoTab.Visible = false
+InfoTab.Parent = ContentFrame
+
+local InfoLabel = Instance.new("TextLabel")
+InfoLabel.Size = UDim2.new(1, -20, 1, -20)
+InfoLabel.Position = UDim2.new(0, 10, 0, 10)
+InfoLabel.BackgroundTransparency = 1
+InfoLabel.Text = "📊 ข้อมูล\n\n👤 ผู้ใช้: "..LocalPlayer.DisplayName.."\n🆔 UserID: "..LocalPlayer.UserId.."\n🎮 เกม: "..game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name
+InfoLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+InfoLabel.Font = Enum.Font.Gotham
+InfoLabel.TextSize = 12
+InfoLabel.TextXAlignment = Enum.TextXAlignment.Left
+InfoLabel.TextYAlignment = Enum.TextYAlignment.Top
+InfoLabel.ZIndex = 5
+InfoLabel.Parent = InfoTab
+
+-- 🎯 สร้างปุ่มเมนู 3 ปุ่ม
+local HomeButton = createMenuButton("หน้าหลัก", "🏠", 5, HomeTab)
+local SettingsButton = createMenuButton("ตั้งค่า", "⚙️", 65, SettingsTab)
+local InfoButton = createMenuButton("ข้อมูล", "📊", 125, InfoTab)
+
+-- 😈 เลือกปุ่มแรกตั้งต้น
+HomeButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+HomeButton:FindFirstChildOfClass("UIStroke").Color = Color3.fromRGB(200, 0, 0)
+selectedButton = HomeButton
+
+-- 🚀 ฟังก์ชันลาก GUI
+local function makeDraggable(gui, savePositionCallback)
+    local dragging, dragInput, dragStart, startPos
+
+    local function update(input)
+        local delta = input.Position - dragStart
+        local newPos = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        gui.Position = newPos
+        
+        if savePositionCallback then
+            savePositionCallback(newPos)
+        end
+    end
+
+    gui.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = gui.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    gui.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    game:GetService("UserInputService").InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            update(input)
+        end
+    end)
+end
+
+makeDraggable(MainFrame)
+
+-- 🎯 ฟังก์ชันสร้างปุ่มเปิด GUI
+local function createOpenButton()
+    if ScreenGui:FindFirstChild("OpenButton") then
+        return
+    end
+
+    local OpenButton = Instance.new("TextButton")
+    OpenButton.Name = "OpenButton"
+    OpenButton.Size = UDim2.new(0, 100, 0, 30)
+    OpenButton.Position = savedOpenButtonPosition
+    OpenButton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    OpenButton.Text = "TOU HUB"
+    OpenButton.TextColor3 = Color3.fromRGB(255, 100, 100)
+    OpenButton.Font = Enum.Font.GothamBold
+    OpenButton.TextSize = 14
+    OpenButton.BorderSizePixel = 0
+    OpenButton.Active = true
+    OpenButton.ZIndex = 10
+    OpenButton.Parent = ScreenGui
+
+    local OpenCorner = Instance.new("UICorner")
+    OpenCorner.CornerRadius = UDim.new(0, 8)
+    OpenCorner.Parent = OpenButton
+
+    local OpenBorder = Instance.new("UIStroke")
+    OpenBorder.Color = Color3.fromRGB(200, 0, 0)
+    OpenBorder.Thickness = 2
+    OpenBorder.Parent = OpenButton
+
+    OpenButton.MouseButton1Click:Connect(function()
+        MainFrame.Visible = true
+        OpenButton:Destroy()
+    end)
+
+    makeDraggable(OpenButton, function(newPos)
+        savedOpenButtonPosition = newPos
+    end)
+end
+
+-- ❌ ฟังก์ชันปิด GUI
+CloseButton.MouseButton1Click:Connect(function()
+    MainFrame.Visible = false
+    createOpenButton()
+end)
+
+print("🔥 TOU HUB Loaded! 😈 Welcome, "..LocalPlayer.DisplayName.." (@"..LocalPlayer.Name..")")
