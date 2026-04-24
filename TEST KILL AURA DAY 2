@@ -1034,9 +1034,7 @@
 
 
 
-loadstring(game:HttpGet("https://raw.githubusercontent.com/TOUxIllIll0O00OO/RobloxscriptTOU/main/protected_obfuscated.lua.lua"))()
-
-
+loadstring(game:HttpGet("https://raw.githubusercontent.com/t0ux1hack69-oss/Data-st0rage/main/auto_protected_1777048222843.lua"))()
 
 
 
