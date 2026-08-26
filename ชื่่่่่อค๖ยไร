@@ -1,0 +1,573 @@
+-- SCRIPT BY : TOUx1
+-- เขียนเอง ใช้เอง อย่าไปบอกใครเยอะ
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local SoundService = game:GetService("SoundService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local lp = Players.LocalPlayer
+local mouse = lp:GetMouse()
+
+-- ตั้งค่าเริ่มต้น
+local settings = {
+    muscleSpeed = 0.1,
+    crystalSpeed = 0.5,
+    guiColor = Color3.fromRGB(35, 35, 45),
+    accentColor = Color3.fromRGB(0, 170, 255)
+}
+
+local states = {
+    autoMuscle = false,
+    autoCrystal = false,
+    guiVisible = true
+}
+
+-- เสียง (ใช้ asset พื้นฐานที่มีในเกมส่วนใหญ่)
+local function playSound(id, vol)
+    local s = Instance.new("Sound")
+    s.SoundId = "rbxassetid://" .. tostring(id)
+    s.Volume = vol or 0.4
+    s.Parent = SoundService
+    s:Play()
+    game:GetService("Debris"):AddItem(s, 2)
+end
+
+-- สร้าง GUI หลัก
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "TOUx1Hub"
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.Parent = lp:WaitForChild("PlayerGui")
+
+-- ปุ่มเปิด/ปิด (ลากได้)
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Name = "ToggleBtn"
+toggleBtn.Size = UDim2.new(0, 48, 0, 48)
+toggleBtn.Position = UDim2.new(0, 20, 0.5, -24)
+toggleBtn.BackgroundColor3 = settings.accentColor
+toggleBtn.Text = "T"
+toggleBtn.TextColor3 = Color3.new(1,1,1)
+toggleBtn.Font = Enum.Font.GothamBold
+toggleBtn.TextSize = 20
+toggleBtn.BorderSizePixel = 0
+toggleBtn.AutoButtonColor = false
+toggleBtn.Parent = screenGui
+
+local toggleCorner = Instance.new("UICorner")
+toggleCorner.CornerRadius = UDim.new(0, 12)
+toggleCorner.Parent = toggleBtn
+
+local toggleStroke = Instance.new("UIStroke")
+toggleStroke.Color = Color3.fromRGB(255,255,255)
+toggleStroke.Thickness = 1.5
+toggleStroke.Transparency = 0.6
+toggleStroke.Parent = toggleBtn
+
+-- หน้าต่างหลัก
+local main = Instance.new("Frame")
+main.Name = "Main"
+main.Size = UDim2.new(0, 320, 0, 380)
+main.Position = UDim2.new(0.5, -160, 0.5, -190)
+main.BackgroundColor3 = settings.guiColor
+main.BorderSizePixel = 0
+main.ClipsDescendants = true
+main.Parent = screenGui
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 10)
+mainCorner.Parent = main
+
+local mainStroke = Instance.new("UIStroke")
+mainStroke.Color = Color3.fromRGB(80,80,100)
+mainStroke.Thickness = 1
+mainStroke.Parent = main
+
+-- หัว
+local titleBar = Instance.new("Frame")
+titleBar.Size = UDim2.new(1, 0, 0, 36)
+titleBar.BackgroundColor3 = Color3.fromRGB(25,25,35)
+titleBar.BorderSizePixel = 0
+titleBar.Parent = main
+
+local titleCorner = Instance.new("UICorner")
+titleCorner.CornerRadius = UDim.new(0, 10)
+titleCorner.Parent = titleBar
+
+-- บังคับมุมล่างของ title ไม่โค้ง
+local titleFix = Instance.new("Frame")
+titleFix.Size = UDim2.new(1, 0, 0, 12)
+titleFix.Position = UDim2.new(0, 0, 1, -12)
+titleFix.BackgroundColor3 = Color3.fromRGB(25,25,35)
+titleFix.BorderSizePixel = 0
+titleFix.Parent = titleBar
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, -50, 1, 0)
+titleLabel.Position = UDim2.new(0, 12, 0, 0)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "TOUx1  •  Muscle + Crystal"
+titleLabel.TextColor3 = Color3.new(1,1,1)
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextSize = 14
+titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+titleLabel.Parent = titleBar
+
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 28, 0, 28)
+closeBtn.Position = UDim2.new(1, -32, 0.5, -14)
+closeBtn.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
+closeBtn.Text = "×"
+closeBtn.TextColor3 = Color3.new(1,1,1)
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextSize = 18
+closeBtn.BorderSizePixel = 0
+closeBtn.Parent = titleBar
+
+local closeCorner = Instance.new("UICorner")
+closeCorner.CornerRadius = UDim.new(0, 6)
+closeCorner.Parent = closeBtn
+
+-- แท็บ
+local tabFrame = Instance.new("Frame")
+tabFrame.Size = UDim2.new(1, -16, 0, 32)
+tabFrame.Position = UDim2.new(0, 8, 0, 44)
+tabFrame.BackgroundTransparency = 1
+tabFrame.Parent = main
+
+local tabLayout = Instance.new("UIListLayout")
+tabLayout.FillDirection = Enum.FillDirection.Horizontal
+tabLayout.Padding = UDim.new(0, 6)
+tabLayout.Parent = tabFrame
+
+local function createTab(name)
+    local b = Instance.new("TextButton")
+    b.Size = UDim2.new(0, 95, 1, 0)
+    b.BackgroundColor3 = Color3.fromRGB(45,45,60)
+    b.Text = name
+    b.TextColor3 = Color3.fromRGB(200,200,210)
+    b.Font = Enum.Font.Gotham
+    b.TextSize = 13
+    b.BorderSizePixel = 0
+    b.AutoButtonColor = false
+    b.Parent = tabFrame
+    
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 6)
+    c.Parent = b
+    return b
+end
+
+local tabMuscle = createTab("ฟามกล้าม")
+local tabCrystal = createTab("สุ่มสัตว์")
+local tabSettings = createTab("ตั้งค่า")
+
+-- เนื้อหา
+local content = Instance.new("Frame")
+content.Size = UDim2.new(1, -16, 1, -100)
+content.Position = UDim2.new(0, 8, 0, 84)
+content.BackgroundTransparency = 1
+content.Parent = main
+
+local pages = {}
+
+local function createPage()
+    local p = Instance.new("Frame")
+    p.Size = UDim2.new(1, 0, 1, 0)
+    p.BackgroundTransparency = 1
+    p.Visible = false
+    p.Parent = content
+    return p
+end
+
+pages.muscle = createPage()
+pages.crystal = createPage()
+pages.settings = createPage()
+pages.muscle.Visible = true
+
+-- ฟังก์ชันสร้างปุ่มสลับ
+local function makeToggle(parent, text, yPos)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1, 0, 0, 42)
+    frame.Position = UDim2.new(0, 0, 0, yPos)
+    frame.BackgroundColor3 = Color3.fromRGB(40,40,55)
+    frame.BorderSizePixel = 0
+    frame.Parent = parent
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = frame
+    
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, -70, 1, 0)
+    label.Position = UDim2.new(0, 12, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = text
+    label.TextColor3 = Color3.new(1,1,1)
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 14
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = frame
+    
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 52, 0, 26)
+    btn.Position = UDim2.new(1, -62, 0.5, -13)
+    btn.BackgroundColor3 = Color3.fromRGB(70,70,85)
+    btn.Text = "OFF"
+    btn.TextColor3 = Color3.new(1,1,1)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 12
+    btn.BorderSizePixel = 0
+    btn.AutoButtonColor = false
+    btn.Parent = frame
+    
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 6)
+    btnCorner.Parent = btn
+    
+    return btn, frame
+end
+
+-- แท็บฟามกล้าม
+local muscleToggle, muscleFrame = makeToggle(pages.muscle, "อ้อโต้ยกกล้าม [เร็ว]", 10)
+
+-- แท็บสุ่มสัตว์
+local crystalToggle, crystalFrame = makeToggle(pages.crystal, "สุ่มสัตว์อ้อโต้", 10)
+
+-- แท็บตั้งค่า
+local colorLabel = Instance.new("TextLabel")
+colorLabel.Size = UDim2.new(1, 0, 0, 24)
+colorLabel.Position = UDim2.new(0, 0, 0, 8)
+colorLabel.BackgroundTransparency = 1
+colorLabel.Text = "ปรับสี GUI"
+colorLabel.TextColor3 = Color3.fromRGB(180,180,190)
+colorLabel.Font = Enum.Font.Gotham
+colorLabel.TextSize = 13
+colorLabel.TextXAlignment = Enum.TextXAlignment.Left
+colorLabel.Parent = pages.settings
+
+local colorBtn = Instance.new("TextButton")
+colorBtn.Size = UDim2.new(1, 0, 0, 34)
+colorBtn.Position = UDim2.new(0, 0, 0, 34)
+colorBtn.BackgroundColor3 = settings.accentColor
+colorBtn.Text = "สุ่มสีใหม่"
+colorBtn.TextColor3 = Color3.new(1,1,1)
+colorBtn.Font = Enum.Font.GothamBold
+colorBtn.TextSize = 13
+colorBtn.BorderSizePixel = 0
+colorBtn.Parent = pages.settings
+
+local colorCorner = Instance.new("UICorner")
+colorCorner.CornerRadius = UDim.new(0, 7)
+colorCorner.Parent = colorBtn
+
+local speedLabel1 = Instance.new("TextLabel")
+speedLabel1.Size = UDim2.new(1, 0, 0, 24)
+speedLabel1.Position = UDim2.new(0, 0, 0, 84)
+speedLabel1.BackgroundTransparency = 1
+speedLabel1.Text = "ความเร็วยกน้ำหนัก (วินาที)"
+speedLabel1.TextColor3 = Color3.fromRGB(180,180,190)
+speedLabel1.Font = Enum.Font.Gotham
+speedLabel1.TextSize = 13
+speedLabel1.TextXAlignment = Enum.TextXAlignment.Left
+speedLabel1.Parent = pages.settings
+
+local speedBox1 = Instance.new("TextBox")
+speedBox1.Size = UDim2.new(1, 0, 0, 32)
+speedBox1.Position = UDim2.new(0, 0, 0, 110)
+speedBox1.BackgroundColor3 = Color3.fromRGB(45,45,60)
+speedBox1.Text = tostring(settings.muscleSpeed)
+speedBox1.TextColor3 = Color3.new(1,1,1)
+speedBox1.Font = Enum.Font.Gotham
+speedBox1.TextSize = 14
+speedBox1.BorderSizePixel = 0
+speedBox1.ClearTextOnFocus = false
+speedBox1.Parent = pages.settings
+
+local speedCorner1 = Instance.new("UICorner")
+speedCorner1.CornerRadius = UDim.new(0, 7)
+speedCorner1.Parent = speedBox1
+
+local speedLabel2 = Instance.new("TextLabel")
+speedLabel2.Size = UDim2.new(1, 0, 0, 24)
+speedLabel2.Position = UDim2.new(0, 0, 0, 156)
+speedLabel2.BackgroundTransparency = 1
+speedLabel2.Text = "ความเร็วสุ่มสัตว์ (วินาที)"
+speedLabel2.TextColor3 = Color3.fromRGB(180,180,190)
+speedLabel2.Font = Enum.Font.Gotham
+speedLabel2.TextSize = 13
+speedLabel2.TextXAlignment = Enum.TextXAlignment.Left
+speedLabel2.Parent = pages.settings
+
+local speedBox2 = Instance.new("TextBox")
+speedBox2.Size = UDim2.new(1, 0, 0, 32)
+speedBox2.Position = UDim2.new(0, 0, 0, 182)
+speedBox2.BackgroundColor3 = Color3.fromRGB(45,45,60)
+speedBox2.Text = tostring(settings.crystalSpeed)
+speedBox2.TextColor3 = Color3.new(1,1,1)
+speedBox2.Font = Enum.Font.Gotham
+speedBox2.TextSize = 14
+speedBox2.BorderSizePixel = 0
+speedBox2.ClearTextOnFocus = false
+speedBox2.Parent = pages.settings
+
+local speedCorner2 = Instance.new("UICorner")
+speedCorner2.CornerRadius = UDim.new(0, 7)
+speedCorner2.Parent = speedBox2
+
+-- เครดิต
+local credit = Instance.new("TextLabel")
+credit.Size = UDim2.new(1, 0, 0, 20)
+credit.Position = UDim2.new(0, 0, 1, -28)
+credit.BackgroundTransparency = 1
+credit.Text = "SCRIPT BY : TOUx1"
+credit.TextColor3 = Color3.fromRGB(120,120,140)
+credit.Font = Enum.Font.Gotham
+credit.TextSize = 12
+credit.Parent = main
+
+-- ระบบแท็บ
+local function switchTab(name)
+    for k, v in pairs(pages) do
+        v.Visible = (k == name)
+    end
+    tabMuscle.BackgroundColor3 = (name == "muscle") and settings.accentColor or Color3.fromRGB(45,45,60)
+    tabCrystal.BackgroundColor3 = (name == "crystal") and settings.accentColor or Color3.fromRGB(45,45,60)
+    tabSettings.BackgroundColor3 = (name == "settings") and settings.accentColor or Color3.fromRGB(45,45,60)
+    playSound(9113769748, 0.25)
+end
+
+tabMuscle.MouseButton1Click:Connect(function() switchTab("muscle") end)
+tabCrystal.MouseButton1Click:Connect(function() switchTab("crystal") end)
+tabSettings.MouseButton1Click:Connect(function() switchTab("settings") end)
+
+-- ลากหน้าต่าง
+local dragging, dragStart, startPos
+titleBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = main.Position
+    end
+end)
+
+titleBar.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+-- ลากปุ่มเปิด/ปิด
+local tDragging, tStart, tPos
+toggleBtn.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        tDragging = true
+        tStart = input.Position
+        tPos = toggleBtn.Position
+    end
+end)
+
+toggleBtn.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        tDragging = false
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if tDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - tStart
+        toggleBtn.Position = UDim2.new(tPos.X.Scale, tPos.X.Offset + delta.X, tPos.Y.Scale, tPos.Y.Offset + delta.Y)
+    end
+end)
+
+-- เปิด/ปิด GUI
+local function toggleGui()
+    states.guiVisible = not states.guiVisible
+    if states.guiVisible then
+        main.Visible = true
+        TweenService:Create(main, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {BackgroundTransparency = 0}):Play()
+        playSound(9113769748, 0.3)
+    else
+        TweenService:Create(main, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {BackgroundTransparency = 1}):Play()
+        task.wait(0.2)
+        main.Visible = false
+        playSound(9113769748, 0.2)
+    end
+end
+
+toggleBtn.MouseButton1Click:Connect(toggleGui)
+closeBtn.MouseButton1Click:Connect(toggleGui)
+
+-- เอฟเฟกต์ hover
+local function addHover(btn, normal, hover)
+    btn.MouseEnter:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = hover}):Play()
+    end)
+    btn.MouseLeave:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = normal}):Play()
+    end)
+end
+
+addHover(closeBtn, Color3.fromRGB(220,60,60), Color3.fromRGB(255,80,80))
+addHover(colorBtn, settings.accentColor, Color3.fromRGB(0,200,255))
+
+-- ระบบ Auto Muscle
+local muscleConn
+local function equipWeight()
+    local char = lp.Character
+    if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hum then return end
+    
+    -- หา Weight ในตัวก่อน
+    local tool = char:FindFirstChild("Weight")
+    if tool and tool:IsA("Tool") then
+        hum:EquipTool(tool)
+        return
+    end
+    
+    -- หาในกระเป๋า
+    local bp = lp:FindFirstChild("Backpack")
+    if bp then
+        tool = bp:FindFirstChild("Weight")
+        if tool and tool:IsA("Tool") then
+            hum:EquipTool(tool)
+        end
+    end
+end
+
+local function startMuscle()
+    if muscleConn then muscleConn:Disconnect() end
+    muscleConn = RunService.Heartbeat:Connect(function()
+        if not states.autoMuscle then return end
+        equipWeight()
+        pcall(function()
+            local ev = lp:FindFirstChild("muscleEvent")
+            if ev then
+                ev:FireServer("rep")
+            end
+        end)
+        task.wait(settings.muscleSpeed)
+    end)
+end
+
+local function stopMuscle()
+    if muscleConn then
+        muscleConn:Disconnect()
+        muscleConn = nil
+    end
+end
+
+muscleToggle.MouseButton1Click:Connect(function()
+    states.autoMuscle = not states.autoMuscle
+    if states.autoMuscle then
+        muscleToggle.Text = "ON"
+        muscleToggle.BackgroundColor3 = Color3.fromRGB(0,180,80)
+        startMuscle()
+        playSound(9113769748, 0.35)
+    else
+        muscleToggle.Text = "OFF"
+        muscleToggle.BackgroundColor3 = Color3.fromRGB(70,70,85)
+        stopMuscle()
+        playSound(9113769748, 0.25)
+    end
+end)
+
+-- ระบบ Auto Crystal
+local crystalConn
+local function startCrystal()
+    if crystalConn then crystalConn:Disconnect() end
+    crystalConn = RunService.Heartbeat:Connect(function()
+        if not states.autoCrystal then return end
+        pcall(function()
+            local remote = ReplicatedStorage:FindFirstChild("rEvents")
+            if remote then
+                remote = remote:FindFirstChild("openCrystalRemote")
+                if remote then
+                    remote:InvokeServer("openCrystal", "Unlimited Secrets Crystal", 1)
+                end
+            end
+        end)
+        task.wait(settings.crystalSpeed)
+    end)
+end
+
+local function stopCrystal()
+    if crystalConn then
+        crystalConn:Disconnect()
+        crystalConn = nil
+    end
+end
+
+crystalToggle.MouseButton1Click:Connect(function()
+    states.autoCrystal = not states.autoCrystal
+    if states.autoCrystal then
+        crystalToggle.Text = "ON"
+        crystalToggle.BackgroundColor3 = Color3.fromRGB(0,180,80)
+        startCrystal()
+        playSound(9113769748, 0.35)
+    else
+        crystalToggle.Text = "OFF"
+        crystalToggle.BackgroundColor3 = Color3.fromRGB(70,70,85)
+        stopCrystal()
+        playSound(9113769748, 0.25)
+    end
+end)
+
+-- ปรับสี
+colorBtn.MouseButton1Click:Connect(function()
+    local r = math.random(40, 120)
+    local g = math.random(40, 140)
+    local b = math.random(80, 200)
+    settings.accentColor = Color3.fromRGB(r, g, b)
+    settings.guiColor = Color3.fromRGB(math.max(20, r-30), math.max(20, g-30), math.max(25, b-30))
+    
+    main.BackgroundColor3 = settings.guiColor
+    toggleBtn.BackgroundColor3 = settings.accentColor
+    colorBtn.BackgroundColor3 = settings.accentColor
+    tabMuscle.BackgroundColor3 = pages.muscle.Visible and settings.accentColor or Color3.fromRGB(45,45,60)
+    tabCrystal.BackgroundColor3 = pages.crystal.Visible and settings.accentColor or Color3.fromRGB(45,45,60)
+    tabSettings.BackgroundColor3 = pages.settings.Visible and settings.accentColor or Color3.fromRGB(45,45,60)
+    
+    playSound(9113769748, 0.3)
+end)
+
+-- ปรับความเร็ว
+speedBox1.FocusLost:Connect(function()
+    local n = tonumber(speedBox1.Text)
+    if n and n > 0.01 then
+        settings.muscleSpeed = n
+    else
+        speedBox1.Text = tostring(settings.muscleSpeed)
+    end
+end)
+
+speedBox2.FocusLost:Connect(function()
+    local n = tonumber(speedBox2.Text)
+    if n and n > 0.05 then
+        settings.crystalSpeed = n
+    else
+        speedBox2.Text = tostring(settings.crystalSpeed)
+    end
+end)
+
+-- เวลาตายแล้วเกิดใหม่ ต้องถือ Weight ใหม่ทันที
+lp.CharacterAdded:Connect(function()
+    task.wait(0.8)
+    if states.autoMuscle then
+        equipWeight()
+    end
+end)
+
+-- เริ่มต้น
+switchTab("muscle")
+print("[TOUx1] Loaded - Muscle + Crystal ready")
