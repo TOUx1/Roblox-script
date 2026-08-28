@@ -1,0 +1,19 @@
+{
+  "PremiumUsers": [
+    {
+      "Username": "PlayerOne123",
+      "UserId": 12345678,
+      "Tier": "VIP"
+    },
+    {
+      "Username": "PlayerTwo456",
+      "UserId": 87654321,
+      "Tier": "VVIP"
+    },
+    {
+      "Username": "KlDC00I_333",
+      "UserId": 10772836933,
+      "Tier": "Owner"
+    }
+  ]
+}
