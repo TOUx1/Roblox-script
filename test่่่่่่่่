@@ -897,6 +897,12 @@ local function executeScript(isPremiumUser)
 	local antiAfkEnabled = false
 	local antiAfkConn = nil
 
+	-- ⭐ NEW: Auto Gacha State
+	local autoGachaEnabled = false
+	local autoGachaCrystal = "Blue Crystal"  -- default
+	local autoGachaAmount = "1"  -- "1", "3", "10"
+	local autoGachaThread = nil
+
 	-- ════════ HELPERS ════════
 	local function findNil(name)
 		if typeof(getnilinstances) ~= "function" then return nil end
@@ -1683,7 +1689,7 @@ local function executeScript(isPremiumUser)
 		if state then startRebirth() else stopRebirth() end
 	end, "AutoRebirth")
 
-	-- ════════ POPULATING TAB 4: สุ่มสัตว์ ════════
+	-- ════════ POPULATING TAB 4: สุ่มสัตว์ (Premium) ════════
 	addSectionHeader(RollPage, "🎡 ระบบสุ่มวงล้อ (Fortune Wheel)")
 	addToggle(RollPage, "🎡 เปิดออโต้สุ่มวงล้อ (5 รอบทุก 30 นาที)", false, function(state)
 		autoFortuneWheel = state
@@ -2009,6 +2015,59 @@ local function executeScript(isPremiumUser)
 	addGachaButtons("Galaxy Oracle Crystal", "🌌 Galaxy Oracle Crystal (รี 30 - 1.5M)")
 	addGachaButtons("Jungle Crystal", "🌴 Jungle Crystal (รี 60 - 3M)")
 	addGachaButtons("Industrial Crystal", "⚡ Industrial Crystal (รี 150 - 7.5M)")
+
+	-- ⭐ NEW: Auto Gacha Section
+	addSectionHeader(GachaPage, "🎰 สุ่มตู้สัตว์ออโต้ (ทุกคนใช้ได้)")
+
+	local crystalOptions = {
+		"Blue Crystal",
+		"Green Crystal",
+		"Frost Crystal",
+		"Mythical Crystal",
+		"Inferno Crystal",
+		"Legends Crystal",
+		"Muscle Elite Crystal",
+		"Galaxy Oracle Crystal",
+		"Jungle Crystal",
+		"Industrial Crystal"
+	}
+
+	addToolSelector(GachaPage, "🔮 เลือกคริสตัล", crystalOptions, "Blue Crystal", function(selected)
+		autoGachaCrystal = selected
+	end)
+
+	local amountOptions = {"1", "3", "10"}
+	addToolSelector(GachaPage, "🥚 จำนวนไข่ต่อรอบ", amountOptions, "1", function(selected)
+		autoGachaAmount = selected
+	end)
+
+	local function startAutoGacha()
+		if not autoGachaCrystal or not autoGachaAmount then return end
+		autoGachaEnabled = true
+		task.spawn(function()
+			while autoGachaEnabled do
+				local amount = tonumber(autoGachaAmount) or 1
+				if amount == 1 then
+					pcall(function() openCrystalRemote:InvokeServer("openCrystal", autoGachaCrystal) end)
+				else
+					pcall(function() openCrystalRemote:InvokeServer("openCrystalBulk", autoGachaCrystal, amount) end)
+				end
+				task.wait(0.5)  -- ดีเลย์ 0.5 วิ กันสแปม
+			end
+		end)
+	end
+
+	local function stopAutoGacha()
+		autoGachaEnabled = false
+	end
+
+	addToggle(GachaPage, "▶ เปิดออโต้สุ่มตู้สัตว์", false, function(state)
+		if state then
+			startAutoGacha()
+		else
+			stopAutoGacha()
+		end
+	end, "AutoGacha")
 
 end
 
