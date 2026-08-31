@@ -11,7 +11,7 @@ local LocalPlayer = Players.LocalPlayer
 local loadstring = loadstring or load
 
 -- 🌐 ลิ้งค์ดึง รายชื่อ Whitelist / Premium Users (JSON)
-local RAW_WHITELIST_URL = "https://raw.githubusercontent.com/TOUx1/Roblox-script/refs/heads/main/%E0%B8%8A%E0%B8%B7%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B8%ADn%E0%B9%88%E0%B8%B2%E0%B8%99"
+local RAW_WHITELIST_URL = "https://raw.githubusercontent.com/TOUx1/Roblox-script/refs/heads/main/%E0%B8%8A%E0%B8%B7%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B8%ADn%E0%B9%88%E0%B8%B2%E0%B8%99"
 
 -- 🔒 ฟังก์ชั่นเช็คสิทธิ์ Premium จาก URL
 local function checkPremiumFromURL()
@@ -944,11 +944,13 @@ local function executeScript(isPremiumUser)
 	local fastMode = false
 	local farmConn = nil
 
-	-- 🪨 Auto Punch Rock States
+	-- 🪨 Auto Punch Rock States & Configs
 	local autoRockEnabled = false
 	local autoRockConn = nil
 	local selectedRockName = "Tiny Rock"
 	local rockAngle = 0
+	local rockHandToggle = false
+	local originalRockData = {}
 
 	local rebirthEnabled = false
 	local rebirthConn = nil
@@ -1361,18 +1363,55 @@ local function executeScript(isPremiumUser)
 		end
 	end
 
-	-- 🪨 AUTO PUNCH ROCK FUNCTIONS
-	local function modifyAndMoveRock(rockModel, handPart)
-		if not rockModel or not handPart then return end
-		rockAngle = (rockAngle + 15) % 360
-		local targetCFrame = handPart.CFrame * CFrame.Angles(0, math.rad(rockAngle), math.rad(rockAngle))
+	-- 🪨 AUTO PUNCH ROCK FUNCTIONS (ปรับแต่งย่อขนาด สลับมือซ้าย-ขวา คืนค่าเดิม)
+	local function saveOriginalRockData(rockModel)
+		if not rockModel then return end
+		for _, part in ipairs(rockModel:GetDescendants()) do
+			if part:IsA("BasePart") and not originalRockData[part] then
+				originalRockData[part] = {
+					CFrame = part.CFrame,
+					Size = part.Size,
+					Transparency = part.Transparency,
+					CanCollide = part.CanCollide
+				}
+			end
+		end
+	end
+
+	local function restoreOriginalRockData()
+		for part, data in pairs(originalRockData) do
+			if part and part.Parent then
+				pcall(function()
+					part.CanCollide = data.CanCollide
+					part.Transparency = data.Transparency
+					part.Size = data.Size
+					part.CFrame = data.CFrame
+					if part:IsA("BasePart") then
+						part.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+						part.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+					end
+				end)
+			end
+		end
+		table.clear(originalRockData)
+	end
+
+	local function modifyAndMoveRock(rockModel, targetHand)
+		if not rockModel or not targetHand then return end
+		saveOriginalRockData(rockModel)
 		
+		rockAngle = (rockAngle + 15) % 360
+		local targetCFrame = targetHand.CFrame * CFrame.Angles(0, math.rad(rockAngle), math.rad(rockAngle))
+
 		for _, part in ipairs(rockModel:GetDescendants()) do
 			if part:IsA("BasePart") then
 				part.CanCollide = false
 				part.Transparency = 1
 				part.Size = Vector3.new(0.001, 0.001, 0.001)
 				part.CFrame = targetCFrame
+				-- ป้องกันแรงเหวี่ยงจากฟิสิกส์ Roblox (Anti Velocity Lag/Launch)
+				part.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+				part.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
 			elseif part:IsA("Decal") or part:IsA("Texture") then
 				part.Transparency = 1
 			elseif part:IsA("SpecialMesh") or part:IsA("BlockMesh") then
@@ -1386,16 +1425,22 @@ local function executeScript(isPremiumUser)
 		autoRockConn = RunService.Heartbeat:Connect(function()
 			if not autoRockEnabled then return end
 			local char = LocalPlayer.Character
-			local hand = char and (char:FindFirstChild("RightHand") or char:FindFirstChild("Right Arm") or char:FindFirstChild("HumanoidRootPart"))
-			
+			if not char then return end
+
+			-- สลับมือซ้าย / ขวา ไปมาทุกเฟรม
+			rockHandToggle = not rockHandToggle
+			local rightHand = char:FindFirstChild("RightHand") or char:FindFirstChild("Right Arm") or char:FindFirstChild("HumanoidRootPart")
+			local leftHand = char:FindFirstChild("LeftHand") or char:FindFirstChild("Left Arm") or char:FindFirstChild("HumanoidRootPart")
+			local targetHand = rockHandToggle and leftHand or rightHand
+
 			local machines = workspace:FindFirstChild("machinesFolder")
 			if machines then
 				local rock = machines:FindFirstChild(selectedRockName)
 				if rock then
-					modifyAndMoveRock(rock, hand)
+					modifyAndMoveRock(rock, targetHand)
 				end
 			end
-			
+
 			local event = getMuscleEvent()
 			if event then
 				pcall(function()
@@ -1413,6 +1458,7 @@ local function executeScript(isPremiumUser)
 			autoRockConn:Disconnect()
 			autoRockConn = nil
 		end
+		restoreOriginalRockData()
 	end
 
 	local function stopRebirth()
