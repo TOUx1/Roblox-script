@@ -409,7 +409,7 @@ local function executeScript(isPremiumUser)
 	local BtnMain = createTabBtn("Main", "🏠 เมนูหลัก")
 	local BtnStats = createTabBtn("Stats", "📊 ดูข้อมูล")
 	local BtnFarm = createTabBtn("Farm", "🏋️ ฟาร์ม")
-	local BtnGacha = createTabBtn("Gacha", "🎁 สุ่มตู้สัตว์")  -- ⭐ New Tab
+	local BtnGacha = createTabBtn("Gacha", "🎁 สุ่มตู้สัตว์")
 	local BtnRoll = createTabBtn("Roll", "🎲 สุ่มสัตว์")
 	local BtnPremium = createTabBtn("Premium", "พรี่เมี่ยม⭐")
 	local BtnSettings = createTabBtn("Settings", "⚙️ ตั้งค่า")
@@ -487,7 +487,7 @@ local function executeScript(isPremiumUser)
 	local MainPage = createTabPage("MainPage")
 	local StatsPage = createTabPage("StatsPage")
 	local FarmPage = createTabPage("FarmPage")
-	local GachaPage = createTabPage("GachaPage")  -- ⭐ New Page
+	local GachaPage = createTabPage("GachaPage")
 	local RollPage = createTabPage("RollPage")
 	local PremiumPage = createTabPage("PremiumPage")
 	local SettingsPage = createTabPage("SettingsPage")
@@ -512,8 +512,7 @@ local function executeScript(isPremiumUser)
 	BtnMain.MouseButton1Click:Connect(function() switchTab("Main", MainPage) end)
 	BtnStats.MouseButton1Click:Connect(function() switchTab("Stats", StatsPage) end)
 	BtnFarm.MouseButton1Click:Connect(function() switchTab("Farm", FarmPage) end)
-	BtnGacha.MouseButton1Click:Connect(function() switchTab("Gacha", GachaPage) end)  -- ⭐ Unlocked
-	-- 🔒 ล็อกการเข้าถึงแท็บ Roll สำหรับผู้ใช้ Key
+	BtnGacha.MouseButton1Click:Connect(function() switchTab("Gacha", GachaPage) end)
 	BtnRoll.MouseButton1Click:Connect(function()
 		if not isPremiumUser then
 			openPremiumNoticeModal()
@@ -521,7 +520,6 @@ local function executeScript(isPremiumUser)
 			switchTab("Roll", RollPage)
 		end
 	end)
-	-- 🔒 ล็อกการเข้าถึงแท็บ พรี่เมี่ยม⭐ สำหรับผู้ใช้ Key
 	BtnPremium.MouseButton1Click:Connect(function()
 		if not isPremiumUser then
 			openPremiumNoticeModal()
@@ -897,11 +895,10 @@ local function executeScript(isPremiumUser)
 	local antiAfkEnabled = false
 	local antiAfkConn = nil
 
-	-- ⭐ NEW: Auto Gacha State
+	-- 🎁 Auto Gacha State
 	local autoGachaEnabled = false
-	local autoGachaCrystal = "Blue Crystal"  -- default
-	local autoGachaAmount = "1"  -- "1", "3", "10"
-	local autoGachaThread = nil
+	local autoGachaCrystal = "Blue Crystal"
+	local autoGachaAmount = "1"
 
 	-- ════════ HELPERS ════════
 	local function findNil(name)
@@ -1282,12 +1279,22 @@ local function executeScript(isPremiumUser)
 		if not rockModel then return end
 		for _, part in ipairs(rockModel:GetDescendants()) do
 			if part:IsA("BasePart") and not originalRockData[part] then
-				originalRockData[part] = {
+				local data = {
 					CFrame = part.CFrame,
 					Size = part.Size,
 					Transparency = part.Transparency,
-					CanCollide = part.CanCollide
+					CanCollide = part.CanCollide,
+					MeshScale = nil,
+					MeshOffset = nil,
+					MeshId = nil,
 				}
+				local mesh = part:FindFirstChildOfClass("DataModelMesh")
+				if mesh then
+					data.MeshScale = mesh.Scale
+					data.MeshOffset = mesh.Offset
+					data.MeshId = mesh.MeshId
+				end
+				originalRockData[part] = data
 			end
 		end
 	end
@@ -1303,6 +1310,14 @@ local function executeScript(isPremiumUser)
 					if part:IsA("BasePart") then
 						part.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
 						part.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+					end
+					local mesh = part:FindFirstChildOfClass("DataModelMesh")
+					if mesh and data.MeshScale then
+						mesh.Scale = data.MeshScale
+						mesh.Offset = data.MeshOffset
+						if data.MeshId then
+							mesh.MeshId = data.MeshId
+						end
 					end
 				end)
 			end
@@ -1667,7 +1682,14 @@ local function executeScript(isPremiumUser)
 		"Industrial Rock"
 	}
 	addToolSelector(FarmPage, "🪨 เลือกหินต่อย", rockOptions, "Tiny Rock", function(selected)
-		selectedRockName = selected
+		if autoRockEnabled then
+			stopAutoRock()
+			selectedRockName = selected
+			task.wait(0.1)
+			startAutoRock()
+		else
+			selectedRockName = selected
+		end
 	end)
 	addToggle(FarmPage, "▶ เปิดออโต้ต่อยหิน", false, function(state)
 		if state then
@@ -2016,7 +2038,7 @@ local function executeScript(isPremiumUser)
 	addGachaButtons("Jungle Crystal", "🌴 Jungle Crystal (รี 60 - 3M)")
 	addGachaButtons("Industrial Crystal", "⚡ Industrial Crystal (รี 150 - 7.5M)")
 
-	-- ⭐ NEW: Auto Gacha Section
+	-- ⭐ Auto Gacha Section
 	addSectionHeader(GachaPage, "🎰 สุ่มตู้สัตว์ออโต้ (ทุกคนใช้ได้)")
 
 	local crystalOptions = {
@@ -2052,7 +2074,7 @@ local function executeScript(isPremiumUser)
 				else
 					pcall(function() openCrystalRemote:InvokeServer("openCrystalBulk", autoGachaCrystal, amount) end)
 				end
-				task.wait(0.5)  -- ดีเลย์ 0.5 วิ กันสแปม
+				task.wait(0.5)
 			end
 		end)
 	end
