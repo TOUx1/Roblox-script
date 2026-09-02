@@ -1884,6 +1884,50 @@ local function executeScript(isPremiumUser)
 		EVOLVE_60.Enabled = state
 	end, "AutoEvolveFast")
 
+	-- 💪 ปุ่มใหม่: ยกน้ำหนักแบบโครตไว (สำหรับคนมีสัตว์แพ็ค)
+	addSectionHeader(PremiumPage, "💪 ยกน้ำหนักแบบโครตไว (สำหรับคนมีสัตว์แพ็ค)")
+
+	local fastMuscleTool = "Weight"
+	local fastMuscleEnabled = false
+	local fastMuscleConn = nil
+
+	local function startFastMuscle()
+		if fastMuscleEnabled then return end
+		fastMuscleEnabled = true
+		fastMuscleConn = RunService.Heartbeat:Connect(function()
+			if not fastMuscleEnabled then return end
+			equipTool(fastMuscleTool)
+			for _ = 1, 500 do
+				fireMuscle()
+			end
+			task.wait(0.05)
+		end)
+	end
+
+	local function stopFastMuscle()
+		fastMuscleEnabled = false
+		if fastMuscleConn then
+			fastMuscleConn:Disconnect()
+			fastMuscleConn = nil
+		end
+	end
+
+	addToolSelector(PremiumPage, "🏋️ เลือก Tool ออกกำลังกาย", {"Weight", "Situps", "Pushups", "Handstands"}, "Weight", function(selected)
+		fastMuscleTool = selected
+		if fastMuscleEnabled then
+			stopFastMuscle()
+			startFastMuscle()
+		end
+	end)
+
+	addToggle(PremiumPage, "▶ เปิดใช้งานยกน้ำหนักโครตไว", false, function(state)
+		if state then
+			startFastMuscle()
+		else
+			stopFastMuscle()
+		end
+	end, "FastMuscleUltra")
+
 	-- ════════ POPULATING TAB 6: ตั้งค่า ════════
 	addSectionHeader(SettingsPage, "💾 ระบบบันทึกการตั้งค่า")
 	addButton(SettingsPage, "💾 บันทึกการตั้งค่าปัจจุบัน", function()
@@ -2093,6 +2137,75 @@ local function executeScript(isPremiumUser)
 
 end
 
--- 🚀 เช็คสิทธิ์ Premium จาก URL แล้วเริ่มทำงานสคริปต์
+-- ════════ KEY GUI SYSTEM ════════
+local function checkKey(isPremium)
+    local keyGui = Instance.new("ScreenGui")
+    keyGui.Name = "KeyGui"
+    keyGui.Parent = (gethui and gethui()) or CoreGui
+    keyGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    keyGui.DisplayOrder = 999999998
+
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 300, 0, 170)
+    frame.Position = UDim2.new(0.5, -150, 0.5, -85)
+    frame.BackgroundColor3 = Color3.fromRGB(18, 5, 5)
+    frame.BorderSizePixel = 0
+    frame.Parent = keyGui
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
+    local stroke = Instance.new("UIStroke", frame)
+    stroke.Color = Color3.fromRGB(140, 0, 0)
+    stroke.Thickness = 2
+
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, -20, 0, 30)
+    title.Position = UDim2.new(0, 10, 0, 10)
+    title.BackgroundTransparency = 1
+    title.Text = "กรุณากรอกคีย์เพื่อใช้งาน"
+    title.TextColor3 = Color3.fromRGB(255, 60, 60)
+    title.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+    title.TextSize = 14
+    title.Parent = frame
+
+    local input = Instance.new("TextBox")
+    input.Size = UDim2.new(1, -20, 0, 40)
+    input.Position = UDim2.new(0, 10, 0, 50)
+    input.BackgroundColor3 = Color3.fromRGB(28, 6, 6)
+    input.TextColor3 = Color3.fromRGB(255, 255, 255)
+    input.PlaceholderText = "ใส่คีย์ที่นี่"
+    input.PlaceholderColor3 = Color3.fromRGB(180, 180, 180)
+    input.TextSize = 14
+    input.BorderSizePixel = 0
+    input.Parent = frame
+    Instance.new("UICorner", input).CornerRadius = UDim.new(0, 6)
+
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(1, -20, 0, 40)
+    button.Position = UDim2.new(0, 10, 0, 110)
+    button.BackgroundColor3 = Color3.fromRGB(140, 15, 15)
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.Text = "ยืนยัน"
+    button.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+    button.TextSize = 14
+    button.Parent = frame
+    Instance.new("UICorner", button).CornerRadius = UDim.new(0, 6)
+
+    button.MouseButton1Click:Connect(function()
+        if input.Text == CORRECT_KEY then
+            playSound("rbxassetid://6895079853", 0.5)
+            keyGui:Destroy()
+            executeScript(isPremium)
+        else
+            title.Text = "❌ คีย์ไม่ถูกต้อง!"
+            title.TextColor3 = Color3.fromRGB(255, 0, 0)
+            input.Text = ""
+        end
+    end)
+end
+
+-- 🚀 เริ่มต้นการทำงาน
 local isPremium = checkPremiumFromURL()
-executeScript(isPremium)
+if isPremium then
+    executeScript(isPremium)
+else
+    checkKey(isPremium)
+end
