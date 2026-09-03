@@ -10,7 +10,7 @@ local LocalPlayer = Players.LocalPlayer
 local loadstring = loadstring or load
 
 -- 🌐 ลิ้งค์ดึง รายชื่อ Whitelist / Premium Users (JSON)
-local RAW_WHITELIST_URL = "https://raw.githubusercontent.com/TOUx1/Roblox-script/refs/heads/main/%E0%B8%8A%E0%B8%B7%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B8%ADn%E0%B9%88%E0%B8%B2%E0%B8%99"
+local RAW_WHITELIST_URL = "https://raw.githubusercontent.com/TOUx1/Roblox-script/refs/heads/main/%E0%B8%8A%E0%B8%B7%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B8%ADn%E0%B9%88%E0%B8%B2%E0%B8%99"
 
 -- 🔒 ฟังก์ชั่นเช็คสิทธิ์ Premium จาก URL
 local function checkPremiumFromURL()
