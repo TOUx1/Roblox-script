@@ -10,28 +10,48 @@ local LocalPlayer = Players.LocalPlayer
 local loadstring = loadstring or load
 
 -- 🌐 ลิ้งค์ดึง รายชื่อ Whitelist / Premium Users (JSON)
-local RAW_WHITELIST_URL = "https://raw.githubusercontent.com/TOUx1/Roblox-script/refs/heads/main/%E0%B8%8A%E0%B8%B7%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B9%88%E0%B8%ADn%E0%B9%88%E0%B8%B2%E0%B8%99"
+local RAW_WHITELIST_URL = "https://raw.githubusercontent.com/TOUx1/Roblox-script/refs/heads/main/ชื่่่่่่่่่่่่่่อn่าน"
 
 -- 🔒 ฟังก์ชั่นเช็คสิทธิ์ Premium จาก URL
 local function checkPremiumFromURL()
-	local isPremium = false
-	pcall(function()
-		local response = game:HttpGet(RAW_WHITELIST_URL)
-		if response and response ~= "" then
-			local data = HttpService:JSONDecode(response)
-			if data and data.PremiumUsers then
-				for _, user in ipairs(data.PremiumUsers) do
-					local nameMatch = user.Username and string.lower(user.Username) == string.lower(LocalPlayer.Name)
-					local idMatch = user.UserId and tonumber(user.UserId) == LocalPlayer.UserId and tonumber(user.UserId) ~= 0
-					if nameMatch or idMatch then
-						isPremium = true
-						break
-					end
-				end
-			end
-		end
-	end)
-	return isPremium
+    local isPremium = false
+    local success, response = pcall(function()
+        if game.HttpGet then
+            return game:HttpGet(RAW_WHITELIST_URL)
+        elseif syn and syn.request then
+            local res = syn.request({
+                Url = RAW_WHITELIST_URL,
+                Method = "GET"
+            })
+            return res.Body
+        elseif http and http.request then
+            local res = http.request({
+                Url = RAW_WHITELIST_URL,
+                Method = "GET"
+            })
+            return res.Body
+        else
+            return nil
+        end
+    end)
+
+    if success and response and response ~= "" then
+        local decodeSuccess, data = pcall(function()
+            return HttpService:JSONDecode(response)
+        end)
+        if decodeSuccess and data and data.PremiumUsers then
+            for _, user in ipairs(data.PremiumUsers) do
+                local nameMatch = user.Username and string.lower(user.Username) == string.lower(LocalPlayer.Name)
+                local idMatch = user.UserId and tonumber(user.UserId) == LocalPlayer.UserId and tonumber(user.UserId) ~= 0
+                if nameMatch or idMatch then
+                    isPremium = true
+                    break
+                end
+            end
+        end
+    end
+
+    return isPremium
 end
 
 -- 🔑 Config
@@ -41,2099 +61,2099 @@ local WEBHOOK_URL = "https://discord.com/api/webhooks/1539980287264559134/B3I_P0
 
 -- 🔊 เสียง
 local function playSound(id, vol)
-	pcall(function()
-		local s = Instance.new("Sound")
-		s.SoundId = id
-		s.Volume = vol or 0.6
-		s.Parent = SoundService
-		s:Play()
-		game:GetService("Debris"):AddItem(s, 3)
-	end)
+    pcall(function()
+        local s = Instance.new("Sound")
+        s.SoundId = id
+        s.Volume = vol or 0.6
+        s.Parent = SoundService
+        s:Play()
+        game:GetService("Debris"):AddItem(s, 3)
+    end)
 end
 
 -- 📡 Webhook
 local function sendWebhookCustom(url, title, description, color)
-	pcall(function()
-		local data = {
-			username = "TOU HUB | System Notice",
-			embeds = {{
-				title = title,
-				description = description,
-				color = color,
-				footer = { text = "TOU HUB • " .. os.date("%d/%m/%Y %H:%M:%S") }
-			}}
-		}
-		local body = HttpService:JSONEncode(data)
-		local req = (syn and syn.request) or (http and http.request) or request or http_request
-		if req then
-			req({
-				Url = url,
-				Method = "POST",
-				Headers = {["Content-Type"] = "application/json"},
-				Body = body
-			})
-		end
-	end)
+    pcall(function()
+        local data = {
+            username = "TOU HUB | System Notice",
+            embeds = {{
+                title = title,
+                description = description,
+                color = color,
+                footer = { text = "TOU HUB • " .. os.date("%d/%m/%Y %H:%M:%S") }
+            }}
+        }
+        local body = HttpService:JSONEncode(data)
+        local req = (syn and syn.request) or (http and http.request) or request or http_request
+        if req then
+            req({
+                Url = url,
+                Method = "POST",
+                Headers = {["Content-Type"] = "application/json"},
+                Body = body
+            })
+        end
+    end)
 end
 
 local function sendWebhook(title, description, color)
-	sendWebhookCustom(WEBHOOK_URL, title, description, color)
+    sendWebhookCustom(WEBHOOK_URL, title, description, color)
 end
 
 -- 🚀 รันสคริปต์หลัก (รับค่า isPremiumUser เพื่อเช็คสิทธิ์)
 local function executeScript(isPremiumUser)
-	-- ════════ SERVICES & LOCAL PLAYER ════════
-	local Players = game:GetService("Players")
-	local ReplicatedStorage = game:GetService("ReplicatedStorage")
-	local RunService = game:GetService("RunService")
-	local UserInputService = game:GetService("UserInputService")
-	local MarketplaceService = game:GetService("MarketplaceService")
-	local VirtualUser = game:GetService("VirtualUser")
-	local LocalPlayer = Players.LocalPlayer
-
-	-- 📁 Save File Configs
-	local SAVE_FILE_NAME = "TOU_HUB_Config.json"
-	local COOLDOWN_FILE_NAME = "TOU_HUB_Cooldown.json"
-
-	local function readJsonFile(filename)
-		if readfile and isfile and isfile(filename) then
-			local success, result = pcall(function()
-				return HttpService:JSONDecode(readfile(filename))
-			end)
-			if success then return result end
-		end
-		return nil
-	end
-
-	local function writeJsonFile(filename, data)
-		if writefile then
-			pcall(function()
-				writefile(filename, HttpService:JSONEncode(data))
-			end)
-		end
-	end
-
-	local function deleteJsonFile(filename)
-		if delfile and isfile and isfile(filename) then
-			pcall(function()
-				delfile(filename)
-			end)
-		end
-	end
-
-	-- ลบ GUI เก่าถ้ามีอยู่
-	local function removeOldGui(name)
-		pcall(function()
-			if gethui and gethui():FindFirstChild(name) then
-				gethui()[name]:Destroy()
-			end
-			if CoreGui:FindFirstChild(name) then
-				CoreGui[name]:Destroy()
-			end
-			if LocalPlayer:FindFirstChild("PlayerGui") and LocalPlayer.PlayerGui:FindFirstChild(name) then
-				LocalPlayer.PlayerGui[name]:Destroy()
-			end
-		end)
-	end
-	removeOldGui("TOU_HUB_GUI")
-
-	-- ฟังก์ชั่นแปลงตัวเลขเป็น k, m, b, t
-	local function formatNumber(val)
-		local n = tonumber(val) or 0
-		local sign = n < 0 and "-" or ""
-		n = math.abs(n)
-		if n >= 1e12 then
-			local formatted = string.format("%.2f", n / 1e12):gsub("%.?0+$", "")
-			return sign .. formatted .. "t"
-		elseif n >= 1e9 then
-			local formatted = string.format("%.2f", n / 1e9):gsub("%.?0+$", "")
-			return sign .. formatted .. "b"
-		elseif n >= 1e6 then
-			local formatted = string.format("%.2f", n / 1e6):gsub("%.?0+$", "")
-			return sign .. formatted .. "m"
-		elseif n >= 1e3 then
-			local formatted = string.format("%.2f", n / 1e3):gsub("%.?0+$", "")
-			return sign .. formatted .. "k"
-		end
-		return sign .. tostring(n)
-	end
-
-	-- ════════ CUSTOM GUI CREATION (MATCH KEY SYSTEM THEME) ════════
-	local ScreenGui = Instance.new("ScreenGui")
-	ScreenGui.Name = "TOU_HUB_GUI"
-	ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-	ScreenGui.ResetOnSpawn = false
-	ScreenGui.DisplayOrder = 999999999
-	pcall(function()
-		if gethui then
-			ScreenGui.Parent = gethui()
-		elseif syn and syn.protect_gui then
-			syn.protect_gui(ScreenGui)
-			ScreenGui.Parent = CoreGui
-		else
-			ScreenGui.Parent = CoreGui
-		end
-	end)
-
-	-- 🌟 GUI หน้าต่างแจ้งเตือนพรีเมี่ยม (สำหรับผู้ใช้ Key ที่กดเข้าโซนพรีเมี่ยม)
-	local function openPremiumNoticeModal()
-		local existing = ScreenGui:FindFirstChild("PremiumNoticeModalFrame")
-		if existing then existing:Destroy() end
-		local modal = Instance.new("Frame")
-		modal.Name = "PremiumNoticeModalFrame"
-		modal.Parent = ScreenGui
-		modal.Size = UDim2.new(0, 360, 0, 330)
-		modal.Position = UDim2.new(0.5, -180, 0.5, -165)
-		modal.BackgroundColor3 = Color3.fromRGB(18, 5, 5)
-		modal.BorderSizePixel = 0
-		modal.ZIndex = 20000
-		modal.Active = true
-		modal.Draggable = true
-		Instance.new("UICorner", modal).CornerRadius = UDim.new(0, 12)
-		local stroke = Instance.new("UIStroke", modal)
-		stroke.Color = Color3.fromRGB(255, 215, 0)
-		stroke.Thickness = 2
-		local topBar = Instance.new("TextLabel", modal)
-		topBar.Size = UDim2.new(1, 0, 0, 40)
-		topBar.BackgroundColor3 = Color3.fromRGB(35, 10, 10)
-		topBar.Text = "⭐ สำหรับสมาชิก พรี่เมี่ยม เท่านั้น ⭐"
-		topBar.TextColor3 = Color3.fromRGB(255, 215, 0)
-		topBar.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-		topBar.TextSize = 14
-		topBar.ZIndex = 20001
-		Instance.new("UICorner", topBar).CornerRadius = UDim.new(0, 12)
-		local closeBtn = Instance.new("TextButton", modal)
-		closeBtn.Size = UDim2.new(0, 26, 0, 26)
-		closeBtn.Position = UDim2.new(1, -32, 0, 7)
-		closeBtn.BackgroundColor3 = Color3.fromRGB(180, 30, 30)
-		closeBtn.Text = "✕"
-		closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-		closeBtn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-		closeBtn.TextSize = 12
-		closeBtn.ZIndex = 20002
-		Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 6)
-		closeBtn.MouseButton1Click:Connect(function() modal:Destroy() end)
-		local content = Instance.new("Frame", modal)
-		content.Size = UDim2.new(1, -24, 1, -50)
-		content.Position = UDim2.new(0, 12, 0, 45)
-		content.BackgroundTransparency = 1
-		content.ZIndex = 20001
-		local msgLabel = Instance.new("TextLabel", content)
-		msgLabel.Size = UDim2.new(1, 0, 0, 26)
-		msgLabel.Position = UDim2.new(0, 0, 0, 2)
-		msgLabel.BackgroundTransparency = 1
-		msgLabel.Text = "🔒 ระบบนี้สงวนสิทธิ์เฉพาะผู้ใช้ พรี่เมี่ยม เท่านั้น!"
-		msgLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
-		msgLabel.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-		msgLabel.TextSize = 12
-		msgLabel.ZIndex = 20001
-		local featureBox = Instance.new("Frame", content)
-		featureBox.Size = UDim2.new(1, 0, 0, 135)
-		featureBox.Position = UDim2.new(0, 0, 0, 32)
-		featureBox.BackgroundColor3 = Color3.fromRGB(28, 6, 6)
-		featureBox.ZIndex = 20001
-		Instance.new("UICorner", featureBox).CornerRadius = UDim.new(0, 8)
-		local fStroke = Instance.new("UIStroke", featureBox)
-		fStroke.Color = Color3.fromRGB(120, 20, 20)
-		local descLabel = Instance.new("TextLabel", featureBox)
-		descLabel.Size = UDim2.new(1, -16, 1, -10)
-		descLabel.Position = UDim2.new(0, 8, 0, 5)
-		descLabel.BackgroundTransparency = 1
-		descLabel.TextColor3 = Color3.fromRGB(240, 220, 220)
-		descLabel.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal)
-		descLabel.TextSize = 11
-		descLabel.TextXAlignment = Enum.TextXAlignment.Left
-		descLabel.TextYAlignment = Enum.TextYAlignment.Top
-		descLabel.ZIndex = 20002
-		descLabel.Text = "✨ คุณสมบัติเมื่อซื้อ พรี่เมี่ยม (Premium):\n" ..
-			"• 🎲 ปลดล็อกการใช้งานระบบสุ่มสัตว์ทุกตู้คริสตัล\n" ..
-			"• 🔄 เข้าถึงระบบ Auto Evolve สัตว์อัตโนมัติแบบไว\n" ..
-			"• 🛡️ ได้รับสิทธิ์ทดลองใช้ฟังก์ชั่นใหม่ๆ ก่อนใคร\n" ..
-			"• ⚡ ความเร็วการทำงานสคริปต์ระดับ VIP\n" ..
-			"• 🚀 สนับสนุนการพัฒนาระบบ TOU HUB"
-		local contactLabel = Instance.new("TextLabel", content)
-		contactLabel.Size = UDim2.new(1, 0, 0, 20)
-		contactLabel.Position = UDim2.new(0, 0, 0, 175)
-		contactLabel.BackgroundTransparency = 1
-		contactLabel.Text = "💬 ติดต่อซื้อพรี่เมี่ยมได้ที่:"
-		contactLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
-		contactLabel.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-		contactLabel.TextSize = 12
-		contactLabel.ZIndex = 20001
-		local copyBtn = Instance.new("TextButton", content)
-		copyBtn.Size = UDim2.new(1, 0, 0, 36)
-		copyBtn.Position = UDim2.new(0, 0, 0, 200)
-		copyBtn.BackgroundColor3 = Color3.fromRGB(150, 20, 20)
-		copyBtn.Text = "📋 คัดลอกลิ้งค์ Discord (" .. DISCORD_LINK .. ")"
-		copyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-		copyBtn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-		copyBtn.TextSize = 11
-		copyBtn.ZIndex = 20001
-		Instance.new("UICorner", copyBtn).CornerRadius = UDim.new(0, 6)
-		local copyStroke = Instance.new("UIStroke", copyBtn)
-		copyStroke.Color = Color3.fromRGB(255, 60, 60)
-		copyStroke.Thickness = 1
-		copyBtn.MouseButton1Click:Connect(function()
-			playSound("rbxassetid://6895079853", 0.5)
-			if setclipboard then
-				setclipboard(DISCORD_LINK)
-				copyBtn.Text = "✅ คัดลอกลิ้งค์สำเร็จแล้ว!"
-				copyBtn.TextColor3 = Color3.fromRGB(80, 255, 120)
-				task.delay(1.5, function()
-					if copyBtn and copyBtn.Parent then
-						copyBtn.Text = "📋 คัดลอกลิ้งค์ Discord (" .. DISCORD_LINK .. ")"
-						copyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-					end
-				end)
-			end
-		end)
-	end
-
-	-- 🔘 ปุ่มเปิด/ปิด GUI (🍣) - ทำให้ลากได้
-	local ToggleButton = Instance.new("TextButton")
-	ToggleButton.Name = "ปุ่มเปิด/ปิด GUI"
-	ToggleButton.Parent = ScreenGui
-	ToggleButton.BorderSizePixel = 0
-	ToggleButton.TextSize = 22
-	ToggleButton.BackgroundColor3 = Color3.fromRGB(28, 6, 6)
-	ToggleButton.Size = UDim2.new(0, 50, 0, 50)
-	ToggleButton.Position = UDim2.new(0.02, 0, 0.4, 0)
-	ToggleButton.Text = "🍣"
-	ToggleButton.Active = true
-	Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(0, 12)
-	local TogStroke = Instance.new("UIStroke", ToggleButton)
-	TogStroke.Color = Color3.fromRGB(140, 0, 0)
-	TogStroke.Thickness = 1.5
-
-	-- ทำให้ปุ่ม 🍣 ลากได้
-	local togDragging, togDragStart, togStartPos
-	ToggleButton.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			togDragging = true
-			togDragStart = input.Position
-			togStartPos = ToggleButton.Position
-			input.Changed:Connect(function()
-				if input.UserInputState == Enum.UserInputState.End then
-					togDragging = false
-				end
-			end)
-		end
-	end)
-	UserInputService.InputChanged:Connect(function(input)
-		if togDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-			local delta = input.Position - togDragStart
-			ToggleButton.Position = UDim2.new(togStartPos.X.Scale, togStartPos.X.Offset + delta.X, togStartPos.Y.Scale, togStartPos.Y.Offset + delta.Y)
-		end
-	end)
-
-	-- 🪟 Frame หลัก (ดีไซน์เดียวกับ KEY GUI)
-	local MainFrame = Instance.new("Frame")
-	MainFrame.Name = "MainFrame"
-	MainFrame.Parent = ScreenGui
-	MainFrame.BorderSizePixel = 0
-	MainFrame.BackgroundColor3 = Color3.fromRGB(18, 5, 5)
-	MainFrame.Size = UDim2.new(0, 520, 0, 360)
-	MainFrame.Position = UDim2.new(0.5, -260, 0.5, -180)
-	MainFrame.ClipsDescendants = false
-	Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
-	local MainStroke = Instance.new("UIStroke", MainFrame)
-	MainStroke.Color = Color3.fromRGB(140, 0, 0)
-	MainStroke.Thickness = 2
-	MainStroke.Transparency = 0.2
-	local MainGradient = Instance.new("UIGradient", MainFrame)
-	MainGradient.Color = ColorSequence.new{
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(28, 6, 6)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(12, 2, 2))
-	}
-	MainGradient.Rotation = 90
-
-	-- TitleBox ข้อความส่วนหัว
-	local TitleBox = Instance.new("Frame")
-	TitleBox.Name = "TitleBox"
-	TitleBox.Parent = MainFrame
-	TitleBox.BorderSizePixel = 0
-	TitleBox.BackgroundColor3 = Color3.fromRGB(35, 5, 5)
-	TitleBox.Size = UDim2.new(1, 0, 0, 42)
-	TitleBox.Position = UDim2.new(0, 0, 0, 0)
-	Instance.new("UICorner", TitleBox).CornerRadius = UDim.new(0, 12)
-	local TitleLabel = Instance.new("TextLabel", TitleBox)
-	TitleLabel.Size = UDim2.new(1, -20, 1, 0)
-	TitleLabel.Position = UDim2.new(0, 15, 0, 0)
-	TitleLabel.BackgroundTransparency = 1
-	TitleLabel.TextSize = 16
-	TitleLabel.TextColor3 = Color3.fromRGB(255, 60, 60)
-	TitleLabel.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-	TitleLabel.Text = "TOU HUB | ตำนานกล้ามเนื้อ " .. (isPremiumUser and "⭐ [PREMIUM]" or "🔑 [KEY USER]")
-	TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-
-	-- 📑 แถบช่อง (Sidebar)
-	local Sidebar = Instance.new("Frame")
-	Sidebar.Name = "Sidebar"
-	Sidebar.Parent = MainFrame
-	Sidebar.BorderSizePixel = 0
-	Sidebar.BackgroundColor3 = Color3.fromRGB(24, 5, 5)
-	Sidebar.Size = UDim2.new(0, 130, 1, -48)
-	Sidebar.Position = UDim2.new(0, 6, 0, 44)
-	Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 8)
-	local SideStroke = Instance.new("UIStroke", Sidebar)
-	SideStroke.Color = Color3.fromRGB(80, 15, 15)
-	SideStroke.Thickness = 1
-	local SideLayout = Instance.new("UIListLayout", Sidebar)
-	SideLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	SideLayout.Padding = UDim.new(0, 4)
-	SideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-	local SidePadding = Instance.new("UIPadding", Sidebar)
-	SidePadding.PaddingTop = UDim.new(0, 6)
-
-	local tabButtons = {}
-	local function createTabBtn(name, text)
-		local btn = Instance.new("TextButton")
-		btn.Name = "Btn_" .. name
-		btn.Parent = Sidebar
-		btn.BorderSizePixel = 0
-		btn.TextSize = 12
-		btn.TextColor3 = Color3.fromRGB(220, 180, 180)
-		btn.BackgroundColor3 = Color3.fromRGB(38, 8, 8)
-		btn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-		btn.Size = UDim2.new(0.92, 0, 0, 32)
-		btn.Text = text
-		Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
-		local btnStroke = Instance.new("UIStroke", btn)
-		btnStroke.Color = Color3.fromRGB(100, 20, 20)
-		btnStroke.Thickness = 1
-		btnStroke.Transparency = 0.5
-		tabButtons[name] = {Button = btn, Stroke = btnStroke}
-		return btn
-	end
-
-	local BtnMain = createTabBtn("Main", "🏠 เมนูหลัก")
-	local BtnStats = createTabBtn("Stats", "📊 ดูข้อมูล")
-	local BtnFarm = createTabBtn("Farm", "🏋️ ฟาร์ม")
-	local BtnGacha = createTabBtn("Gacha", "🎁 สุ่มตู้สัตว์")
-	local BtnRoll = createTabBtn("Roll", "🎲 สุ่มสัตว์")
-	local BtnPremium = createTabBtn("Premium", "พรี่เมี่ยม⭐")
-	local BtnSettings = createTabBtn("Settings", "⚙️ ตั้งค่า")
-	local BtnExtra = createTabBtn("Extra", "✨ เพิ่มเติม")
-
-	-- 📦 Container สำหรับใส่เนื้อหา Tab Pages
-	local ContentContainer = Instance.new("Frame")
-	ContentContainer.Name = "ContentContainer"
-	ContentContainer.Parent = MainFrame
-	ContentContainer.BackgroundTransparency = 1
-	ContentContainer.Size = UDim2.new(1, -148, 1, -54)
-	ContentContainer.Position = UDim2.new(0, 142, 0, 48)
-
-	-- 🖐️ ระบบ Drag GUI พร้อมการอัปเดต ตำแหน่ง Dropdown ให้ตามติด
-	local dropdownUpdateCallbacks = {}
-	local dragging, dragInput, dragStart, startPos
-	local function update(input)
-		local delta = input.Position - dragStart
-		MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-		for _, cb in ipairs(dropdownUpdateCallbacks) do cb() end
-	end
-	TitleBox.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			dragging = true
-			dragStart = input.Position
-			startPos = MainFrame.Position
-			input.Changed:Connect(function()
-				if input.UserInputState == Enum.UserInputState.End then
-					dragging = false
-				end
-			end)
-		end
-	end)
-	TitleBox.InputChanged:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-			dragInput = input
-		end
-	end)
-	UserInputService.InputChanged:Connect(function(input)
-		if input == dragInput and dragging then
-			update(input)
-		end
-	end)
-
-	-- สลับ เปิด/ปิด GUI
-	ToggleButton.MouseButton1Click:Connect(function()
-		MainFrame.Visible = not MainFrame.Visible
-		if MainFrame.Visible then
-			for _, cb in ipairs(dropdownUpdateCallbacks) do cb() end
-		end
-	end)
-
-	-- ════════ CREATING TAB PAGES ════════
-	local pages = {}
-	local function createTabPage(name)
-		local page = Instance.new("ScrollingFrame")
-		page.Name = name
-		page.Parent = ContentContainer
-		page.Size = UDim2.new(1, -4, 1, 0)
-		page.BackgroundTransparency = 1
-		page.BorderSizePixel = 0
-		page.ScrollBarThickness = 4
-		page.ScrollBarImageColor3 = Color3.fromRGB(160, 20, 20)
-		page.Visible = false
-		local layout = Instance.new("UIListLayout", page)
-		layout.SortOrder = Enum.SortOrder.LayoutOrder
-		layout.Padding = UDim.new(0, 8)
-		layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-			page.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 12)
-		end)
-		pages[name] = page
-		return page
-	end
-
-	local MainPage = createTabPage("MainPage")
-	local StatsPage = createTabPage("StatsPage")
-	local FarmPage = createTabPage("FarmPage")
-	local GachaPage = createTabPage("GachaPage")
-	local RollPage = createTabPage("RollPage")
-	local PremiumPage = createTabPage("PremiumPage")
-	local SettingsPage = createTabPage("SettingsPage")
-	local ExtraPage = createTabPage("ExtraPage")
-	MainPage.Visible = true
-
-	local function switchTab(targetName, targetPage)
-		for name, p in pairs(pages) do p.Visible = false end
-		for name, data in pairs(tabButtons) do
-			data.Button.BackgroundColor3 = Color3.fromRGB(38, 8, 8)
-			data.Button.TextColor3 = Color3.fromRGB(220, 180, 180)
-			data.Stroke.Color = Color3.fromRGB(100, 20, 20)
-		end
-		targetPage.Visible = true
-		if tabButtons[targetName] then
-			tabButtons[targetName].Button.BackgroundColor3 = Color3.fromRGB(140, 15, 15)
-			tabButtons[targetName].Button.TextColor3 = Color3.fromRGB(255, 255, 255)
-			tabButtons[targetName].Stroke.Color = Color3.fromRGB(255, 60, 60)
-		end
-	end
-
-	BtnMain.MouseButton1Click:Connect(function() switchTab("Main", MainPage) end)
-	BtnStats.MouseButton1Click:Connect(function() switchTab("Stats", StatsPage) end)
-	BtnFarm.MouseButton1Click:Connect(function() switchTab("Farm", FarmPage) end)
-	BtnGacha.MouseButton1Click:Connect(function() switchTab("Gacha", GachaPage) end)
-	BtnRoll.MouseButton1Click:Connect(function()
-		if not isPremiumUser then
-			openPremiumNoticeModal()
-		else
-			switchTab("Roll", RollPage)
-		end
-	end)
-	BtnPremium.MouseButton1Click:Connect(function()
-		if not isPremiumUser then
-			openPremiumNoticeModal()
-		else
-			switchTab("Premium", PremiumPage)
-		end
-	end)
-	BtnSettings.MouseButton1Click:Connect(function() switchTab("Settings", SettingsPage) end)
-	BtnExtra.MouseButton1Click:Connect(function() switchTab("Extra", ExtraPage) end)
-	switchTab("Main", MainPage)
-
-	-- ════════ TOGGLE CONTROLLER & SAVE DATA ════════
-	local toggleStates = {}
-	local toggleSetters = {}
-
-	-- ════════ UI HELPERS FOR COMPONENTS ════════
-	local function addSectionHeader(parent, text)
-		local lbl = Instance.new("TextLabel")
-		lbl.Size = UDim2.new(1, 0, 0, 24)
-		lbl.BackgroundTransparency = 1
-		lbl.TextColor3 = Color3.fromRGB(255, 90, 90)
-		lbl.TextXAlignment = Enum.TextXAlignment.Left
-		lbl.Text = " " .. text
-		lbl.TextSize = 13
-		lbl.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-		lbl.Parent = parent
-		return lbl
-	end
-
-	local function addToggle(parent, text, defaultState, callback, saveKey)
-		local frame = Instance.new("Frame")
-		frame.Size = UDim2.new(1, -6, 0, 38)
-		frame.BackgroundColor3 = Color3.fromRGB(28, 6, 6)
-		frame.BorderSizePixel = 0
-		frame.Parent = parent
-		Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
-		local stroke = Instance.new("UIStroke", frame)
-		stroke.Color = Color3.fromRGB(80, 15, 15)
-		stroke.Thickness = 1
-		local lbl = Instance.new("TextLabel", frame)
-		lbl.Size = UDim2.new(0.68, 0, 1, 0)
-		lbl.Position = UDim2.new(0.03, 0, 0, 0)
-		lbl.BackgroundTransparency = 1
-		lbl.TextColor3 = Color3.fromRGB(240, 220, 220)
-		lbl.TextXAlignment = Enum.TextXAlignment.Left
-		lbl.Text = text
-		lbl.TextSize = 12
-		lbl.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal)
-		local btn = Instance.new("TextButton", frame)
-		btn.Size = UDim2.new(0.26, 0, 0.7, 0)
-		btn.Position = UDim2.new(0.71, 0, 0.15, 0)
-		btn.BorderSizePixel = 0
-		btn.TextSize = 11
-		btn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-		Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
-		local state = defaultState
-		local function updateVisual()
-			btn.Text = state and "เปิด [ON]" or "ปิด [OFF]"
-			btn.BackgroundColor3 = state and Color3.fromRGB(40, 160, 80) or Color3.fromRGB(150, 30, 30)
-			btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-		end
-		updateVisual()
-		local function setState(newState, skipCallback)
-			state = newState
-			if saveKey then toggleStates[saveKey] = state end
-			updateVisual()
-			if not skipCallback then callback(state) end
-		end
-		btn.MouseButton1Click:Connect(function()
-			setState(not state)
-		end)
-		if saveKey then
-			toggleStates[saveKey] = state
-			toggleSetters[saveKey] = setState
-		end
-		return frame, setState
-	end
-
-	local function addButton(parent, text, callback)
-		local btn = Instance.new("TextButton")
-		btn.Size = UDim2.new(1, -6, 0, 35)
-		btn.BackgroundColor3 = Color3.fromRGB(120, 15, 15)
-		btn.TextColor3 = Color3.fromRGB(255, 230, 230)
-		btn.Text = text
-		btn.TextSize = 12
-		btn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-		btn.BorderSizePixel = 0
-		btn.Parent = parent
-		Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
-		local btnStroke = Instance.new("UIStroke", btn)
-		btnStroke.Color = Color3.fromRGB(200, 40, 40)
-		btnStroke.Thickness = 1
-		btnStroke.Transparency = 0.4
-		btn.MouseButton1Click:Connect(callback)
-		return btn
-	end
-
-	local function addTextbox(parent, text, defaultText, callback)
-		local frame = Instance.new("Frame")
-		frame.Size = UDim2.new(1, -6, 0, 42)
-		frame.BackgroundColor3 = Color3.fromRGB(28, 6, 6)
-		frame.BorderSizePixel = 0
-		frame.Parent = parent
-		Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
-		local stroke = Instance.new("UIStroke", frame)
-		stroke.Color = Color3.fromRGB(80, 15, 15)
-		local lbl = Instance.new("TextLabel", frame)
-		lbl.Size = UDim2.new(0.55, 0, 1, 0)
-		lbl.Position = UDim2.new(0.03, 0, 0, 0)
-		lbl.BackgroundTransparency = 1
-		lbl.TextColor3 = Color3.fromRGB(240, 220, 220)
-		lbl.TextXAlignment = Enum.TextXAlignment.Left
-		lbl.Text = text
-		lbl.TextSize = 12
-		lbl.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal)
-		local box = Instance.new("TextBox", frame)
-		box.Size = UDim2.new(0.38, 0, 0.7, 0)
-		box.Position = UDim2.new(0.58, 0, 0.15, 0)
-		box.BackgroundColor3 = Color3.fromRGB(18, 4, 4)
-		box.TextColor3 = Color3.fromRGB(255, 255, 255)
-		box.Text = defaultText
-		box.TextSize = 12
-		box.BorderSizePixel = 0
-		box.ClearTextOnFocus = false
-		box.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
-		Instance.new("UICorner", box).CornerRadius = UDim.new(0, 5)
-		box.FocusLost:Connect(function() callback(box.Text) end)
-		return box
-	end
-
-	-- 🛠️ FIXED TOOL SELECTOR DROPDOWN
-	local function addToolSelector(parent, labelText, options, defaultOption, callback)
-		local frame = Instance.new("Frame")
-		frame.Size = UDim2.new(1, -6, 0, 42)
-		frame.BackgroundColor3 = Color3.fromRGB(28, 6, 6)
-		frame.BorderSizePixel = 0
-		frame.Parent = parent
-		Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
-		local stroke = Instance.new("UIStroke", frame)
-		stroke.Color = Color3.fromRGB(80, 15, 15)
-		local lbl = Instance.new("TextLabel", frame)
-		lbl.Size = UDim2.new(0.45, 0, 1, 0)
-		lbl.Position = UDim2.new(0.03, 0, 0, 0)
-		lbl.BackgroundTransparency = 1
-		lbl.TextColor3 = Color3.fromRGB(240, 220, 220)
-		lbl.TextXAlignment = Enum.TextXAlignment.Left
-		lbl.Text = labelText
-		lbl.TextSize = 12
-		lbl.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal)
-		local btn = Instance.new("TextButton", frame)
-		btn.Size = UDim2.new(0.48, 0, 0.7, 0)
-		btn.Position = UDim2.new(0.49, 0, 0.15, 0)
-		btn.BackgroundColor3 = Color3.fromRGB(100, 15, 15)
-		btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-		btn.Text = defaultOption .. " 🔽"
-		btn.TextSize = 11
-		btn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-		btn.BorderSizePixel = 0
-		Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
-		local dropFrame = Instance.new("ScrollingFrame", ScreenGui)
-		dropFrame.Size = UDim2.new(0, 160, 0, 110)
-		dropFrame.BackgroundColor3 = Color3.fromRGB(22, 5, 5)
-		dropFrame.BorderSizePixel = 0
-		dropFrame.Visible = false
-		dropFrame.ZIndex = 9999
-		dropFrame.ScrollBarThickness = 4
-		Instance.new("UICorner", dropFrame).CornerRadius = UDim.new(0, 6)
-		local dropStroke = Instance.new("UIStroke", dropFrame)
-		dropStroke.Color = Color3.fromRGB(160, 30, 30)
-		local listLayout = Instance.new("UIListLayout", dropFrame)
-		listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-		listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-			dropFrame.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y)
-		end)
-		local function updatePos()
-			local absPos = btn.AbsolutePosition
-			dropFrame.Position = UDim2.new(0, absPos.X, 0, absPos.Y + btn.AbsoluteSize.Y + 5)
-		end
-		table.insert(dropdownUpdateCallbacks, updatePos)
-		local function updateDropdownList()
-			for _, child in ipairs(dropFrame:GetChildren()) do
-				if child:IsA("TextButton") then child:Destroy() end
-			end
-			for _, opt in ipairs(options) do
-				local oBtn = Instance.new("TextButton", dropFrame)
-				oBtn.Size = UDim2.new(1, 0, 0, 26)
-				oBtn.BackgroundColor3 = Color3.fromRGB(35, 7, 7)
-				oBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-				oBtn.Text = opt
-				oBtn.TextSize = 11
-				oBtn.ZIndex = 10000
-				oBtn.BorderSizePixel = 0
-				oBtn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
-				oBtn.MouseButton1Click:Connect(function()
-					btn.Text = opt .. " 🔽"
-					dropFrame.Visible = false
-					callback(opt)
-				end)
-			end
-		end
-		btn.MouseButton1Click:Connect(function()
-			if not dropFrame.Visible then
-				updateDropdownList()
-				dropFrame.Visible = true
-				updatePos()
-			else
-				dropFrame.Visible = false
-			end
-		end)
-		return frame
-	end
-
-	-- 🛠️ FIXED PLAYER SELECTOR DROPDOWN
-	local function addPlayerSelector(parent, labelText, callback)
-		local frame = Instance.new("Frame")
-		frame.Size = UDim2.new(1, -6, 0, 42)
-		frame.BackgroundColor3 = Color3.fromRGB(28, 6, 6)
-		frame.BorderSizePixel = 0
-		frame.Parent = parent
-		Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
-		local stroke = Instance.new("UIStroke", frame)
-		stroke.Color = Color3.fromRGB(80, 15, 15)
-		local lbl = Instance.new("TextLabel", frame)
-		lbl.Size = UDim2.new(0.4, 0, 1, 0)
-		lbl.Position = UDim2.new(0.03, 0, 0, 0)
-		lbl.BackgroundTransparency = 1
-		lbl.TextColor3 = Color3.fromRGB(240, 220, 220)
-		lbl.TextXAlignment = Enum.TextXAlignment.Left
-		lbl.Text = labelText
-		lbl.TextSize = 12
-		lbl.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal)
-		local btn = Instance.new("TextButton", frame)
-		btn.Size = UDim2.new(0.53, 0, 0.7, 0)
-		btn.Position = UDim2.new(0.44, 0, 0.15, 0)
-		btn.BackgroundColor3 = Color3.fromRGB(100, 15, 15)
-		btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-		btn.Text = LocalPlayer.Name .. " 🔽"
-		btn.TextSize = 11
-		btn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-		btn.BorderSizePixel = 0
-		Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
-		local dropFrame = Instance.new("ScrollingFrame", ScreenGui)
-		dropFrame.Size = UDim2.new(0, 180, 0, 120)
-		dropFrame.BackgroundColor3 = Color3.fromRGB(22, 5, 5)
-		dropFrame.BorderSizePixel = 0
-		dropFrame.Visible = false
-		dropFrame.ZIndex = 9999
-		dropFrame.ScrollBarThickness = 4
-		Instance.new("UICorner", dropFrame).CornerRadius = UDim.new(0, 6)
-		local dropStroke = Instance.new("UIStroke", dropFrame)
-		dropStroke.Color = Color3.fromRGB(160, 30, 30)
-		local listLayout = Instance.new("UIListLayout", dropFrame)
-		listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-		listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-			dropFrame.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y)
-		end)
-		local function updatePos()
-			local absPos = btn.AbsolutePosition
-			dropFrame.Position = UDim2.new(0, absPos.X, 0, absPos.Y + btn.AbsoluteSize.Y + 5)
-		end
-		table.insert(dropdownUpdateCallbacks, updatePos)
-		local function updateDropdownList()
-			for _, child in ipairs(dropFrame:GetChildren()) do
-				if child:IsA("TextButton") then child:Destroy() end
-			end
-			for _, p in ipairs(Players:GetPlayers()) do
-				local pBtn = Instance.new("TextButton", dropFrame)
-				pBtn.Size = UDim2.new(1, 0, 0, 25)
-				pBtn.BackgroundColor3 = Color3.fromRGB(35, 7, 7)
-				pBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-				pBtn.Text = p.Name
-				pBtn.TextSize = 11
-				pBtn.ZIndex = 10000
-				pBtn.BorderSizePixel = 0
-				pBtn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
-				pBtn.MouseButton1Click:Connect(function()
-					btn.Text = p.Name .. " 🔽"
-					dropFrame.Visible = false
-					callback(p)
-				end)
-			end
-		end
-		btn.MouseButton1Click:Connect(function()
-			if not dropFrame.Visible then
-				updateDropdownList()
-				dropFrame.Visible = true
-				updatePos()
-			else
-				dropFrame.Visible = false
-			end
-		end)
-		return frame
-	end
-
-	-- ════════ REMOTES & BACKEND SERVICES ════════
-	local openCrystalRemote = ReplicatedStorage:WaitForChild("rEvents"):WaitForChild("openCrystalRemote")
-	local sellPetEvent = ReplicatedStorage:WaitForChild("rEvents"):WaitForChild("sellPetEvent")
-	local sellPowerUpEvent = ReplicatedStorage:WaitForChild("rEvents"):WaitForChild("sellPowerUpEvent")
-	local petEvolveEvent = ReplicatedStorage:WaitForChild("rEvents"):WaitForChild("petEvolveEvent")
-	local rebirthRemote = ReplicatedStorage:WaitForChild("rEvents"):WaitForChild("rebirthRemote")
-	local freeGiftClaimRemote = ReplicatedStorage:WaitForChild("rEvents"):WaitForChild("freeGiftClaimRemote")
-
-	-- ════════ CONFIG & STATE ════════
-	local CRYSTAL_30 = "Galaxy Oracle Crystal"
-	local CRYSTAL_15 = "Inferno Crystal"
-	local CRYSTAL_150 = "Industrial Crystal"
-	local CRYSTAL_60 = "Jungle Crystal"
-	local BULK_AMOUNT = 10
-	local DELAY_30, DELAY_15, DELAY_150, DELAY_60 = 0.3, 0.3, 0.5, 0.5
-	local SELL_PETS_30 = {["Eternal Strike Leviathan"]=true,["Lightning Strike Phantom"]=true}
-	local SELL_AURAS_30 = {["Ultra Inferno"]=true,["Azure Tundra"]=true}
-	local SELL_PETS_15 = {["Red Firecaster"]="1_2567483",["White Pegasus"]="1_2567305",["Golden Pheonix"]="1_2565691"}
-	local SELL_AURAS_15 = {["Grand Supernova"]="1_2567413",["Lightning"]="1_2566778",["Enchanted Mirage"]="1_2565705",["Unstable Mirage"]="1_2565275",["Dark Lightning"]="1_635194",["Inferno"]="1_638292",["Azure Tundra"]="1_653186"}
-	local SELL_PETS_150 = {["Plasma Ravager"]="1_315848",["Reactor Beast"]="1_321232",["Volt Talon"]="1_321250",["Core Pup"]="1_321241"}
-	local TITAN_REACTOR = {Name="Titan Reactor", DebugId="1_433530"}
-	local SELL_PETS_60 = {["Golden Viking"]="1_2233962", ["Muscle Sensei"]="1_2233971"}
-	local SELL_AURAS_60 = {["Grand Supernova"]="1_2234849", ["Eternal Megastrike"]="1_2238862", ["Entropic Blast"]="1_2233999"}
-	local EVOLVE_30 = {Target="Darkstar Hunter", Need=5, Enabled=false}
-	local EVOLVE_15 = {Target="Infernal Dragon", Need=5, Enabled=false}
-	local EVOLVE_150 = {Target="Apex Overlord", Need=5, Enabled=false}
-	local EVOLVE_60 = {Target="Neon Guardian", Need=5, Enabled=false}
-	local EXCLUDE_PETS = {}
-	local EXCLUDE_AURAS = {}
-	local petsFolderObj = LocalPlayer:WaitForChild("petsFolder", 10)
-	local powerUpsFolderObj = LocalPlayer:WaitForChild("powerUpsFolder", 10)
-	local PET_FOLDERS = petsFolderObj and {
-		petsFolderObj:WaitForChild("Advanced", 5),
-		petsFolderObj:WaitForChild("Basic", 5),
-		petsFolderObj:WaitForChild("Epic", 5),
-		petsFolderObj:WaitForChild("Rare", 5),
-		petsFolderObj:WaitForChild("Unique", 5),
-	} or {}
-	local AURA_FOLDERS = powerUpsFolderObj and {
-		powerUpsFolderObj:WaitForChild("Epic", 5),
-		powerUpsFolderObj:WaitForChild("Basic", 5),
-		powerUpsFolderObj:WaitForChild("Advanced", 5),
-		powerUpsFolderObj:WaitForChild("Unique", 5),
-		powerUpsFolderObj:WaitForChild("Rare", 5),
-	} or {}
-
-	local running30, running15, running150, running60 = false, false, false, false
-	local autoFortuneWheel = false
-	local sellConn30, sellConn15, sellConn150, sellConn60 = nil, nil, nil, nil
-	local lastScan30, lastScan15, lastScan150, lastScan60 = 0, 0, 0, 0
-	local evolving = false
-	local farmEnabled = false
-	local farmTool = "Weight"
-	local fastMode = false
-	local farmConn = nil
-
-	-- 🪨 Auto Punch Rock States & Configs
-	local autoRockEnabled = false
-	local autoRockConn = nil
-	local selectedRockName = "Tiny Rock"
-	local rockAngle = 0
-	local rockHandToggle = false
-	local originalRockData = {}
-
-	local rebirthEnabled = false
-	local rebirthConn = nil
-	local targetRebirths = 0
-	local useRebirthTarget = false
-	local autoGiftEnabled = false
-	local antiKnockbackEnabled = false
-	local antiRebirthTpEnabled = false
-	local lastHealth = 100
-	local healthConn = nil
-	local isKnockbackLocked = false
-	local savedPosBeforeRebirth = nil
-	local isMonitoringRebirthTp = false
-
-	-- 🛡️ Anti-AFK State
-	local antiAfkEnabled = false
-	local antiAfkConn = nil
-
-	-- 🎁 Auto Gacha State
-	local autoGachaEnabled = false
-	local autoGachaCrystal = "Blue Crystal"
-	local autoGachaAmount = "1"
-
-	-- ════════ HELPERS ════════
-	local function findNil(name)
-		if typeof(getnilinstances) ~= "function" then return nil end
-		local success, instances = pcall(getnilinstances)
-		if not success or not instances then return nil end
-		for _, o in ipairs(instances) do
-			if o and o.Name == name then return o end
-		end
-		return nil
-	end
-
-	local function findNilDbg(name, id)
-		if typeof(getnilinstances) ~= "function" then return nil end
-		local success, instances = pcall(getnilinstances)
-		if not success or not instances then return nil end
-		for _, o in ipairs(instances) do
-			if o and o.Name == name then
-				local dbgId = nil
-				if typeof(getdebugid) == "function" then
-					pcall(function() dbgId = getdebugid(o) end)
-				elseif pcall(function() return o.GetDebugId end) and typeof(o.GetDebugId) == "function" then
-					pcall(function() dbgId = o:GetDebugId() end)
-				end
-				if dbgId == id then return o end
-			end
-		end
-		return nil
-	end
-
-	local function sellPet(name)
-		for _, f in ipairs(PET_FOLDERS) do
-			if f then
-				local p = f:FindFirstChild(name)
-				if p then
-					sellPetEvent:FireServer("sellPet", p)
-					return true
-				end
-			end
-		end
-		local n = findNil(name)
-		if n then
-			sellPetEvent:FireServer("sellPet", n)
-			return true
-		end
-		return false
-	end
-
-	local function sellAura(name)
-		for _, f in ipairs(AURA_FOLDERS) do
-			if f then
-				local a = f:FindFirstChild(name)
-				if a then
-					sellPowerUpEvent:FireServer("sellPowerUp", a)
-					return true
-				end
-			end
-		end
-		local n = findNil(name)
-		if n then
-			sellPowerUpEvent:FireServer("sellPowerUp", n)
-			return true
-		end
-		return false
-	end
-
-	local function sellPetDbg(name, id)
-		for _, f in ipairs(PET_FOLDERS) do
-			if f then
-				local p = f:FindFirstChild(name)
-				if p then
-					sellPetEvent:FireServer("sellPet", p)
-					return true
-				end
-			end
-		end
-		local n = findNilDbg(name, id)
-		if n then
-			sellPetEvent:FireServer("sellPet", n)
-			return true
-		end
-		return false
-	end
-
-	local function sellAuraDbg(name, id)
-		for _, f in ipairs(AURA_FOLDERS) do
-			if f then
-				local a = f:FindFirstChild(name)
-				if a then
-					sellPowerUpEvent:FireServer("sellPowerUp", a)
-					return true
-				end
-			end
-		end
-		local n = findNilDbg(name, id)
-		if n then
-			sellPowerUpEvent:FireServer("sellPowerUp", n)
-			return true
-		end
-		return false
-	end
-
-	local function scan30()
-		for n,_ in pairs(SELL_PETS_30) do if not EXCLUDE_PETS[n] then sellPet(n) end end
-		for n,_ in pairs(SELL_AURAS_30) do if not EXCLUDE_AURAS[n] then sellAura(n) end end
-	end
-
-	local function scan15()
-		for n,id in pairs(SELL_PETS_15) do if not EXCLUDE_PETS[n] then sellPetDbg(n,id) end end
-		for n,id in pairs(SELL_AURAS_15) do if not EXCLUDE_AURAS[n] then sellAuraDbg(n,id) end end
-	end
-
-	local function scan150()
-		for n,id in pairs(SELL_PETS_150) do if not EXCLUDE_PETS[n] then sellPetDbg(n,id) end end
-		if not EXCLUDE_PETS[TITAN_REACTOR.Name] then sellPetDbg(TITAN_REACTOR.Name, TITAN_REACTOR.DebugId) end
-	end
-
-	local function scan60()
-		for n,id in pairs(SELL_PETS_60) do if not EXCLUDE_PETS[n] then sellPetDbg(n,id) end end
-		for n,id in pairs(SELL_AURAS_60) do if not EXCLUDE_AURAS[n] then sellAuraDbg(n,id) end end
-	end
-
-	local function countPet(name)
-		local count = 0
-		for _, folder in ipairs(PET_FOLDERS) do
-			if folder then
-				for _, child in ipairs(folder:GetChildren()) do
-					if child.Name == name then count = count + 1 end
-				end
-			end
-		end
-		return count
-	end
-
-	local function tryEvolve(cfg)
-		if evolving or not cfg.Enabled then return end
-		local count = countPet(cfg.Target)
-		if count >= cfg.Need then
-			evolving = true
-			pcall(function() petEvolveEvent:FireServer("evolvePet", cfg.Target) end)
-			evolving = false
-		end
-	end
-
-	local function roll30()
-		local ok = pcall(function() openCrystalRemote:InvokeServer("openCrystal", CRYSTAL_30) end)
-		if ok then task.delay(0.15, function() scan30() tryEvolve(EVOLVE_30) end) end
-		return ok
-	end
-
-	local function roll15()
-		local ok = pcall(function() openCrystalRemote:InvokeServer("openCrystal", CRYSTAL_15) end)
-		if ok then task.delay(0.15, function() scan15() tryEvolve(EVOLVE_15) end) end
-		return ok
-	end
-
-	local function roll150()
-		local ok = pcall(function() openCrystalRemote:InvokeServer("openCrystalBulk", CRYSTAL_150, BULK_AMOUNT) end)
-		if ok then task.delay(0.3, function() scan150() tryEvolve(EVOLVE_150) end) end
-		return ok
-	end
-
-	local function roll60()
-		local ok = pcall(function() openCrystalRemote:InvokeServer("openCrystalBulk", CRYSTAL_60, BULK_AMOUNT) end)
-		if ok then task.delay(0.3, function() scan60() tryEvolve(EVOLVE_60) end) end
-		return ok
-	end
-
-	-- ════════ GUI EXCEPTION SYSTEM (DARK THEME) ════════
-	local function openExceptionModal(boxTitle, petsDict, aurasDict)
-		local existing = ScreenGui:FindFirstChild("ExceptionModalFrame")
-		if existing then existing:Destroy() end
-		local modal = Instance.new("Frame")
-		modal.Name = "ExceptionModalFrame"
-		modal.Parent = ScreenGui
-		modal.Size = UDim2.new(0, 320, 0, 360)
-		modal.Position = UDim2.new(0.5, -160, 0.5, -180)
-		modal.BackgroundColor3 = Color3.fromRGB(18, 5, 5)
-		modal.BorderSizePixel = 0
-		modal.ZIndex = 500
-		modal.Active = true
-		modal.Draggable = true
-		Instance.new("UICorner", modal).CornerRadius = UDim.new(0, 10)
-		local stroke = Instance.new("UIStroke", modal)
-		stroke.Color = Color3.fromRGB(160, 30, 30)
-		stroke.Thickness = 2
-		local topBar = Instance.new("TextLabel", modal)
-		topBar.Size = UDim2.new(1, 0, 0, 35)
-		topBar.BackgroundColor3 = Color3.fromRGB(35, 6, 6)
-		topBar.Text = "🛡️ ตั้งค่ายกเว้น: " .. boxTitle
-		topBar.TextColor3 = Color3.fromRGB(255, 255, 255)
-		topBar.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-		topBar.TextSize = 13
-		topBar.ZIndex = 501
-		Instance.new("UICorner", topBar).CornerRadius = UDim.new(0, 10)
-		local closeBtn = Instance.new("TextButton", modal)
-		closeBtn.Size = UDim2.new(0, 24, 0, 24)
-		closeBtn.Position = UDim2.new(1, -28, 0, 5)
-		closeBtn.BackgroundColor3 = Color3.fromRGB(150, 25, 25)
-		closeBtn.Text = "✕"
-		closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-		closeBtn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-		closeBtn.TextSize = 12
-		closeBtn.ZIndex = 502
-		Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 5)
-		closeBtn.MouseButton1Click:Connect(function() modal:Destroy() end)
-		local scroll = Instance.new("ScrollingFrame", modal)
-		scroll.Size = UDim2.new(0.92, 0, 0.85, -10)
-		scroll.Position = UDim2.new(0.04, 0, 0.12, 10)
-		scroll.BackgroundTransparency = 1
-		scroll.BorderSizePixel = 0
-		scroll.ScrollBarThickness = 4
-		scroll.ZIndex = 501
-		local layout = Instance.new("UIListLayout", scroll)
-		layout.SortOrder = Enum.SortOrder.LayoutOrder
-		layout.Padding = UDim.new(0, 6)
-		layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-			scroll.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 10)
-		end)
-		-- 🐾 หมวดหมู่สัตว์
-		local petHeader = Instance.new("TextLabel", scroll)
-		petHeader.Size = UDim2.new(1, 0, 0, 24)
-		petHeader.BackgroundColor3 = Color3.fromRGB(40, 8, 8)
-		petHeader.Text = " 🐾 สัตว์ (เปิด = ยกเว้น/ไม่ลบ)"
-		petHeader.TextColor3 = Color3.fromRGB(255, 180, 180)
-		petHeader.TextXAlignment = Enum.TextXAlignment.Left
-		petHeader.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-		petHeader.TextSize = 11
-		petHeader.ZIndex = 502
-		Instance.new("UICorner", petHeader).CornerRadius = UDim.new(0, 5)
-		for petName, _ in pairs(petsDict) do
-			local row = Instance.new("Frame", scroll)
-			row.Size = UDim2.new(1, 0, 0, 32)
-			row.BackgroundColor3 = Color3.fromRGB(28, 6, 6)
-			row.BorderSizePixel = 0
-			row.ZIndex = 502
-			Instance.new("UICorner", row).CornerRadius = UDim.new(0, 5)
-			local lbl = Instance.new("TextLabel", row)
-			lbl.Size = UDim2.new(0.65, 0, 1, 0)
-			lbl.Position = UDim2.new(0.03, 0, 0, 0)
-			lbl.BackgroundTransparency = 1
-			lbl.Text = petName
-			lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
-			lbl.TextXAlignment = Enum.TextXAlignment.Left
-			lbl.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
-			lbl.TextSize = 11
-			lbl.ZIndex = 503
-			local tog = Instance.new("TextButton", row)
-			tog.Size = UDim2.new(0.28, 0, 0.75, 0)
-			tog.Position = UDim2.new(0.69, 0, 0.12, 0)
-			tog.ZIndex = 503
-			tog.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-			tog.TextSize = 10
-			Instance.new("UICorner", tog).CornerRadius = UDim.new(0, 4)
-			local isExcluded = EXCLUDE_PETS[petName] or false
-			local function updateTog()
-				if isExcluded then
-					tog.Text = "🛡️ ยกเว้น"
-					tog.BackgroundColor3 = Color3.fromRGB(40, 160, 80)
-				else
-					tog.Text = "🗑️ ลบปกติ"
-					tog.BackgroundColor3 = Color3.fromRGB(150, 30, 30)
-				end
-			end
-			updateTog()
-			tog.MouseButton1Click:Connect(function()
-				isExcluded = not isExcluded
-				EXCLUDE_PETS[petName] = isExcluded
-				updateTog()
-			end)
-		end
-		-- 🌟 หมวดหมู่อ่อร่า
-		local auraHeader = Instance.new("TextLabel", scroll)
-		auraHeader.Size = UDim2.new(1, 0, 0, 24)
-		auraHeader.BackgroundColor3 = Color3.fromRGB(40, 8, 8)
-		auraHeader.Text = " 🌟 อ่อร่า (เปิด = ยกเว้น/ไม่ลบ)"
-		auraHeader.TextColor3 = Color3.fromRGB(255, 180, 180)
-		auraHeader.TextXAlignment = Enum.TextXAlignment.Left
-		auraHeader.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-		auraHeader.TextSize = 11
-		auraHeader.ZIndex = 502
-		Instance.new("UICorner", auraHeader).CornerRadius = UDim.new(0, 5)
-		for auraName, _ in pairs(aurasDict) do
-			local row = Instance.new("Frame", scroll)
-			row.Size = UDim2.new(1, 0, 0, 32)
-			row.BackgroundColor3 = Color3.fromRGB(28, 6, 6)
-			row.BorderSizePixel = 0
-			row.ZIndex = 502
-			Instance.new("UICorner", row).CornerRadius = UDim.new(0, 5)
-			local lbl = Instance.new("TextLabel", row)
-			lbl.Size = UDim2.new(0.65, 0, 1, 0)
-			lbl.Position = UDim2.new(0.03, 0, 0, 0)
-			lbl.BackgroundTransparency = 1
-			lbl.Text = auraName
-			lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
-			lbl.TextXAlignment = Enum.TextXAlignment.Left
-			lbl.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
-			lbl.TextSize = 11
-			lbl.ZIndex = 503
-			local tog = Instance.new("TextButton", row)
-			tog.Size = UDim2.new(0.28, 0, 0.75, 0)
-			tog.Position = UDim2.new(0.69, 0, 0.12, 0)
-			tog.ZIndex = 503
-			tog.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-			tog.TextSize = 10
-			Instance.new("UICorner", tog).CornerRadius = UDim.new(0, 4)
-			local isExcluded = EXCLUDE_AURAS[auraName] or false
-			local function updateTog()
-				if isExcluded then
-					tog.Text = "🛡️ ยกเว้น"
-					tog.BackgroundColor3 = Color3.fromRGB(40, 160, 80)
-				else
-					tog.Text = "🗑️ ลบปกติ"
-					tog.BackgroundColor3 = Color3.fromRGB(150, 30, 30)
-				end
-			end
-			updateTog()
-			tog.MouseButton1Click:Connect(function()
-				isExcluded = not isExcluded
-				EXCLUDE_AURAS[auraName] = isExcluded
-				updateTog()
-			end)
-		end
-	end
-
-	-- ════════ FARMING & REBIRTH LOGIC ════════
-	local function getMuscleEvent()
-		return LocalPlayer:FindFirstChild("muscleEvent")
-	end
-
-	local function equipTool(toolName)
-		local char = LocalPlayer.Character
-		if not char then return false end
-		local humanoid = char:FindFirstChildOfClass("Humanoid")
-		if not humanoid then return false end
-		local tool = LocalPlayer.Backpack:FindFirstChild(toolName) or char:FindFirstChild(toolName)
-		if tool then
-			humanoid:EquipTool(tool)
-			return true
-		end
-		return false
-	end
-
-	local function fireMuscle()
-		local event = getMuscleEvent()
-		if event then
-			pcall(function() event:FireServer("rep") end)
-		end
-	end
-
-	local function startFarming()
-		if not farmTool then return end
-		farmEnabled = true
-		farmConn = RunService.Heartbeat:Connect(function()
-			if not farmEnabled then return end
-			if not equipTool(farmTool) then
-				local char = LocalPlayer.Character
-				if char and char:FindFirstChildOfClass("Humanoid") then
-					local tool = LocalPlayer.Backpack:FindFirstChild(farmTool) or char:FindFirstChild(farmTool)
-					if tool then char.Humanoid:EquipTool(tool) end
-				end
-			end
-			fireMuscle()
-			task.wait(fastMode and 0.01 or 0.1)
-		end)
-	end
-
-	local function stopFarming()
-		farmEnabled = false
-		if farmConn then
-			farmConn:Disconnect()
-			farmConn = nil
-		end
-	end
-
-	-- 🪨 AUTO PUNCH ROCK FUNCTIONS (ปรับแต่งย่อขนาด สลับมือซ้าย-ขวา คืนค่าเดิม)
-	local function saveOriginalRockData(rockModel)
-		if not rockModel then return end
-		for _, part in ipairs(rockModel:GetDescendants()) do
-			if part:IsA("BasePart") and not originalRockData[part] then
-				local data = {
-					CFrame = part.CFrame,
-					Size = part.Size,
-					Transparency = part.Transparency,
-					CanCollide = part.CanCollide,
-					MeshScale = nil,
-					MeshOffset = nil,
-					MeshId = nil,
-				}
-				local mesh = part:FindFirstChildOfClass("DataModelMesh")
-				if mesh then
-					data.MeshScale = mesh.Scale
-					data.MeshOffset = mesh.Offset
-					data.MeshId = mesh.MeshId
-				end
-				originalRockData[part] = data
-			end
-		end
-	end
-
-	local function restoreOriginalRockData()
-		for part, data in pairs(originalRockData) do
-			if part and part.Parent then
-				pcall(function()
-					part.CanCollide = data.CanCollide
-					part.Transparency = data.Transparency
-					part.Size = data.Size
-					part.CFrame = data.CFrame
-					if part:IsA("BasePart") then
-						part.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-						part.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-					end
-					local mesh = part:FindFirstChildOfClass("DataModelMesh")
-					if mesh and data.MeshScale then
-						mesh.Scale = data.MeshScale
-						mesh.Offset = data.MeshOffset
-						if data.MeshId then
-							mesh.MeshId = data.MeshId
-						end
-					end
-				end)
-			end
-		end
-		table.clear(originalRockData)
-	end
-
-	local function modifyAndMoveRock(rockModel, targetHand)
-		if not rockModel or not targetHand then return end
-		saveOriginalRockData(rockModel)
-		
-		rockAngle = (rockAngle + 15) % 360
-		local targetCFrame = targetHand.CFrame * CFrame.Angles(0, math.rad(rockAngle), math.rad(rockAngle))
-		for _, part in ipairs(rockModel:GetDescendants()) do
-			if part:IsA("BasePart") then
-				part.CanCollide = false
-				part.Transparency = 1
-				part.Size = Vector3.new(0.001, 0.001, 0.001)
-				part.CFrame = targetCFrame
-				-- ป้องกันแรงเหวี่ยงจากฟิสิกส์ Roblox (Anti Velocity Lag/Launch)
-				part.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-				part.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-			elseif part:IsA("Decal") or part:IsA("Texture") then
-				part.Transparency = 1
-			elseif part:IsA("SpecialMesh") or part:IsA("BlockMesh") then
-				part.Scale = Vector3.new(0.001, 0.001, 0.001)
-			end
-		end
-	end
-
-	local function startAutoRock()
-		autoRockEnabled = true
-		-- ⭐ Equip "Punch" tool immediately
-		equipTool("Punch")
-		autoRockConn = RunService.Heartbeat:Connect(function()
-			if not autoRockEnabled then return end
-			local char = LocalPlayer.Character
-			if not char then return end
-			-- สลับมือซ้าย / ขวา ไปมาทุกเฟรม
-			rockHandToggle = not rockHandToggle
-			local rightHand = char:FindFirstChild("RightHand") or char:FindFirstChild("Right Arm") or char:FindFirstChild("HumanoidRootPart")
-			local leftHand = char:FindFirstChild("LeftHand") or char:FindFirstChild("Left Arm") or char:FindFirstChild("HumanoidRootPart")
-			local targetHand = rockHandToggle and leftHand or rightHand
-			local machines = workspace:FindFirstChild("machinesFolder")
-			if machines then
-				local rock = machines:FindFirstChild(selectedRockName)
-				if rock then
-					modifyAndMoveRock(rock, targetHand)
-				end
-			end
-			local event = getMuscleEvent()
-			if event then
-				pcall(function()
-					event:FireServer("punch", "rightHand")
-					event:FireServer("punch", "leftHand")
-				end)
-			end
-			task.wait(0.01)
-		end)
-	end
-
-	local function stopAutoRock()
-		autoRockEnabled = false
-		if autoRockConn then
-			autoRockConn:Disconnect()
-			autoRockConn = nil
-		end
-		restoreOriginalRockData()
-	end
-
-	-- ⭐ Re-equip Punch on respawn if auto rock is active
-	LocalPlayer.CharacterAdded:Connect(function(char)
-		if autoRockEnabled then
-			task.wait(0.5)
-			equipTool("Punch")
-		end
-	end)
-
-	local function stopRebirth()
-		rebirthEnabled = false
-		if rebirthConn then
-			rebirthConn:Disconnect()
-			rebirthConn = nil
-		end
-	end
-
-	local function startRebirth()
-		rebirthEnabled = true
-		rebirthConn = RunService.Heartbeat:Connect(function()
-			if not rebirthEnabled then return end
-			local leaderstats = LocalPlayer:FindFirstChild("leaderstats")
-			local currentRebirths = (leaderstats and leaderstats:FindFirstChild("Rebirths")) and leaderstats.Rebirths.Value or 0
-			if useRebirthTarget and currentRebirths >= targetRebirths then
-				stopRebirth()
-				return
-			end
-			pcall(function() rebirthRemote:InvokeServer("rebirthRequest") end)
-			task.wait(0.5)
-		end)
-	end
-
-	-- 🛠️ FIXED ANTI-KNOCKBACK
-	local function setupAntiKnockback(char)
-		if not char then return end
-		local humanoid = char:WaitForChild("Humanoid", 5)
-		local root = char:WaitForChild("HumanoidRootPart", 5)
-		if not humanoid or not root then return end
-		lastHealth = humanoid.Health
-		if healthConn then healthConn:Disconnect() end
-		healthConn = humanoid.HealthChanged:Connect(function(newHealth)
-			if antiKnockbackEnabled and newHealth < lastHealth then
-				if not isKnockbackLocked then
-					isKnockbackLocked = true
-					root.Anchored = true
-					task.delay(0.5, function()
-						if root and root.Parent then root.Anchored = false end
-						isKnockbackLocked = false
-					end)
-				end
-			end
-			lastHealth = newHealth
-		end)
-	end
-
-	LocalPlayer.CharacterAdded:Connect(function(char)
-		setupAntiKnockback(char)
-	end)
-	if LocalPlayer.Character then setupAntiKnockback(LocalPlayer.Character) end
-
-	task.spawn(function()
-		while true do
-			if not isMonitoringRebirthTp and LocalPlayer.Character then
-				local root = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-				if root then savedPosBeforeRebirth = root.CFrame end
-			end
-			task.wait(0.1)
-		end
-	end)
-
-	local function setupRebirthTracker(leaderstats)
-		if not leaderstats then return end
-		local rebirths = leaderstats:WaitForChild("Rebirths", 5)
-		if not rebirths then return end
-		local currentCount = rebirths.Value
-		rebirths.Changed:Connect(function(newVal)
-			if antiRebirthTpEnabled and newVal > currentCount then
-				local returnCFrame = savedPosBeforeRebirth
-				isMonitoringRebirthTp = true
-				local startTime = os.clock()
-				task.spawn(function()
-					while os.clock() - startTime < 6 do
-						local char = LocalPlayer.Character
-						local root = char and char:FindFirstChild("HumanoidRootPart")
-						if root and returnCFrame then
-							if (root.Position - returnCFrame.Position).Magnitude > 10 then
-								task.wait(0.1)
-								root.CFrame = returnCFrame
-							end
-						end
-						task.wait(0.05)
-					end
-					isMonitoringRebirthTp = false
-				end)
-			end
-			currentCount = newVal
-		end)
-	end
-
-	local leaderstatsObj = LocalPlayer:FindFirstChild("leaderstats")
-	if leaderstatsObj then setupRebirthTracker(leaderstatsObj) end
-	LocalPlayer.ChildAdded:Connect(function(child)
-		if child.Name == "leaderstats" then setupRebirthTracker(child) end
-	end)
-
-	-- ════════ AUTO-SELL ON CHILD ADDED ════════
-	for _, f in ipairs(PET_FOLDERS) do
-		if f then
-			f.ChildAdded:Connect(function(c)
-				if SELL_PETS_30[c.Name] and running30 and not EXCLUDE_PETS[c.Name] then
-					task.wait(0.1) sellPetEvent:FireServer("sellPet", c)
-				end
-				if SELL_PETS_15[c.Name] and running15 and not EXCLUDE_PETS[c.Name] then
-					task.wait(0.1) sellPetEvent:FireServer("sellPet", c)
-				end
-				if SELL_PETS_150[c.Name] and running150 and not EXCLUDE_PETS[c.Name] then
-					task.wait(0.1) sellPetEvent:FireServer("sellPet", c)
-				end
-				if c.Name == TITAN_REACTOR.Name and running150 and not EXCLUDE_PETS[c.Name] then
-					task.wait(0.1) sellPetEvent:FireServer("sellPet", c)
-				end
-				if SELL_PETS_60[c.Name] and running60 and not EXCLUDE_PETS[c.Name] then
-					task.wait(0.1) sellPetEvent:FireServer("sellPet", c)
-				end
-				if c.Name == EVOLVE_30.Target then task.delay(0.3, function() tryEvolve(EVOLVE_30) end) end
-				if c.Name == EVOLVE_15.Target then task.delay(0.3, function() tryEvolve(EVOLVE_15) end) end
-				if c.Name == EVOLVE_150.Target then task.delay(0.3, function() tryEvolve(EVOLVE_150) end) end
-				if c.Name == EVOLVE_60.Target then task.delay(0.3, function() tryEvolve(EVOLVE_60) end) end
-			end)
-		end
-	end
-
-	for _, f in ipairs(AURA_FOLDERS) do
-		if f then
-			f.ChildAdded:Connect(function(c)
-				if SELL_AURAS_30[c.Name] and running30 and not EXCLUDE_AURAS[c.Name] then
-					task.wait(0.1) sellPowerUpEvent:FireServer("sellPowerUp", c)
-				end
-				if SELL_AURAS_15[c.Name] and running15 and not EXCLUDE_AURAS[c.Name] then
-					task.wait(0.1) sellPowerUpEvent:FireServer("sellPowerUp", c)
-				end
-				if SELL_AURAS_60[c.Name] and running60 and not EXCLUDE_AURAS[c.Name] then
-					task.wait(0.1) sellPowerUpEvent:FireServer("sellPowerUp", c)
-				end
-			end)
-		end
-	end
-
-	-- ════════ POPULATING TAB 1: เมนูหลัก ════════
-	addSectionHeader(MainPage, "ข้อมูลบัญชีผู้ใช้")
-	local mapTitle = "ไม่พบข้อมูล"
-	pcall(function()
-		local info = MarketplaceService:GetProductInfo(game.PlaceId)
-		if info and info.Name then mapTitle = info.Name end
-	end)
-	local AccountInfoDisplay = Instance.new("TextLabel")
-	AccountInfoDisplay.Size = UDim2.new(1, -6, 0, 95)
-	AccountInfoDisplay.BackgroundColor3 = Color3.fromRGB(28, 6, 6)
-	AccountInfoDisplay.TextColor3 = Color3.fromRGB(240, 220, 220)
-	AccountInfoDisplay.TextSize = 12
-	AccountInfoDisplay.TextXAlignment = Enum.TextXAlignment.Left
-	AccountInfoDisplay.TextYAlignment = Enum.TextYAlignment.Top
-	AccountInfoDisplay.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
-	AccountInfoDisplay.Parent = MainPage
-	Instance.new("UICorner", AccountInfoDisplay).CornerRadius = UDim.new(0, 6)
-	local accStroke = Instance.new("UIStroke", AccountInfoDisplay)
-	accStroke.Color = Color3.fromRGB(80, 15, 15)
-	AccountInfoDisplay.Text = string.format(
-		" 👤 ผู้ใช้งาน: %s (@%s)\n" ..
-		" 📅 อายุบัญชี: %d วัน\n" ..
-		" 🎮 แมพที่รัน: %s\n" ..
-		" 🌐 ไอดีเซิร์ฟเวอร์: %s",
-		LocalPlayer.DisplayName, LocalPlayer.Name, LocalPlayer.AccountAge, mapTitle, game.JobId ~= "" and game.JobId or "Single Player / Studio"
-	)
-	addSectionHeader(MainPage, "ตัวละคร")
-	addToggle(MainPage, "⚡ Speed Hack (100)", false, function(state)
-		local char = LocalPlayer.Character
-		if char and char:FindFirstChild("Humanoid") then
-			char.Humanoid.WalkSpeed = state and 100 or 16
-		end
-	end, "SpeedHack")
-	addTextbox(MainPage, "🏃 WalkSpeed Custom", "16", function(txt)
-		local val = tonumber(txt)
-		local char = LocalPlayer.Character
-		if val and char and char:FindFirstChild("Humanoid") then
-			char.Humanoid.WalkSpeed = val
-		end
-	end)
-	addTextbox(MainPage, "🦘 JumpPower Custom", "50", function(txt)
-		local val = tonumber(txt)
-		local char = LocalPlayer.Character
-		if val and char and char:FindFirstChild("Humanoid") then
-			char.Humanoid.JumpPower = val
-		end
-	end)
-
-	-- ════════ POPULATING TAB 2: ดูข้อมูล ════════
-	addSectionHeader(StatsPage, "แผงแสดงสถานะตัวละคร")
-	local StatsDisplay = Instance.new("TextLabel")
-	StatsDisplay.Size = UDim2.new(1, -6, 0, 150)
-	StatsDisplay.BackgroundColor3 = Color3.fromRGB(28, 6, 6)
-	StatsDisplay.TextColor3 = Color3.fromRGB(240, 220, 220)
-	StatsDisplay.TextSize = 11
-	StatsDisplay.TextXAlignment = Enum.TextXAlignment.Left
-	StatsDisplay.TextYAlignment = Enum.TextYAlignment.Top
-	StatsDisplay.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
-	StatsDisplay.Text = " 📊 กรุณาเลือกผู้เล่น หรือกดดูข้อมูล..."
-	StatsDisplay.Parent = StatsPage
-	Instance.new("UICorner", StatsDisplay).CornerRadius = UDim.new(0, 6)
-	local statStroke = Instance.new("UIStroke", StatsDisplay)
-	statStroke.Color = Color3.fromRGB(80, 15, 15)
-	local function getPlayerStats(player)
-		local stats = {}
-		stats.Agility = player:FindFirstChild("Agility") and player.Agility.Value or 0
-		stats.Durability = player:FindFirstChild("Durability") and player.Durability.Value or 0
-		local leaderstats = player:FindFirstChild("leaderstats")
-		if leaderstats then
-			stats.Kills = leaderstats:FindFirstChild("Kills") and leaderstats.Kills.Value or 0
-			stats.Strength = leaderstats:FindFirstChild("Strength") and leaderstats.Strength.Value or 0
-			stats.Rebirths = leaderstats:FindFirstChild("Rebirths") and leaderstats.Rebirths.Value or 0
-			stats.Brawls = leaderstats:FindFirstChild("Brawls") and leaderstats.Brawls.Value or 0
-		else
-			stats.Kills, stats.Strength, stats.Rebirths, stats.Brawls = 0,0,0,0
-		end
-		stats.GoodKarma = player:FindFirstChild("goodKarma") and player.goodKarma.Value or 0
-		stats.BadKarma = player:FindFirstChild("badKarma") and player.badKarma.Value or 0
-		stats.MaxPetCapacity = player:FindFirstChild("maxPetCapacity") and player.maxPetCapacity.Value or 0
-		stats.Gems = player:FindFirstChild("Gems") and player.Gems.Value or 0
-		local consumablesFolder = player:FindFirstChild("consumablesFolder")
-		local boosts = {}
-		if consumablesFolder then
-			for _, item in ipairs(consumablesFolder:GetChildren()) do
-				table.insert(boosts, item.Name .. " x" .. (item:IsA("NumberValue") and item.Value or 1))
-			end
-		end
-		return stats, boosts
-	end
-	local function renderStatsOnGUI(player)
-		if not player then return end
-		local stats, boosts = getPlayerStats(player)
-		StatsDisplay.Text = string.format(
-			" 👤 ชื่อผู้เล่น: %s\n" ..
-			" ⚡ Agility: %s | 🛡️ Durability: %s\n" ..
-			" ⚔️ Kills: %s | 💪 Strength: %s\n" ..
-			" 🔄 Rebirths: %s | 🥊 Brawls: %s\n" ..
-			" 😇 กรรมดี: %s | 😈 กรรมชั่ว: %s\n" ..
-			" 🐾 ความจุสัตว์: %s | 💎 Gems: %s\n" ..
-			" 🧪 บูส: %s",
-			player.Name, formatNumber(stats.Agility), formatNumber(stats.Durability),
-			formatNumber(stats.Kills), formatNumber(stats.Strength),
-			formatNumber(stats.Rebirths), formatNumber(stats.Brawls),
-			formatNumber(stats.GoodKarma), formatNumber(stats.BadKarma),
-			formatNumber(stats.MaxPetCapacity), formatNumber(stats.Gems),
-			(#boosts > 0 and table.concat(boosts, ", ") or "ไม่มี")
-		)
-	end
-	local selectedTargetPlayer = LocalPlayer
-	addPlayerSelector(StatsPage, "👤 เลือกผู้เล่น", function(playerObj)
-		selectedTargetPlayer = playerObj
-	end)
-	addButton(StatsPage, "👤 ดูข้อมูลตัวเอง", function()
-		renderStatsOnGUI(LocalPlayer)
-	end)
-	addButton(StatsPage, "🔍 ดูข้อมูลผู้เล่นที่เลือก", function()
-		if selectedTargetPlayer then
-			renderStatsOnGUI(selectedTargetPlayer)
-		end
-	end)
-
-	-- ════════ POPULATING TAB 3: ฟาม ════════
-	addSectionHeader(FarmPage, "ระบบออโต้ฟาร์มพลัง")
-	local availableTools = {"Weight", "Situps", "Pushups", "Handstands"}
-	addToolSelector(FarmPage, "🏋️ เลือก Tool ฟาร์ม", availableTools, "Weight", function(selectedTool)
-		farmTool = selectedTool
-		if farmEnabled then stopFarming() startFarming() end
-	end)
-	addToggle(FarmPage, "▶ เปิดออโต้ออกกำลังกาย", false, function(state)
-		if state then startFarming() else stopFarming() end
-	end, "AutoFarm")
-	addToggle(FarmPage, "⚡ ยกน้ำหนักแบบไว (0.01s)", false, function(state)
-		fastMode = state
-		if farmEnabled then stopFarming() startFarming() end
-	end, "FastMode")
-
-	-- 🪨 เพิ่มส่วน ออโต้ต่อยหิน ในช่องฟาม
-	addSectionHeader(FarmPage, "🪨 ระบบออโต้ต่อยหิน (Auto Rock Punch)")
-	local rockOptions = {
-		"Tiny Rock",
-		"Frozen Rock",
-		"Inferno Rock",
-		"Rock Of Legends",
-		"Muscle King Mountain",
-		"Industrial Rock"
-	}
-	addToolSelector(FarmPage, "🪨 เลือกหินต่อย", rockOptions, "Tiny Rock", function(selected)
-		if autoRockEnabled then
-			stopAutoRock()
-			selectedRockName = selected
-			task.wait(0.1)
-			startAutoRock()
-		else
-			selectedRockName = selected
-		end
-	end)
-	addToggle(FarmPage, "▶ เปิดออโต้ต่อยหิน", false, function(state)
-		if state then
-			startAutoRock()
-		else
-			stopAutoRock()
-		end
-	end, "AutoRockPunch")
-
-	addSectionHeader(FarmPage, "ระบบออโต้ Rebirth")
-	addTextbox(FarmPage, "🎯 ตั้งเป้าหมาย Rebirth", "0", function(txt)
-		local num = tonumber(txt)
-		targetRebirths = num or 0
-	end)
-	addToggle(FarmPage, "☑️ จำกัด Rebirth ตามเป้าหมาย", false, function(state)
-		useRebirthTarget = state
-	end, "UseRebirthTarget")
-	addToggle(FarmPage, "▶ เปิดออโต้ Rebirth", false, function(state)
-		if state then startRebirth() else stopRebirth() end
-	end, "AutoRebirth")
-
-	-- ════════ POPULATING TAB 4: สุ่มสัตว์ (Premium) ════════
-	addSectionHeader(RollPage, "🎡 ระบบสุ่มวงล้อ (Fortune Wheel)")
-	addToggle(RollPage, "🎡 เปิดออโต้สุ่มวงล้อ (5 รอบทุก 30 นาที)", false, function(state)
-		autoFortuneWheel = state
-		if autoFortuneWheel then
-			task.spawn(function()
-				local Event = ReplicatedStorage:WaitForChild("rEvents", 5):WaitForChild("openFortuneWheelRemote", 5)
-				local wheelCatalog = ReplicatedStorage:WaitForChild("shared", 5):WaitForChild("catalogs", 5):WaitForChild("fortuneWheelChances", 5)["Fortune Wheel"]
-				while autoFortuneWheel do
-					for round = 1, 5 do
-						if not autoFortuneWheel then break end
-						pcall(function() Event:InvokeServer("openFortuneWheel", wheelCatalog) end)
-						for i = 1, 15 do
-							if not autoFortuneWheel then break end
-							task.wait(1)
-						end
-					end
-					if autoFortuneWheel then
-						for t = 1, 1800 do
-							if not autoFortuneWheel then break end
-							task.wait(1)
-						end
-					end
-				end
-			end)
-		end
-	end, "AutoFortuneWheel")
-
-	addSectionHeader(RollPage, "🎰 ระบบสุ่มตู้คริสตัล (Auto Roll Crystals)")
-	local function addCrystalCard(parent, title, toggleText, toggleStateFunc, modalFunc, saveKey)
-		local cardFrame = Instance.new("Frame")
-		cardFrame.Size = UDim2.new(1, -6, 0, 78)
-		cardFrame.BackgroundColor3 = Color3.fromRGB(24, 5, 5)
-		cardFrame.BorderSizePixel = 0
-		cardFrame.Parent = parent
-		Instance.new("UICorner", cardFrame).CornerRadius = UDim.new(0, 6)
-		local stroke = Instance.new("UIStroke", cardFrame)
-		stroke.Color = Color3.fromRGB(80, 15, 15)
-		local titleLbl = Instance.new("TextLabel", cardFrame)
-		titleLbl.Size = UDim2.new(1, -10, 0, 22)
-		titleLbl.Position = UDim2.new(0, 8, 0, 4)
-		titleLbl.BackgroundTransparency = 1
-		titleLbl.Text = title
-		titleLbl.TextColor3 = Color3.fromRGB(255, 120, 120)
-		titleLbl.TextXAlignment = Enum.TextXAlignment.Left
-		titleLbl.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-		titleLbl.TextSize = 11
-		local btnContainer = Instance.new("Frame", cardFrame)
-		btnContainer.Size = UDim2.new(1, -12, 0, 42)
-		btnContainer.Position = UDim2.new(0, 6, 0, 28)
-		btnContainer.BackgroundTransparency = 1
-		local layout = Instance.new("UIListLayout", btnContainer)
-		layout.FillDirection = Enum.FillDirection.Horizontal
-		layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-		layout.Padding = UDim.new(0, 6)
-		local togBtn = Instance.new("TextButton", btnContainer)
-		togBtn.Size = UDim2.new(0.55, -3, 1, 0)
-		togBtn.BackgroundColor3 = Color3.fromRGB(150, 30, 30)
-		togBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-		togBtn.Text = "▶ " .. toggleText
-		togBtn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-		togBtn.TextSize = 10
-		Instance.new("UICorner", togBtn).CornerRadius = UDim.new(0, 5)
-		local isRunning = false
-		local function updateVisual()
-			togBtn.Text = isRunning and "⏹ หยุดสุ่ม" or "▶ " .. toggleText
-			togBtn.BackgroundColor3 = isRunning and Color3.fromRGB(40, 160, 80) or Color3.fromRGB(150, 30, 30)
-		end
-		local function setState(newState, skipCallback)
-			isRunning = newState
-			if saveKey then toggleStates[saveKey] = isRunning end
-			updateVisual()
-			if not skipCallback then toggleStateFunc(isRunning) end
-		end
-		togBtn.MouseButton1Click:Connect(function()
-			setState(not isRunning)
-		end)
-		if saveKey then
-			toggleStates[saveKey] = isRunning
-			toggleSetters[saveKey] = setState
-		end
-		local setBtn = Instance.new("TextButton", btnContainer)
-		setBtn.Size = UDim2.new(0.45, -3, 1, 0)
-		setBtn.BackgroundColor3 = Color3.fromRGB(50, 10, 10)
-		setBtn.TextColor3 = Color3.fromRGB(255, 200, 200)
-		setBtn.Text = "🛡️ ยกเว้นไม่ขาย"
-		setBtn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-		setBtn.TextSize = 10
-		Instance.new("UICorner", setBtn).CornerRadius = UDim.new(0, 5)
-		local setStroke = Instance.new("UIStroke", setBtn)
-		setStroke.Color = Color3.fromRGB(120, 20, 20)
-		setStroke.Thickness = 1
-		setBtn.MouseButton1Click:Connect(modalFunc)
-		return cardFrame
-	end
-
-	addCrystalCard(RollPage, "💎 Inferno Crystal (รี 15)", "เปิดสุ่ม รี 15", function(state)
-		running15 = state
-		if running15 then
-			scan15() tryEvolve(EVOLVE_15)
-			task.spawn(function()
-				while running15 do roll15() task.wait(DELAY_15) end
-			end)
-			sellConn15 = RunService.Heartbeat:Connect(function()
-				if running15 and (os.clock() - lastScan15) > 0.3 then
-					lastScan15 = os.clock() scan15() tryEvolve(EVOLVE_15)
-				end
-			end)
-		else
-			if sellConn15 then sellConn15:Disconnect() sellConn15 = nil end
-		end
-	end, function() openExceptionModal("ตู้รี 15 (Inferno)", SELL_PETS_15, SELL_AURAS_15) end, "Roll15")
-
-	addCrystalCard(RollPage, "🌌 Galaxy Oracle Crystal (รี 30)", "เปิดสุ่ม รี 30", function(state)
-		running30 = state
-		if running30 then
-			scan30() tryEvolve(EVOLVE_30)
-			task.spawn(function()
-				while running30 do roll30() task.wait(DELAY_30) end
-			end)
-			sellConn30 = RunService.Heartbeat:Connect(function()
-				if running30 and (os.clock() - lastScan30) > 0.3 then
-					lastScan30 = os.clock() scan30() tryEvolve(EVOLVE_30)
-				end
-			end)
-		else
-			if sellConn30 then sellConn30:Disconnect() sellConn30 = nil end
-		end
-	end, function() openExceptionModal("ตู้รี 30 (Galaxy)", SELL_PETS_30, SELL_AURAS_30) end, "Roll30")
-
-	addCrystalCard(RollPage, "🌴 Jungle Crystal (รี 60)", "เปิดสุ่ม รี 60", function(state)
-		running60 = state
-		if running60 then
-			scan60() tryEvolve(EVOLVE_60)
-			task.spawn(function()
-				while running60 do roll60() task.wait(DELAY_60) end
-			end)
-			sellConn60 = RunService.Heartbeat:Connect(function()
-				if running60 and (os.clock() - lastScan60) > 0.3 then
-					lastScan60 = os.clock() scan60() tryEvolve(EVOLVE_60)
-				end
-			end)
-		else
-			if sellConn60 then sellConn60:Disconnect() sellConn60 = nil end
-		end
-	end, function() openExceptionModal("ตู้รี 60 (Jungle)", SELL_PETS_60, SELL_AURAS_60) end, "Roll60")
-
-	addCrystalCard(RollPage, "⚡ Industrial Crystal (รี 150)", "เปิดสุ่ม รี 150", function(state)
-		running150 = state
-		if running150 then
-			scan150() tryEvolve(EVOLVE_150)
-			task.spawn(function()
-				while running150 do roll150() task.wait(DELAY_150) end
-			end)
-			sellConn150 = RunService.Heartbeat:Connect(function()
-				if running150 and (os.clock() - lastScan150) > 0.3 then
-					lastScan150 = os.clock() scan150() tryEvolve(EVOLVE_150)
-				end
-			end)
-		else
-			if sellConn150 then sellConn150:Disconnect() sellConn150 = nil end
-		end
-	end, function() openExceptionModal("ตู้รี 150 (Industrial)", SELL_PETS_150, {}) end, "Roll150")
-
-	-- ════════ POPULATING TAB 5: พรี่เมี่ยม⭐ ════════
-	addSectionHeader(PremiumPage, "⭐ พรี่เมี่ยม ฟังก์ชั่นพิเศษ")
-	addToggle(PremiumPage, "🔄 Auto Evolve สัตว์ไว (ทุก 0.3 วินาที)", false, function(state)
-		EVOLVE_30.Enabled = state
-		EVOLVE_15.Enabled = state
-		EVOLVE_150.Enabled = state
-		EVOLVE_60.Enabled = state
-	end, "AutoEvolveFast")
-
-	-- 💪 ปุ่มใหม่: ยกน้ำหนักแบบโครตไว (สำหรับคนมีสัตว์แพ็ค)
-	addSectionHeader(PremiumPage, "💪 ยกน้ำหนักแบบโครตไว (สำหรับคนมีสัตว์แพ็ค)")
-
-	local fastMuscleTool = "Weight"
-	local fastMuscleEnabled = false
-	local fastMuscleConn = nil
-
-	local function startFastMuscle()
-		if fastMuscleEnabled then return end
-		fastMuscleEnabled = true
-		fastMuscleConn = RunService.Heartbeat:Connect(function()
-			if not fastMuscleEnabled then return end
-			equipTool(fastMuscleTool)
-			for _ = 1, 500 do
-				fireMuscle()
-			end
-			task.wait(0.05)
-		end)
-	end
-
-	local function stopFastMuscle()
-		fastMuscleEnabled = false
-		if fastMuscleConn then
-			fastMuscleConn:Disconnect()
-			fastMuscleConn = nil
-		end
-	end
-
-	addToolSelector(PremiumPage, "🏋️ เลือก Tool ออกกำลังกาย", {"Weight", "Situps", "Pushups", "Handstands"}, "Weight", function(selected)
-		fastMuscleTool = selected
-		if fastMuscleEnabled then
-			stopFastMuscle()
-			startFastMuscle()
-		end
-	end)
-
-	addToggle(PremiumPage, "▶ เปิดใช้งานยกน้ำหนักโครตไว", false, function(state)
-		if state then
-			startFastMuscle()
-		else
-			stopFastMuscle()
-		end
-	end, "FastMuscleUltra")
-
-	-- ════════ POPULATING TAB 6: ตั้งค่า ════════
-	addSectionHeader(SettingsPage, "💾 ระบบบันทึกการตั้งค่า")
-	addButton(SettingsPage, "💾 บันทึกการตั้งค่าปัจจุบัน", function()
-		writeJsonFile(SAVE_FILE_NAME, toggleStates)
-		playSound("rbxassetid://6895079853", 0.5)
-	end)
-	addButton(SettingsPage, "🗑️ รีเซ็ตการตั้งค่ากลับค่าเริ่มต้น", function()
-		deleteJsonFile(SAVE_FILE_NAME)
-		for key, setter in pairs(toggleSetters) do
-			setter(false, false)
-		end
-		playSound("rbxassetid://6895079853", 0.5)
-	end)
-
-	-- โหลด Save Config อัตโนมัติ
-	local savedConfig = readJsonFile(SAVE_FILE_NAME)
-	if savedConfig and type(savedConfig) == "table" then
-		task.delay(0.5, function()
-			for key, val in pairs(savedConfig) do
-				if toggleSetters[key] then
-					toggleSetters[key](val, false)
-				end
-			end
-		end)
-	end
-
-	-- ════════ POPULATING TAB 7: เพิ่มเติม ════════
-	addSectionHeader(ExtraPage, "🛡️ ป้องกันตัวละคร & ระบบเสริม")
-	addToggle(ExtraPage, "🛡️ Anti-AFK (กันหลุดออกเกม 20 นาที)", false, function(state)
-		antiAfkEnabled = state
-		if antiAfkEnabled then
-			antiAfkConn = LocalPlayer.Idled:Connect(function()
-				if antiAfkEnabled then
-					VirtualUser:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
-					task.wait(1)
-					VirtualUser:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
-				end
-			end)
-		else
-			if antiAfkConn then
-				antiAfkConn:Disconnect()
-				antiAfkConn = nil
-			end
-		end
-	end, "AntiAFK")
-	addToggle(ExtraPage, "🥊 Anti-Knockback (กันลอยเมื่อโดนต่อย)", false, function(state)
-		antiKnockbackEnabled = state
-	end, "AntiKnockback")
-	addToggle(ExtraPage, "📍 Anti-Rebirth TP (กันวาร์ปกลับจุดเกิดหลัง Rebirth)", false, function(state)
-		antiRebirthTpEnabled = state
-	end, "AntiRebirthTp")
-	addToggle(ExtraPage, "🎁 Auto Claim Free Gifts (รับของขวัญฟรีอัตโนมัติ)", false, function(state)
-		autoGiftEnabled = state
-		if autoGiftEnabled then
-			task.spawn(function()
-				while autoGiftEnabled do
-					pcall(function() freeGiftClaimRemote:InvokeServer("claimGift") end)
-					task.wait(10)
-				end
-			end)
-		end
-	end, "AutoGift")
-
-	-- ════════ NEW: GACHA TAB (Everyone) ════════
-	addSectionHeader(GachaPage, "🎁 สุ่มตู้สัตว์ (ทุกคนใช้ได้)")
-
-	local function addGachaButtons(crystalName, displayName)
-		local frame = Instance.new("Frame")
-		frame.Size = UDim2.new(1, -6, 0, 120)
-		frame.BackgroundColor3 = Color3.fromRGB(26, 6, 6)
-		frame.BorderSizePixel = 0
-		frame.Parent = GachaPage
-		Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
-		local stroke = Instance.new("UIStroke", frame)
-		stroke.Color = Color3.fromRGB(80, 15, 15)
-		
-		local title = Instance.new("TextLabel", frame)
-		title.Size = UDim2.new(1, -10, 0, 24)
-		title.Position = UDim2.new(0, 8, 0, 4)
-		title.BackgroundTransparency = 1
-		title.Text = displayName
-		title.TextColor3 = Color3.fromRGB(255, 140, 140)
-		title.TextXAlignment = Enum.TextXAlignment.Left
-		title.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-		title.TextSize = 11
-		
-		local btnContainer = Instance.new("Frame", frame)
-		btnContainer.Size = UDim2.new(1, -12, 0, 80)
-		btnContainer.Position = UDim2.new(0, 6, 0, 34)
-		btnContainer.BackgroundTransparency = 1
-		
-		local layout = Instance.new("UIListLayout", btnContainer)
-		layout.FillDirection = Enum.FillDirection.Horizontal
-		layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-		layout.Padding = UDim.new(0, 6)
-		
-		-- สุ่ม 1 ฟอง
-		local btn1 = Instance.new("TextButton", btnContainer)
-		btn1.Size = UDim2.new(0.3, -2, 1, 0)
-		btn1.BackgroundColor3 = Color3.fromRGB(120, 15, 15)
-		btn1.TextColor3 = Color3.fromRGB(255, 255, 255)
-		btn1.Text = "สุ่ม 1 ฟอง"
-		btn1.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-		btn1.TextSize = 10
-		Instance.new("UICorner", btn1).CornerRadius = UDim.new(0, 5)
-		btn1.MouseButton1Click:Connect(function()
-			pcall(function()
-				openCrystalRemote:InvokeServer("openCrystal", crystalName)
-			end)
-		end)
-		
-		-- สุ่ม 3 ฟอง
-		local btn3 = Instance.new("TextButton", btnContainer)
-		btn3.Size = UDim2.new(0.3, -2, 1, 0)
-		btn3.BackgroundColor3 = Color3.fromRGB(120, 15, 15)
-		btn3.TextColor3 = Color3.fromRGB(255, 255, 255)
-		btn3.Text = "สุ่ม 3 ฟอง"
-		btn3.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-		btn3.TextSize = 10
-		Instance.new("UICorner", btn3).CornerRadius = UDim.new(0, 5)
-		btn3.MouseButton1Click:Connect(function()
-			pcall(function()
-				openCrystalRemote:InvokeServer("openCrystalBulk", crystalName, 3)
-			end)
-		end)
-		
-		-- สุ่ม 10 ฟอง
-		local btn10 = Instance.new("TextButton", btnContainer)
-		btn10.Size = UDim2.new(0.3, -2, 1, 0)
-		btn10.BackgroundColor3 = Color3.fromRGB(120, 15, 15)
-		btn10.TextColor3 = Color3.fromRGB(255, 255, 255)
-		btn10.Text = "สุ่ม 10 ฟอง"
-		btn10.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-		btn10.TextSize = 10
-		Instance.new("UICorner", btn10).CornerRadius = UDim.new(0, 5)
-		btn10.MouseButton1Click:Connect(function()
-			pcall(function()
-				openCrystalRemote:InvokeServer("openCrystalBulk", crystalName, 10)
-			end)
-		end)
-	end
-
-	-- เรียงตามที่ผู้ใช้ให้มา
-	addGachaButtons("Blue Crystal", "🔵 Blue Crystal (รี 0 - 1K)")
-	addGachaButtons("Green Crystal", "🟢 Green Crystal (รี 0 - 3K)")
-	addGachaButtons("Frost Crystal", "❄️ Frost Crystal (รี 1 - 5K)")
-	addGachaButtons("Mythical Crystal", "🟣 Mythical Crystal (รี 5 - 8K)")
-	addGachaButtons("Inferno Crystal", "🔥 Inferno Crystal (รี 15 - 15K)")
-	addGachaButtons("Legends Crystal", "🌟 Legends Crystal (รี 30 - 30K)")
-	addGachaButtons("Muscle Elite Crystal", "💪 Muscle Elite Crystal (รี 30 - 1M)")
-	addGachaButtons("Galaxy Oracle Crystal", "🌌 Galaxy Oracle Crystal (รี 30 - 1.5M)")
-	addGachaButtons("Jungle Crystal", "🌴 Jungle Crystal (รี 60 - 3M)")
-	addGachaButtons("Industrial Crystal", "⚡ Industrial Crystal (รี 150 - 7.5M)")
-
-	-- ⭐ Auto Gacha Section
-	addSectionHeader(GachaPage, "🎰 สุ่มตู้สัตว์ออโต้ (ทุกคนใช้ได้)")
-
-	local crystalOptions = {
-		"Blue Crystal",
-		"Green Crystal",
-		"Frost Crystal",
-		"Mythical Crystal",
-		"Inferno Crystal",
-		"Legends Crystal",
-		"Muscle Elite Crystal",
-		"Galaxy Oracle Crystal",
-		"Jungle Crystal",
-		"Industrial Crystal"
-	}
-
-	addToolSelector(GachaPage, "🔮 เลือกคริสตัล", crystalOptions, "Blue Crystal", function(selected)
-		autoGachaCrystal = selected
-	end)
-
-	local amountOptions = {"1", "3", "10"}
-	addToolSelector(GachaPage, "🥚 จำนวนไข่ต่อรอบ", amountOptions, "1", function(selected)
-		autoGachaAmount = selected
-	end)
-
-	local function startAutoGacha()
-		if not autoGachaCrystal or not autoGachaAmount then return end
-		autoGachaEnabled = true
-		task.spawn(function()
-			while autoGachaEnabled do
-				local amount = tonumber(autoGachaAmount) or 1
-				if amount == 1 then
-					pcall(function() openCrystalRemote:InvokeServer("openCrystal", autoGachaCrystal) end)
-				else
-					pcall(function() openCrystalRemote:InvokeServer("openCrystalBulk", autoGachaCrystal, amount) end)
-				end
-				task.wait(0.5)
-			end
-		end)
-	end
-
-	local function stopAutoGacha()
-		autoGachaEnabled = false
-	end
-
-	addToggle(GachaPage, "▶ เปิดออโต้สุ่มตู้สัตว์", false, function(state)
-		if state then
-			startAutoGacha()
-		else
-			stopAutoGacha()
-		end
-	end, "AutoGacha")
+    -- ════════ SERVICES & LOCAL PLAYER ════════
+    local Players = game:GetService("Players")
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local RunService = game:GetService("RunService")
+    local UserInputService = game:GetService("UserInputService")
+    local MarketplaceService = game:GetService("MarketplaceService")
+    local VirtualUser = game:GetService("VirtualUser")
+    local LocalPlayer = Players.LocalPlayer
+
+    -- 📁 Save File Configs
+    local SAVE_FILE_NAME = "TOU_HUB_Config.json"
+    local COOLDOWN_FILE_NAME = "TOU_HUB_Cooldown.json"
+
+    local function readJsonFile(filename)
+        if readfile and isfile and isfile(filename) then
+            local success, result = pcall(function()
+                return HttpService:JSONDecode(readfile(filename))
+            end)
+            if success then return result end
+        end
+        return nil
+    end
+
+    local function writeJsonFile(filename, data)
+        if writefile then
+            pcall(function()
+                writefile(filename, HttpService:JSONEncode(data))
+            end)
+        end
+    end
+
+    local function deleteJsonFile(filename)
+        if delfile and isfile and isfile(filename) then
+            pcall(function()
+                delfile(filename)
+            end)
+        end
+    end
+
+    -- ลบ GUI เก่าถ้ามีอยู่
+    local function removeOldGui(name)
+        pcall(function()
+            if gethui and gethui():FindFirstChild(name) then
+                gethui()[name]:Destroy()
+            end
+            if CoreGui:FindFirstChild(name) then
+                CoreGui[name]:Destroy()
+            end
+            if LocalPlayer:FindFirstChild("PlayerGui") and LocalPlayer.PlayerGui:FindFirstChild(name) then
+                LocalPlayer.PlayerGui[name]:Destroy()
+            end
+        end)
+    end
+    removeOldGui("TOU_HUB_GUI")
+
+    -- ฟังก์ชั่นแปลงตัวเลขเป็น k, m, b, t
+    local function formatNumber(val)
+        local n = tonumber(val) or 0
+        local sign = n < 0 and "-" or ""
+        n = math.abs(n)
+        if n >= 1e12 then
+            local formatted = string.format("%.2f", n / 1e12):gsub("%.?0+$", "")
+            return sign .. formatted .. "t"
+        elseif n >= 1e9 then
+            local formatted = string.format("%.2f", n / 1e9):gsub("%.?0+$", "")
+            return sign .. formatted .. "b"
+        elseif n >= 1e6 then
+            local formatted = string.format("%.2f", n / 1e6):gsub("%.?0+$", "")
+            return sign .. formatted .. "m"
+        elseif n >= 1e3 then
+            local formatted = string.format("%.2f", n / 1e3):gsub("%.?0+$", "")
+            return sign .. formatted .. "k"
+        end
+        return sign .. tostring(n)
+    end
+
+    -- ════════ CUSTOM GUI CREATION (MATCH KEY SYSTEM THEME) ════════
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "TOU_HUB_GUI"
+    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    ScreenGui.ResetOnSpawn = false
+    ScreenGui.DisplayOrder = 999999999
+    pcall(function()
+        if gethui then
+            ScreenGui.Parent = gethui()
+        elseif syn and syn.protect_gui then
+            syn.protect_gui(ScreenGui)
+            ScreenGui.Parent = CoreGui
+        else
+            ScreenGui.Parent = CoreGui
+        end
+    end)
+
+    -- 🌟 GUI หน้าต่างแจ้งเตือนพรีเมี่ยม (สำหรับผู้ใช้ Key ที่กดเข้าโซนพรีเมี่ยม)
+    local function openPremiumNoticeModal()
+        local existing = ScreenGui:FindFirstChild("PremiumNoticeModalFrame")
+        if existing then existing:Destroy() end
+        local modal = Instance.new("Frame")
+        modal.Name = "PremiumNoticeModalFrame"
+        modal.Parent = ScreenGui
+        modal.Size = UDim2.new(0, 360, 0, 330)
+        modal.Position = UDim2.new(0.5, -180, 0.5, -165)
+        modal.BackgroundColor3 = Color3.fromRGB(18, 5, 5)
+        modal.BorderSizePixel = 0
+        modal.ZIndex = 20000
+        modal.Active = true
+        modal.Draggable = true
+        Instance.new("UICorner", modal).CornerRadius = UDim.new(0, 12)
+        local stroke = Instance.new("UIStroke", modal)
+        stroke.Color = Color3.fromRGB(255, 215, 0)
+        stroke.Thickness = 2
+        local topBar = Instance.new("TextLabel", modal)
+        topBar.Size = UDim2.new(1, 0, 0, 40)
+        topBar.BackgroundColor3 = Color3.fromRGB(35, 10, 10)
+        topBar.Text = "⭐ สำหรับสมาชิก พรี่เมี่ยม เท่านั้น ⭐"
+        topBar.TextColor3 = Color3.fromRGB(255, 215, 0)
+        topBar.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        topBar.TextSize = 14
+        topBar.ZIndex = 20001
+        Instance.new("UICorner", topBar).CornerRadius = UDim.new(0, 12)
+        local closeBtn = Instance.new("TextButton", modal)
+        closeBtn.Size = UDim2.new(0, 26, 0, 26)
+        closeBtn.Position = UDim2.new(1, -32, 0, 7)
+        closeBtn.BackgroundColor3 = Color3.fromRGB(180, 30, 30)
+        closeBtn.Text = "✕"
+        closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        closeBtn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        closeBtn.TextSize = 12
+        closeBtn.ZIndex = 20002
+        Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 6)
+        closeBtn.MouseButton1Click:Connect(function() modal:Destroy() end)
+        local content = Instance.new("Frame", modal)
+        content.Size = UDim2.new(1, -24, 1, -50)
+        content.Position = UDim2.new(0, 12, 0, 45)
+        content.BackgroundTransparency = 1
+        content.ZIndex = 20001
+        local msgLabel = Instance.new("TextLabel", content)
+        msgLabel.Size = UDim2.new(1, 0, 0, 26)
+        msgLabel.Position = UDim2.new(0, 0, 0, 2)
+        msgLabel.BackgroundTransparency = 1
+        msgLabel.Text = "🔒 ระบบนี้สงวนสิทธิ์เฉพาะผู้ใช้ พรี่เมี่ยม เท่านั้น!"
+        msgLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        msgLabel.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        msgLabel.TextSize = 12
+        msgLabel.ZIndex = 20001
+        local featureBox = Instance.new("Frame", content)
+        featureBox.Size = UDim2.new(1, 0, 0, 135)
+        featureBox.Position = UDim2.new(0, 0, 0, 32)
+        featureBox.BackgroundColor3 = Color3.fromRGB(28, 6, 6)
+        featureBox.ZIndex = 20001
+        Instance.new("UICorner", featureBox).CornerRadius = UDim.new(0, 8)
+        local fStroke = Instance.new("UIStroke", featureBox)
+        fStroke.Color = Color3.fromRGB(120, 20, 20)
+        local descLabel = Instance.new("TextLabel", featureBox)
+        descLabel.Size = UDim2.new(1, -16, 1, -10)
+        descLabel.Position = UDim2.new(0, 8, 0, 5)
+        descLabel.BackgroundTransparency = 1
+        descLabel.TextColor3 = Color3.fromRGB(240, 220, 220)
+        descLabel.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal)
+        descLabel.TextSize = 11
+        descLabel.TextXAlignment = Enum.TextXAlignment.Left
+        descLabel.TextYAlignment = Enum.TextYAlignment.Top
+        descLabel.ZIndex = 20002
+        descLabel.Text = "✨ คุณสมบัติเมื่อซื้อ พรี่เมี่ยม (Premium):\n" ..
+            "• 🎲 ปลดล็อกการใช้งานระบบสุ่มสัตว์ทุกตู้คริสตัล\n" ..
+            "• 🔄 เข้าถึงระบบ Auto Evolve สัตว์อัตโนมัติแบบไว\n" ..
+            "• 🛡️ ได้รับสิทธิ์ทดลองใช้ฟังก์ชั่นใหม่ๆ ก่อนใคร\n" ..
+            "• ⚡ ความเร็วการทำงานสคริปต์ระดับ VIP\n" ..
+            "• 🚀 สนับสนุนการพัฒนาระบบ TOU HUB"
+        local contactLabel = Instance.new("TextLabel", content)
+        contactLabel.Size = UDim2.new(1, 0, 0, 20)
+        contactLabel.Position = UDim2.new(0, 0, 0, 175)
+        contactLabel.BackgroundTransparency = 1
+        contactLabel.Text = "💬 ติดต่อซื้อพรี่เมี่ยมได้ที่:"
+        contactLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
+        contactLabel.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        contactLabel.TextSize = 12
+        contactLabel.ZIndex = 20001
+        local copyBtn = Instance.new("TextButton", content)
+        copyBtn.Size = UDim2.new(1, 0, 0, 36)
+        copyBtn.Position = UDim2.new(0, 0, 0, 200)
+        copyBtn.BackgroundColor3 = Color3.fromRGB(150, 20, 20)
+        copyBtn.Text = "📋 คัดลอกลิ้งค์ Discord (" .. DISCORD_LINK .. ")"
+        copyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        copyBtn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        copyBtn.TextSize = 11
+        copyBtn.ZIndex = 20001
+        Instance.new("UICorner", copyBtn).CornerRadius = UDim.new(0, 6)
+        local copyStroke = Instance.new("UIStroke", copyBtn)
+        copyStroke.Color = Color3.fromRGB(255, 60, 60)
+        copyStroke.Thickness = 1
+        copyBtn.MouseButton1Click:Connect(function()
+            playSound("rbxassetid://6895079853", 0.5)
+            if setclipboard then
+                setclipboard(DISCORD_LINK)
+                copyBtn.Text = "✅ คัดลอกลิ้งค์สำเร็จแล้ว!"
+                copyBtn.TextColor3 = Color3.fromRGB(80, 255, 120)
+                task.delay(1.5, function()
+                    if copyBtn and copyBtn.Parent then
+                        copyBtn.Text = "📋 คัดลอกลิ้งค์ Discord (" .. DISCORD_LINK .. ")"
+                        copyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+                    end
+                end)
+            end
+        end)
+    end
+
+    -- 🔘 ปุ่มเปิด/ปิด GUI (🍣) - ทำให้ลากได้
+    local ToggleButton = Instance.new("TextButton")
+    ToggleButton.Name = "ปุ่มเปิด/ปิด GUI"
+    ToggleButton.Parent = ScreenGui
+    ToggleButton.BorderSizePixel = 0
+    ToggleButton.TextSize = 22
+    ToggleButton.BackgroundColor3 = Color3.fromRGB(28, 6, 6)
+    ToggleButton.Size = UDim2.new(0, 50, 0, 50)
+    ToggleButton.Position = UDim2.new(0.02, 0, 0.4, 0)
+    ToggleButton.Text = "🍣"
+    ToggleButton.Active = true
+    Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(0, 12)
+    local TogStroke = Instance.new("UIStroke", ToggleButton)
+    TogStroke.Color = Color3.fromRGB(140, 0, 0)
+    TogStroke.Thickness = 1.5
+
+    -- ทำให้ปุ่ม 🍣 ลากได้
+    local togDragging, togDragStart, togStartPos
+    ToggleButton.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            togDragging = true
+            togDragStart = input.Position
+            togStartPos = ToggleButton.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    togDragging = false
+                end
+            end)
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if togDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - togDragStart
+            ToggleButton.Position = UDim2.new(togStartPos.X.Scale, togStartPos.X.Offset + delta.X, togStartPos.Y.Scale, togStartPos.Y.Offset + delta.Y)
+        end
+    end)
+
+    -- 🪟 Frame หลัก (ดีไซน์เดียวกับ KEY GUI)
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Name = "MainFrame"
+    MainFrame.Parent = ScreenGui
+    MainFrame.BorderSizePixel = 0
+    MainFrame.BackgroundColor3 = Color3.fromRGB(18, 5, 5)
+    MainFrame.Size = UDim2.new(0, 520, 0, 360)
+    MainFrame.Position = UDim2.new(0.5, -260, 0.5, -180)
+    MainFrame.ClipsDescendants = false
+    Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
+    local MainStroke = Instance.new("UIStroke", MainFrame)
+    MainStroke.Color = Color3.fromRGB(140, 0, 0)
+    MainStroke.Thickness = 2
+    MainStroke.Transparency = 0.2
+    local MainGradient = Instance.new("UIGradient", MainFrame)
+    MainGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(28, 6, 6)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(12, 2, 2))
+    }
+    MainGradient.Rotation = 90
+
+    -- TitleBox ข้อความส่วนหัว
+    local TitleBox = Instance.new("Frame")
+    TitleBox.Name = "TitleBox"
+    TitleBox.Parent = MainFrame
+    TitleBox.BorderSizePixel = 0
+    TitleBox.BackgroundColor3 = Color3.fromRGB(35, 5, 5)
+    TitleBox.Size = UDim2.new(1, 0, 0, 42)
+    TitleBox.Position = UDim2.new(0, 0, 0, 0)
+    Instance.new("UICorner", TitleBox).CornerRadius = UDim.new(0, 12)
+    local TitleLabel = Instance.new("TextLabel", TitleBox)
+    TitleLabel.Size = UDim2.new(1, -20, 1, 0)
+    TitleLabel.Position = UDim2.new(0, 15, 0, 0)
+    TitleLabel.BackgroundTransparency = 1
+    TitleLabel.TextSize = 16
+    TitleLabel.TextColor3 = Color3.fromRGB(255, 60, 60)
+    TitleLabel.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+    TitleLabel.Text = "TOU HUB | ตำนานกล้ามเนื้อ " .. (isPremiumUser and "⭐ [PREMIUM]" or "🔑 [KEY USER]")
+    TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+    -- 📑 แถบช่อง (Sidebar)
+    local Sidebar = Instance.new("Frame")
+    Sidebar.Name = "Sidebar"
+    Sidebar.Parent = MainFrame
+    Sidebar.BorderSizePixel = 0
+    Sidebar.BackgroundColor3 = Color3.fromRGB(24, 5, 5)
+    Sidebar.Size = UDim2.new(0, 130, 1, -48)
+    Sidebar.Position = UDim2.new(0, 6, 0, 44)
+    Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 8)
+    local SideStroke = Instance.new("UIStroke", Sidebar)
+    SideStroke.Color = Color3.fromRGB(80, 15, 15)
+    SideStroke.Thickness = 1
+    local SideLayout = Instance.new("UIListLayout", Sidebar)
+    SideLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    SideLayout.Padding = UDim.new(0, 4)
+    SideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    local SidePadding = Instance.new("UIPadding", Sidebar)
+    SidePadding.PaddingTop = UDim.new(0, 6)
+
+    local tabButtons = {}
+    local function createTabBtn(name, text)
+        local btn = Instance.new("TextButton")
+        btn.Name = "Btn_" .. name
+        btn.Parent = Sidebar
+        btn.BorderSizePixel = 0
+        btn.TextSize = 12
+        btn.TextColor3 = Color3.fromRGB(220, 180, 180)
+        btn.BackgroundColor3 = Color3.fromRGB(38, 8, 8)
+        btn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        btn.Size = UDim2.new(0.92, 0, 0, 32)
+        btn.Text = text
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+        local btnStroke = Instance.new("UIStroke", btn)
+        btnStroke.Color = Color3.fromRGB(100, 20, 20)
+        btnStroke.Thickness = 1
+        btnStroke.Transparency = 0.5
+        tabButtons[name] = {Button = btn, Stroke = btnStroke}
+        return btn
+    end
+
+    local BtnMain = createTabBtn("Main", "🏠 เมนูหลัก")
+    local BtnStats = createTabBtn("Stats", "📊 ดูข้อมูล")
+    local BtnFarm = createTabBtn("Farm", "🏋️ ฟาร์ม")
+    local BtnGacha = createTabBtn("Gacha", "🎁 สุ่มตู้สัตว์")
+    local BtnRoll = createTabBtn("Roll", "🎲 สุ่มสัตว์")
+    local BtnPremium = createTabBtn("Premium", "พรี่เมี่ยม⭐")
+    local BtnSettings = createTabBtn("Settings", "⚙️ ตั้งค่า")
+    local BtnExtra = createTabBtn("Extra", "✨ เพิ่มเติม")
+
+    -- 📦 Container สำหรับใส่เนื้อหา Tab Pages
+    local ContentContainer = Instance.new("Frame")
+    ContentContainer.Name = "ContentContainer"
+    ContentContainer.Parent = MainFrame
+    ContentContainer.BackgroundTransparency = 1
+    ContentContainer.Size = UDim2.new(1, -148, 1, -54)
+    ContentContainer.Position = UDim2.new(0, 142, 0, 48)
+
+    -- 🖐️ ระบบ Drag GUI พร้อมการอัปเดต ตำแหน่ง Dropdown ให้ตามติด
+    local dropdownUpdateCallbacks = {}
+    local dragging, dragInput, dragStart, startPos
+    local function update(input)
+        local delta = input.Position - dragStart
+        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        for _, cb in ipairs(dropdownUpdateCallbacks) do cb() end
+    end
+    TitleBox.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = MainFrame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+    TitleBox.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            update(input)
+        end
+    end)
+
+    -- สลับ เปิด/ปิด GUI
+    ToggleButton.MouseButton1Click:Connect(function()
+        MainFrame.Visible = not MainFrame.Visible
+        if MainFrame.Visible then
+            for _, cb in ipairs(dropdownUpdateCallbacks) do cb() end
+        end
+    end)
+
+    -- ════════ CREATING TAB PAGES ════════
+    local pages = {}
+    local function createTabPage(name)
+        local page = Instance.new("ScrollingFrame")
+        page.Name = name
+        page.Parent = ContentContainer
+        page.Size = UDim2.new(1, -4, 1, 0)
+        page.BackgroundTransparency = 1
+        page.BorderSizePixel = 0
+        page.ScrollBarThickness = 4
+        page.ScrollBarImageColor3 = Color3.fromRGB(160, 20, 20)
+        page.Visible = false
+        local layout = Instance.new("UIListLayout", page)
+        layout.SortOrder = Enum.SortOrder.LayoutOrder
+        layout.Padding = UDim.new(0, 8)
+        layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            page.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 12)
+        end)
+        pages[name] = page
+        return page
+    end
+
+    local MainPage = createTabPage("MainPage")
+    local StatsPage = createTabPage("StatsPage")
+    local FarmPage = createTabPage("FarmPage")
+    local GachaPage = createTabPage("GachaPage")
+    local RollPage = createTabPage("RollPage")
+    local PremiumPage = createTabPage("PremiumPage")
+    local SettingsPage = createTabPage("SettingsPage")
+    local ExtraPage = createTabPage("ExtraPage")
+    MainPage.Visible = true
+
+    local function switchTab(targetName, targetPage)
+        for name, p in pairs(pages) do p.Visible = false end
+        for name, data in pairs(tabButtons) do
+            data.Button.BackgroundColor3 = Color3.fromRGB(38, 8, 8)
+            data.Button.TextColor3 = Color3.fromRGB(220, 180, 180)
+            data.Stroke.Color = Color3.fromRGB(100, 20, 20)
+        end
+        targetPage.Visible = true
+        if tabButtons[targetName] then
+            tabButtons[targetName].Button.BackgroundColor3 = Color3.fromRGB(140, 15, 15)
+            tabButtons[targetName].Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+            tabButtons[targetName].Stroke.Color = Color3.fromRGB(255, 60, 60)
+        end
+    end
+
+    BtnMain.MouseButton1Click:Connect(function() switchTab("Main", MainPage) end)
+    BtnStats.MouseButton1Click:Connect(function() switchTab("Stats", StatsPage) end)
+    BtnFarm.MouseButton1Click:Connect(function() switchTab("Farm", FarmPage) end)
+    BtnGacha.MouseButton1Click:Connect(function() switchTab("Gacha", GachaPage) end)
+    BtnRoll.MouseButton1Click:Connect(function()
+        if not isPremiumUser then
+            openPremiumNoticeModal()
+        else
+            switchTab("Roll", RollPage)
+        end
+    end)
+    BtnPremium.MouseButton1Click:Connect(function()
+        if not isPremiumUser then
+            openPremiumNoticeModal()
+        else
+            switchTab("Premium", PremiumPage)
+        end
+    end)
+    BtnSettings.MouseButton1Click:Connect(function() switchTab("Settings", SettingsPage) end)
+    BtnExtra.MouseButton1Click:Connect(function() switchTab("Extra", ExtraPage) end)
+    switchTab("Main", MainPage)
+
+    -- ════════ TOGGLE CONTROLLER & SAVE DATA ════════
+    local toggleStates = {}
+    local toggleSetters = {}
+
+    -- ════════ UI HELPERS FOR COMPONENTS ════════
+    local function addSectionHeader(parent, text)
+        local lbl = Instance.new("TextLabel")
+        lbl.Size = UDim2.new(1, 0, 0, 24)
+        lbl.BackgroundTransparency = 1
+        lbl.TextColor3 = Color3.fromRGB(255, 90, 90)
+        lbl.TextXAlignment = Enum.TextXAlignment.Left
+        lbl.Text = " " .. text
+        lbl.TextSize = 13
+        lbl.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        lbl.Parent = parent
+        return lbl
+    end
+
+    local function addToggle(parent, text, defaultState, callback, saveKey)
+        local frame = Instance.new("Frame")
+        frame.Size = UDim2.new(1, -6, 0, 38)
+        frame.BackgroundColor3 = Color3.fromRGB(28, 6, 6)
+        frame.BorderSizePixel = 0
+        frame.Parent = parent
+        Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
+        local stroke = Instance.new("UIStroke", frame)
+        stroke.Color = Color3.fromRGB(80, 15, 15)
+        stroke.Thickness = 1
+        local lbl = Instance.new("TextLabel", frame)
+        lbl.Size = UDim2.new(0.68, 0, 1, 0)
+        lbl.Position = UDim2.new(0.03, 0, 0, 0)
+        lbl.BackgroundTransparency = 1
+        lbl.TextColor3 = Color3.fromRGB(240, 220, 220)
+        lbl.TextXAlignment = Enum.TextXAlignment.Left
+        lbl.Text = text
+        lbl.TextSize = 12
+        lbl.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal)
+        local btn = Instance.new("TextButton", frame)
+        btn.Size = UDim2.new(0.26, 0, 0.7, 0)
+        btn.Position = UDim2.new(0.71, 0, 0.15, 0)
+        btn.BorderSizePixel = 0
+        btn.TextSize = 11
+        btn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
+        local state = defaultState
+        local function updateVisual()
+            btn.Text = state and "เปิด [ON]" or "ปิด [OFF]"
+            btn.BackgroundColor3 = state and Color3.fromRGB(40, 160, 80) or Color3.fromRGB(150, 30, 30)
+            btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        end
+        updateVisual()
+        local function setState(newState, skipCallback)
+            state = newState
+            if saveKey then toggleStates[saveKey] = state end
+            updateVisual()
+            if not skipCallback then callback(state) end
+        end
+        btn.MouseButton1Click:Connect(function()
+            setState(not state)
+        end)
+        if saveKey then
+            toggleStates[saveKey] = state
+            toggleSetters[saveKey] = setState
+        end
+        return frame, setState
+    end
+
+    local function addButton(parent, text, callback)
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.new(1, -6, 0, 35)
+        btn.BackgroundColor3 = Color3.fromRGB(120, 15, 15)
+        btn.TextColor3 = Color3.fromRGB(255, 230, 230)
+        btn.Text = text
+        btn.TextSize = 12
+        btn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        btn.BorderSizePixel = 0
+        btn.Parent = parent
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+        local btnStroke = Instance.new("UIStroke", btn)
+        btnStroke.Color = Color3.fromRGB(200, 40, 40)
+        btnStroke.Thickness = 1
+        btnStroke.Transparency = 0.4
+        btn.MouseButton1Click:Connect(callback)
+        return btn
+    end
+
+    local function addTextbox(parent, text, defaultText, callback)
+        local frame = Instance.new("Frame")
+        frame.Size = UDim2.new(1, -6, 0, 42)
+        frame.BackgroundColor3 = Color3.fromRGB(28, 6, 6)
+        frame.BorderSizePixel = 0
+        frame.Parent = parent
+        Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
+        local stroke = Instance.new("UIStroke", frame)
+        stroke.Color = Color3.fromRGB(80, 15, 15)
+        local lbl = Instance.new("TextLabel", frame)
+        lbl.Size = UDim2.new(0.55, 0, 1, 0)
+        lbl.Position = UDim2.new(0.03, 0, 0, 0)
+        lbl.BackgroundTransparency = 1
+        lbl.TextColor3 = Color3.fromRGB(240, 220, 220)
+        lbl.TextXAlignment = Enum.TextXAlignment.Left
+        lbl.Text = text
+        lbl.TextSize = 12
+        lbl.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal)
+        local box = Instance.new("TextBox", frame)
+        box.Size = UDim2.new(0.38, 0, 0.7, 0)
+        box.Position = UDim2.new(0.58, 0, 0.15, 0)
+        box.BackgroundColor3 = Color3.fromRGB(18, 4, 4)
+        box.TextColor3 = Color3.fromRGB(255, 255, 255)
+        box.Text = defaultText
+        box.TextSize = 12
+        box.BorderSizePixel = 0
+        box.ClearTextOnFocus = false
+        box.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+        Instance.new("UICorner", box).CornerRadius = UDim.new(0, 5)
+        box.FocusLost:Connect(function() callback(box.Text) end)
+        return box
+    end
+
+    -- 🛠️ FIXED TOOL SELECTOR DROPDOWN
+    local function addToolSelector(parent, labelText, options, defaultOption, callback)
+        local frame = Instance.new("Frame")
+        frame.Size = UDim2.new(1, -6, 0, 42)
+        frame.BackgroundColor3 = Color3.fromRGB(28, 6, 6)
+        frame.BorderSizePixel = 0
+        frame.Parent = parent
+        Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
+        local stroke = Instance.new("UIStroke", frame)
+        stroke.Color = Color3.fromRGB(80, 15, 15)
+        local lbl = Instance.new("TextLabel", frame)
+        lbl.Size = UDim2.new(0.45, 0, 1, 0)
+        lbl.Position = UDim2.new(0.03, 0, 0, 0)
+        lbl.BackgroundTransparency = 1
+        lbl.TextColor3 = Color3.fromRGB(240, 220, 220)
+        lbl.TextXAlignment = Enum.TextXAlignment.Left
+        lbl.Text = labelText
+        lbl.TextSize = 12
+        lbl.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal)
+        local btn = Instance.new("TextButton", frame)
+        btn.Size = UDim2.new(0.48, 0, 0.7, 0)
+        btn.Position = UDim2.new(0.49, 0, 0.15, 0)
+        btn.BackgroundColor3 = Color3.fromRGB(100, 15, 15)
+        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        btn.Text = defaultOption .. " 🔽"
+        btn.TextSize = 11
+        btn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        btn.BorderSizePixel = 0
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
+        local dropFrame = Instance.new("ScrollingFrame", ScreenGui)
+        dropFrame.Size = UDim2.new(0, 160, 0, 110)
+        dropFrame.BackgroundColor3 = Color3.fromRGB(22, 5, 5)
+        dropFrame.BorderSizePixel = 0
+        dropFrame.Visible = false
+        dropFrame.ZIndex = 9999
+        dropFrame.ScrollBarThickness = 4
+        Instance.new("UICorner", dropFrame).CornerRadius = UDim.new(0, 6)
+        local dropStroke = Instance.new("UIStroke", dropFrame)
+        dropStroke.Color = Color3.fromRGB(160, 30, 30)
+        local listLayout = Instance.new("UIListLayout", dropFrame)
+        listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            dropFrame.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y)
+        end)
+        local function updatePos()
+            local absPos = btn.AbsolutePosition
+            dropFrame.Position = UDim2.new(0, absPos.X, 0, absPos.Y + btn.AbsoluteSize.Y + 5)
+        end
+        table.insert(dropdownUpdateCallbacks, updatePos)
+        local function updateDropdownList()
+            for _, child in ipairs(dropFrame:GetChildren()) do
+                if child:IsA("TextButton") then child:Destroy() end
+            end
+            for _, opt in ipairs(options) do
+                local oBtn = Instance.new("TextButton", dropFrame)
+                oBtn.Size = UDim2.new(1, 0, 0, 26)
+                oBtn.BackgroundColor3 = Color3.fromRGB(35, 7, 7)
+                oBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+                oBtn.Text = opt
+                oBtn.TextSize = 11
+                oBtn.ZIndex = 10000
+                oBtn.BorderSizePixel = 0
+                oBtn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+                oBtn.MouseButton1Click:Connect(function()
+                    btn.Text = opt .. " 🔽"
+                    dropFrame.Visible = false
+                    callback(opt)
+                end)
+            end
+        end
+        btn.MouseButton1Click:Connect(function()
+            if not dropFrame.Visible then
+                updateDropdownList()
+                dropFrame.Visible = true
+                updatePos()
+            else
+                dropFrame.Visible = false
+            end
+        end)
+        return frame
+    end
+
+    -- 🛠️ FIXED PLAYER SELECTOR DROPDOWN
+    local function addPlayerSelector(parent, labelText, callback)
+        local frame = Instance.new("Frame")
+        frame.Size = UDim2.new(1, -6, 0, 42)
+        frame.BackgroundColor3 = Color3.fromRGB(28, 6, 6)
+        frame.BorderSizePixel = 0
+        frame.Parent = parent
+        Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
+        local stroke = Instance.new("UIStroke", frame)
+        stroke.Color = Color3.fromRGB(80, 15, 15)
+        local lbl = Instance.new("TextLabel", frame)
+        lbl.Size = UDim2.new(0.4, 0, 1, 0)
+        lbl.Position = UDim2.new(0.03, 0, 0, 0)
+        lbl.BackgroundTransparency = 1
+        lbl.TextColor3 = Color3.fromRGB(240, 220, 220)
+        lbl.TextXAlignment = Enum.TextXAlignment.Left
+        lbl.Text = labelText
+        lbl.TextSize = 12
+        lbl.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal)
+        local btn = Instance.new("TextButton", frame)
+        btn.Size = UDim2.new(0.53, 0, 0.7, 0)
+        btn.Position = UDim2.new(0.44, 0, 0.15, 0)
+        btn.BackgroundColor3 = Color3.fromRGB(100, 15, 15)
+        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        btn.Text = LocalPlayer.Name .. " 🔽"
+        btn.TextSize = 11
+        btn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        btn.BorderSizePixel = 0
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
+        local dropFrame = Instance.new("ScrollingFrame", ScreenGui)
+        dropFrame.Size = UDim2.new(0, 180, 0, 120)
+        dropFrame.BackgroundColor3 = Color3.fromRGB(22, 5, 5)
+        dropFrame.BorderSizePixel = 0
+        dropFrame.Visible = false
+        dropFrame.ZIndex = 9999
+        dropFrame.ScrollBarThickness = 4
+        Instance.new("UICorner", dropFrame).CornerRadius = UDim.new(0, 6)
+        local dropStroke = Instance.new("UIStroke", dropFrame)
+        dropStroke.Color = Color3.fromRGB(160, 30, 30)
+        local listLayout = Instance.new("UIListLayout", dropFrame)
+        listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            dropFrame.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y)
+        end)
+        local function updatePos()
+            local absPos = btn.AbsolutePosition
+            dropFrame.Position = UDim2.new(0, absPos.X, 0, absPos.Y + btn.AbsoluteSize.Y + 5)
+        end
+        table.insert(dropdownUpdateCallbacks, updatePos)
+        local function updateDropdownList()
+            for _, child in ipairs(dropFrame:GetChildren()) do
+                if child:IsA("TextButton") then child:Destroy() end
+            end
+            for _, p in ipairs(Players:GetPlayers()) do
+                local pBtn = Instance.new("TextButton", dropFrame)
+                pBtn.Size = UDim2.new(1, 0, 0, 25)
+                pBtn.BackgroundColor3 = Color3.fromRGB(35, 7, 7)
+                pBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+                pBtn.Text = p.Name
+                pBtn.TextSize = 11
+                pBtn.ZIndex = 10000
+                pBtn.BorderSizePixel = 0
+                pBtn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+                pBtn.MouseButton1Click:Connect(function()
+                    btn.Text = p.Name .. " 🔽"
+                    dropFrame.Visible = false
+                    callback(p)
+                end)
+            end
+        end
+        btn.MouseButton1Click:Connect(function()
+            if not dropFrame.Visible then
+                updateDropdownList()
+                dropFrame.Visible = true
+                updatePos()
+            else
+                dropFrame.Visible = false
+            end
+        end)
+        return frame
+    end
+
+    -- ════════ REMOTES & BACKEND SERVICES ════════
+    local openCrystalRemote = ReplicatedStorage:WaitForChild("rEvents"):WaitForChild("openCrystalRemote")
+    local sellPetEvent = ReplicatedStorage:WaitForChild("rEvents"):WaitForChild("sellPetEvent")
+    local sellPowerUpEvent = ReplicatedStorage:WaitForChild("rEvents"):WaitForChild("sellPowerUpEvent")
+    local petEvolveEvent = ReplicatedStorage:WaitForChild("rEvents"):WaitForChild("petEvolveEvent")
+    local rebirthRemote = ReplicatedStorage:WaitForChild("rEvents"):WaitForChild("rebirthRemote")
+    local freeGiftClaimRemote = ReplicatedStorage:WaitForChild("rEvents"):WaitForChild("freeGiftClaimRemote")
+
+    -- ════════ CONFIG & STATE ════════
+    local CRYSTAL_30 = "Galaxy Oracle Crystal"
+    local CRYSTAL_15 = "Inferno Crystal"
+    local CRYSTAL_150 = "Industrial Crystal"
+    local CRYSTAL_60 = "Jungle Crystal"
+    local BULK_AMOUNT = 10
+    local DELAY_30, DELAY_15, DELAY_150, DELAY_60 = 0.3, 0.3, 0.5, 0.5
+    local SELL_PETS_30 = {["Eternal Strike Leviathan"]=true,["Lightning Strike Phantom"]=true}
+    local SELL_AURAS_30 = {["Ultra Inferno"]=true,["Azure Tundra"]=true}
+    local SELL_PETS_15 = {["Red Firecaster"]="1_2567483",["White Pegasus"]="1_2567305",["Golden Pheonix"]="1_2565691"}
+    local SELL_AURAS_15 = {["Grand Supernova"]="1_2567413",["Lightning"]="1_2566778",["Enchanted Mirage"]="1_2565705",["Unstable Mirage"]="1_2565275",["Dark Lightning"]="1_635194",["Inferno"]="1_638292",["Azure Tundra"]="1_653186"}
+    local SELL_PETS_150 = {["Plasma Ravager"]="1_315848",["Reactor Beast"]="1_321232",["Volt Talon"]="1_321250",["Core Pup"]="1_321241"}
+    local TITAN_REACTOR = {Name="Titan Reactor", DebugId="1_433530"}
+    local SELL_PETS_60 = {["Golden Viking"]="1_2233962", ["Muscle Sensei"]="1_2233971"}
+    local SELL_AURAS_60 = {["Grand Supernova"]="1_2234849", ["Eternal Megastrike"]="1_2238862", ["Entropic Blast"]="1_2233999"}
+    local EVOLVE_30 = {Target="Darkstar Hunter", Need=5, Enabled=false}
+    local EVOLVE_15 = {Target="Infernal Dragon", Need=5, Enabled=false}
+    local EVOLVE_150 = {Target="Apex Overlord", Need=5, Enabled=false}
+    local EVOLVE_60 = {Target="Neon Guardian", Need=5, Enabled=false}
+    local EXCLUDE_PETS = {}
+    local EXCLUDE_AURAS = {}
+    local petsFolderObj = LocalPlayer:WaitForChild("petsFolder", 10)
+    local powerUpsFolderObj = LocalPlayer:WaitForChild("powerUpsFolder", 10)
+    local PET_FOLDERS = petsFolderObj and {
+        petsFolderObj:WaitForChild("Advanced", 5),
+        petsFolderObj:WaitForChild("Basic", 5),
+        petsFolderObj:WaitForChild("Epic", 5),
+        petsFolderObj:WaitForChild("Rare", 5),
+        petsFolderObj:WaitForChild("Unique", 5),
+    } or {}
+    local AURA_FOLDERS = powerUpsFolderObj and {
+        powerUpsFolderObj:WaitForChild("Epic", 5),
+        powerUpsFolderObj:WaitForChild("Basic", 5),
+        powerUpsFolderObj:WaitForChild("Advanced", 5),
+        powerUpsFolderObj:WaitForChild("Unique", 5),
+        powerUpsFolderObj:WaitForChild("Rare", 5),
+    } or {}
+
+    local running30, running15, running150, running60 = false, false, false, false
+    local autoFortuneWheel = false
+    local sellConn30, sellConn15, sellConn150, sellConn60 = nil, nil, nil, nil
+    local lastScan30, lastScan15, lastScan150, lastScan60 = 0, 0, 0, 0
+    local evolving = false
+    local farmEnabled = false
+    local farmTool = "Weight"
+    local fastMode = false
+    local farmConn = nil
+
+    -- 🪨 Auto Punch Rock States & Configs
+    local autoRockEnabled = false
+    local autoRockConn = nil
+    local selectedRockName = "Tiny Rock"
+    local rockAngle = 0
+    local rockHandToggle = false
+    local originalRockData = {}
+
+    local rebirthEnabled = false
+    local rebirthConn = nil
+    local targetRebirths = 0
+    local useRebirthTarget = false
+    local autoGiftEnabled = false
+    local antiKnockbackEnabled = false
+    local antiRebirthTpEnabled = false
+    local lastHealth = 100
+    local healthConn = nil
+    local isKnockbackLocked = false
+    local savedPosBeforeRebirth = nil
+    local isMonitoringRebirthTp = false
+
+    -- 🛡️ Anti-AFK State
+    local antiAfkEnabled = false
+    local antiAfkConn = nil
+
+    -- 🎁 Auto Gacha State
+    local autoGachaEnabled = false
+    local autoGachaCrystal = "Blue Crystal"
+    local autoGachaAmount = "1"
+
+    -- ════════ HELPERS ════════
+    local function findNil(name)
+        if typeof(getnilinstances) ~= "function" then return nil end
+        local success, instances = pcall(getnilinstances)
+        if not success or not instances then return nil end
+        for _, o in ipairs(instances) do
+            if o and o.Name == name then return o end
+        end
+        return nil
+    end
+
+    local function findNilDbg(name, id)
+        if typeof(getnilinstances) ~= "function" then return nil end
+        local success, instances = pcall(getnilinstances)
+        if not success or not instances then return nil end
+        for _, o in ipairs(instances) do
+            if o and o.Name == name then
+                local dbgId = nil
+                if typeof(getdebugid) == "function" then
+                    pcall(function() dbgId = getdebugid(o) end)
+                elseif pcall(function() return o.GetDebugId end) and typeof(o.GetDebugId) == "function" then
+                    pcall(function() dbgId = o:GetDebugId() end)
+                end
+                if dbgId == id then return o end
+            end
+        end
+        return nil
+    end
+
+    local function sellPet(name)
+        for _, f in ipairs(PET_FOLDERS) do
+            if f then
+                local p = f:FindFirstChild(name)
+                if p then
+                    sellPetEvent:FireServer("sellPet", p)
+                    return true
+                end
+            end
+        end
+        local n = findNil(name)
+        if n then
+            sellPetEvent:FireServer("sellPet", n)
+            return true
+        end
+        return false
+    end
+
+    local function sellAura(name)
+        for _, f in ipairs(AURA_FOLDERS) do
+            if f then
+                local a = f:FindFirstChild(name)
+                if a then
+                    sellPowerUpEvent:FireServer("sellPowerUp", a)
+                    return true
+                end
+            end
+        end
+        local n = findNil(name)
+        if n then
+            sellPowerUpEvent:FireServer("sellPowerUp", n)
+            return true
+        end
+        return false
+    end
+
+    local function sellPetDbg(name, id)
+        for _, f in ipairs(PET_FOLDERS) do
+            if f then
+                local p = f:FindFirstChild(name)
+                if p then
+                    sellPetEvent:FireServer("sellPet", p)
+                    return true
+                end
+            end
+        end
+        local n = findNilDbg(name, id)
+        if n then
+            sellPetEvent:FireServer("sellPet", n)
+            return true
+        end
+        return false
+    end
+
+    local function sellAuraDbg(name, id)
+        for _, f in ipairs(AURA_FOLDERS) do
+            if f then
+                local a = f:FindFirstChild(name)
+                if a then
+                    sellPowerUpEvent:FireServer("sellPowerUp", a)
+                    return true
+                end
+            end
+        end
+        local n = findNilDbg(name, id)
+        if n then
+            sellPowerUpEvent:FireServer("sellPowerUp", n)
+            return true
+        end
+        return false
+    end
+
+    local function scan30()
+        for n,_ in pairs(SELL_PETS_30) do if not EXCLUDE_PETS[n] then sellPet(n) end end
+        for n,_ in pairs(SELL_AURAS_30) do if not EXCLUDE_AURAS[n] then sellAura(n) end end
+    end
+
+    local function scan15()
+        for n,id in pairs(SELL_PETS_15) do if not EXCLUDE_PETS[n] then sellPetDbg(n,id) end end
+        for n,id in pairs(SELL_AURAS_15) do if not EXCLUDE_AURAS[n] then sellAuraDbg(n,id) end end
+    end
+
+    local function scan150()
+        for n,id in pairs(SELL_PETS_150) do if not EXCLUDE_PETS[n] then sellPetDbg(n,id) end end
+        if not EXCLUDE_PETS[TITAN_REACTOR.Name] then sellPetDbg(TITAN_REACTOR.Name, TITAN_REACTOR.DebugId) end
+    end
+
+    local function scan60()
+        for n,id in pairs(SELL_PETS_60) do if not EXCLUDE_PETS[n] then sellPetDbg(n,id) end end
+        for n,id in pairs(SELL_AURAS_60) do if not EXCLUDE_AURAS[n] then sellAuraDbg(n,id) end end
+    end
+
+    local function countPet(name)
+        local count = 0
+        for _, folder in ipairs(PET_FOLDERS) do
+            if folder then
+                for _, child in ipairs(folder:GetChildren()) do
+                    if child.Name == name then count = count + 1 end
+                end
+            end
+        end
+        return count
+    end
+
+    local function tryEvolve(cfg)
+        if evolving or not cfg.Enabled then return end
+        local count = countPet(cfg.Target)
+        if count >= cfg.Need then
+            evolving = true
+            pcall(function() petEvolveEvent:FireServer("evolvePet", cfg.Target) end)
+            evolving = false
+        end
+    end
+
+    local function roll30()
+        local ok = pcall(function() openCrystalRemote:InvokeServer("openCrystal", CRYSTAL_30) end)
+        if ok then task.delay(0.15, function() scan30() tryEvolve(EVOLVE_30) end) end
+        return ok
+    end
+
+    local function roll15()
+        local ok = pcall(function() openCrystalRemote:InvokeServer("openCrystal", CRYSTAL_15) end)
+        if ok then task.delay(0.15, function() scan15() tryEvolve(EVOLVE_15) end) end
+        return ok
+    end
+
+    local function roll150()
+        local ok = pcall(function() openCrystalRemote:InvokeServer("openCrystalBulk", CRYSTAL_150, BULK_AMOUNT) end)
+        if ok then task.delay(0.3, function() scan150() tryEvolve(EVOLVE_150) end) end
+        return ok
+    end
+
+    local function roll60()
+        local ok = pcall(function() openCrystalRemote:InvokeServer("openCrystalBulk", CRYSTAL_60, BULK_AMOUNT) end)
+        if ok then task.delay(0.3, function() scan60() tryEvolve(EVOLVE_60) end) end
+        return ok
+    end
+
+    -- ════════ GUI EXCEPTION SYSTEM (DARK THEME) ════════
+    local function openExceptionModal(boxTitle, petsDict, aurasDict)
+        local existing = ScreenGui:FindFirstChild("ExceptionModalFrame")
+        if existing then existing:Destroy() end
+        local modal = Instance.new("Frame")
+        modal.Name = "ExceptionModalFrame"
+        modal.Parent = ScreenGui
+        modal.Size = UDim2.new(0, 320, 0, 360)
+        modal.Position = UDim2.new(0.5, -160, 0.5, -180)
+        modal.BackgroundColor3 = Color3.fromRGB(18, 5, 5)
+        modal.BorderSizePixel = 0
+        modal.ZIndex = 500
+        modal.Active = true
+        modal.Draggable = true
+        Instance.new("UICorner", modal).CornerRadius = UDim.new(0, 10)
+        local stroke = Instance.new("UIStroke", modal)
+        stroke.Color = Color3.fromRGB(160, 30, 30)
+        stroke.Thickness = 2
+        local topBar = Instance.new("TextLabel", modal)
+        topBar.Size = UDim2.new(1, 0, 0, 35)
+        topBar.BackgroundColor3 = Color3.fromRGB(35, 6, 6)
+        topBar.Text = "🛡️ ตั้งค่ายกเว้น: " .. boxTitle
+        topBar.TextColor3 = Color3.fromRGB(255, 255, 255)
+        topBar.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        topBar.TextSize = 13
+        topBar.ZIndex = 501
+        Instance.new("UICorner", topBar).CornerRadius = UDim.new(0, 10)
+        local closeBtn = Instance.new("TextButton", modal)
+        closeBtn.Size = UDim2.new(0, 24, 0, 24)
+        closeBtn.Position = UDim2.new(1, -28, 0, 5)
+        closeBtn.BackgroundColor3 = Color3.fromRGB(150, 25, 25)
+        closeBtn.Text = "✕"
+        closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        closeBtn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        closeBtn.TextSize = 12
+        closeBtn.ZIndex = 502
+        Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 5)
+        closeBtn.MouseButton1Click:Connect(function() modal:Destroy() end)
+        local scroll = Instance.new("ScrollingFrame", modal)
+        scroll.Size = UDim2.new(0.92, 0, 0.85, -10)
+        scroll.Position = UDim2.new(0.04, 0, 0.12, 10)
+        scroll.BackgroundTransparency = 1
+        scroll.BorderSizePixel = 0
+        scroll.ScrollBarThickness = 4
+        scroll.ZIndex = 501
+        local layout = Instance.new("UIListLayout", scroll)
+        layout.SortOrder = Enum.SortOrder.LayoutOrder
+        layout.Padding = UDim.new(0, 6)
+        layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            scroll.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 10)
+        end)
+        -- 🐾 หมวดหมู่สัตว์
+        local petHeader = Instance.new("TextLabel", scroll)
+        petHeader.Size = UDim2.new(1, 0, 0, 24)
+        petHeader.BackgroundColor3 = Color3.fromRGB(40, 8, 8)
+        petHeader.Text = " 🐾 สัตว์ (เปิด = ยกเว้น/ไม่ลบ)"
+        petHeader.TextColor3 = Color3.fromRGB(255, 180, 180)
+        petHeader.TextXAlignment = Enum.TextXAlignment.Left
+        petHeader.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        petHeader.TextSize = 11
+        petHeader.ZIndex = 502
+        Instance.new("UICorner", petHeader).CornerRadius = UDim.new(0, 5)
+        for petName, _ in pairs(petsDict) do
+            local row = Instance.new("Frame", scroll)
+            row.Size = UDim2.new(1, 0, 0, 32)
+            row.BackgroundColor3 = Color3.fromRGB(28, 6, 6)
+            row.BorderSizePixel = 0
+            row.ZIndex = 502
+            Instance.new("UICorner", row).CornerRadius = UDim.new(0, 5)
+            local lbl = Instance.new("TextLabel", row)
+            lbl.Size = UDim2.new(0.65, 0, 1, 0)
+            lbl.Position = UDim2.new(0.03, 0, 0, 0)
+            lbl.BackgroundTransparency = 1
+            lbl.Text = petName
+            lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+            lbl.TextXAlignment = Enum.TextXAlignment.Left
+            lbl.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+            lbl.TextSize = 11
+            lbl.ZIndex = 503
+            local tog = Instance.new("TextButton", row)
+            tog.Size = UDim2.new(0.28, 0, 0.75, 0)
+            tog.Position = UDim2.new(0.69, 0, 0.12, 0)
+            tog.ZIndex = 503
+            tog.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+            tog.TextSize = 10
+            Instance.new("UICorner", tog).CornerRadius = UDim.new(0, 4)
+            local isExcluded = EXCLUDE_PETS[petName] or false
+            local function updateTog()
+                if isExcluded then
+                    tog.Text = "🛡️ ยกเว้น"
+                    tog.BackgroundColor3 = Color3.fromRGB(40, 160, 80)
+                else
+                    tog.Text = "🗑️ ลบปกติ"
+                    tog.BackgroundColor3 = Color3.fromRGB(150, 30, 30)
+                end
+            end
+            updateTog()
+            tog.MouseButton1Click:Connect(function()
+                isExcluded = not isExcluded
+                EXCLUDE_PETS[petName] = isExcluded
+                updateTog()
+            end)
+        end
+        -- 🌟 หมวดหมู่อ่อร่า
+        local auraHeader = Instance.new("TextLabel", scroll)
+        auraHeader.Size = UDim2.new(1, 0, 0, 24)
+        auraHeader.BackgroundColor3 = Color3.fromRGB(40, 8, 8)
+        auraHeader.Text = " 🌟 อ่อร่า (เปิด = ยกเว้น/ไม่ลบ)"
+        auraHeader.TextColor3 = Color3.fromRGB(255, 180, 180)
+        auraHeader.TextXAlignment = Enum.TextXAlignment.Left
+        auraHeader.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        auraHeader.TextSize = 11
+        auraHeader.ZIndex = 502
+        Instance.new("UICorner", auraHeader).CornerRadius = UDim.new(0, 5)
+        for auraName, _ in pairs(aurasDict) do
+            local row = Instance.new("Frame", scroll)
+            row.Size = UDim2.new(1, 0, 0, 32)
+            row.BackgroundColor3 = Color3.fromRGB(28, 6, 6)
+            row.BorderSizePixel = 0
+            row.ZIndex = 502
+            Instance.new("UICorner", row).CornerRadius = UDim.new(0, 5)
+            local lbl = Instance.new("TextLabel", row)
+            lbl.Size = UDim2.new(0.65, 0, 1, 0)
+            lbl.Position = UDim2.new(0.03, 0, 0, 0)
+            lbl.BackgroundTransparency = 1
+            lbl.Text = auraName
+            lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+            lbl.TextXAlignment = Enum.TextXAlignment.Left
+            lbl.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+            lbl.TextSize = 11
+            lbl.ZIndex = 503
+            local tog = Instance.new("TextButton", row)
+            tog.Size = UDim2.new(0.28, 0, 0.75, 0)
+            tog.Position = UDim2.new(0.69, 0, 0.12, 0)
+            tog.ZIndex = 503
+            tog.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+            tog.TextSize = 10
+            Instance.new("UICorner", tog).CornerRadius = UDim.new(0, 4)
+            local isExcluded = EXCLUDE_AURAS[auraName] or false
+            local function updateTog()
+                if isExcluded then
+                    tog.Text = "🛡️ ยกเว้น"
+                    tog.BackgroundColor3 = Color3.fromRGB(40, 160, 80)
+                else
+                    tog.Text = "🗑️ ลบปกติ"
+                    tog.BackgroundColor3 = Color3.fromRGB(150, 30, 30)
+                end
+            end
+            updateTog()
+            tog.MouseButton1Click:Connect(function()
+                isExcluded = not isExcluded
+                EXCLUDE_AURAS[auraName] = isExcluded
+                updateTog()
+            end)
+        end
+    end
+
+    -- ════════ FARMING & REBIRTH LOGIC ════════
+    local function getMuscleEvent()
+        return LocalPlayer:FindFirstChild("muscleEvent")
+    end
+
+    local function equipTool(toolName)
+        local char = LocalPlayer.Character
+        if not char then return false end
+        local humanoid = char:FindFirstChildOfClass("Humanoid")
+        if not humanoid then return false end
+        local tool = LocalPlayer.Backpack:FindFirstChild(toolName) or char:FindFirstChild(toolName)
+        if tool then
+            humanoid:EquipTool(tool)
+            return true
+        end
+        return false
+    end
+
+    local function fireMuscle()
+        local event = getMuscleEvent()
+        if event then
+            pcall(function() event:FireServer("rep") end)
+        end
+    end
+
+    local function startFarming()
+        if not farmTool then return end
+        farmEnabled = true
+        farmConn = RunService.Heartbeat:Connect(function()
+            if not farmEnabled then return end
+            if not equipTool(farmTool) then
+                local char = LocalPlayer.Character
+                if char and char:FindFirstChildOfClass("Humanoid") then
+                    local tool = LocalPlayer.Backpack:FindFirstChild(farmTool) or char:FindFirstChild(farmTool)
+                    if tool then char.Humanoid:EquipTool(tool) end
+                end
+            end
+            fireMuscle()
+            task.wait(fastMode and 0.01 or 0.1)
+        end)
+    end
+
+    local function stopFarming()
+        farmEnabled = false
+        if farmConn then
+            farmConn:Disconnect()
+            farmConn = nil
+        end
+    end
+
+    -- 🪨 AUTO PUNCH ROCK FUNCTIONS (ปรับแต่งย่อขนาด สลับมือซ้าย-ขวา คืนค่าเดิม)
+    local function saveOriginalRockData(rockModel)
+        if not rockModel then return end
+        for _, part in ipairs(rockModel:GetDescendants()) do
+            if part:IsA("BasePart") and not originalRockData[part] then
+                local data = {
+                    CFrame = part.CFrame,
+                    Size = part.Size,
+                    Transparency = part.Transparency,
+                    CanCollide = part.CanCollide,
+                    MeshScale = nil,
+                    MeshOffset = nil,
+                    MeshId = nil,
+                }
+                local mesh = part:FindFirstChildOfClass("DataModelMesh")
+                if mesh then
+                    data.MeshScale = mesh.Scale
+                    data.MeshOffset = mesh.Offset
+                    data.MeshId = mesh.MeshId
+                end
+                originalRockData[part] = data
+            end
+        end
+    end
+
+    local function restoreOriginalRockData()
+        for part, data in pairs(originalRockData) do
+            if part and part.Parent then
+                pcall(function()
+                    part.CanCollide = data.CanCollide
+                    part.Transparency = data.Transparency
+                    part.Size = data.Size
+                    part.CFrame = data.CFrame
+                    if part:IsA("BasePart") then
+                        part.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                        part.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+                    end
+                    local mesh = part:FindFirstChildOfClass("DataModelMesh")
+                    if mesh and data.MeshScale then
+                        mesh.Scale = data.MeshScale
+                        mesh.Offset = data.MeshOffset
+                        if data.MeshId then
+                            mesh.MeshId = data.MeshId
+                        end
+                    end
+                end)
+            end
+        end
+        table.clear(originalRockData)
+    end
+
+    local function modifyAndMoveRock(rockModel, targetHand)
+        if not rockModel or not targetHand then return end
+        saveOriginalRockData(rockModel)
+        
+        rockAngle = (rockAngle + 15) % 360
+        local targetCFrame = targetHand.CFrame * CFrame.Angles(0, math.rad(rockAngle), math.rad(rockAngle))
+        for _, part in ipairs(rockModel:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+                part.Transparency = 1
+                part.Size = Vector3.new(0.001, 0.001, 0.001)
+                part.CFrame = targetCFrame
+                -- ป้องกันแรงเหวี่ยงจากฟิสิกส์ Roblox (Anti Velocity Lag/Launch)
+                part.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                part.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+            elseif part:IsA("Decal") or part:IsA("Texture") then
+                part.Transparency = 1
+            elseif part:IsA("SpecialMesh") or part:IsA("BlockMesh") then
+                part.Scale = Vector3.new(0.001, 0.001, 0.001)
+            end
+        end
+    end
+
+    local function startAutoRock()
+        autoRockEnabled = true
+        -- ⭐ Equip "Punch" tool immediately
+        equipTool("Punch")
+        autoRockConn = RunService.Heartbeat:Connect(function()
+            if not autoRockEnabled then return end
+            local char = LocalPlayer.Character
+            if not char then return end
+            -- สลับมือซ้าย / ขวา ไปมาทุกเฟรม
+            rockHandToggle = not rockHandToggle
+            local rightHand = char:FindFirstChild("RightHand") or char:FindFirstChild("Right Arm") or char:FindFirstChild("HumanoidRootPart")
+            local leftHand = char:FindFirstChild("LeftHand") or char:FindFirstChild("Left Arm") or char:FindFirstChild("HumanoidRootPart")
+            local targetHand = rockHandToggle and leftHand or rightHand
+            local machines = workspace:FindFirstChild("machinesFolder")
+            if machines then
+                local rock = machines:FindFirstChild(selectedRockName)
+                if rock then
+                    modifyAndMoveRock(rock, targetHand)
+                end
+            end
+            local event = getMuscleEvent()
+            if event then
+                pcall(function()
+                    event:FireServer("punch", "rightHand")
+                    event:FireServer("punch", "leftHand")
+                end)
+            end
+            task.wait(0.01)
+        end)
+    end
+
+    local function stopAutoRock()
+        autoRockEnabled = false
+        if autoRockConn then
+            autoRockConn:Disconnect()
+            autoRockConn = nil
+        end
+        restoreOriginalRockData()
+    end
+
+    -- ⭐ Re-equip Punch on respawn if auto rock is active
+    LocalPlayer.CharacterAdded:Connect(function(char)
+        if autoRockEnabled then
+            task.wait(0.5)
+            equipTool("Punch")
+        end
+    end)
+
+    local function stopRebirth()
+        rebirthEnabled = false
+        if rebirthConn then
+            rebirthConn:Disconnect()
+            rebirthConn = nil
+        end
+    end
+
+    local function startRebirth()
+        rebirthEnabled = true
+        rebirthConn = RunService.Heartbeat:Connect(function()
+            if not rebirthEnabled then return end
+            local leaderstats = LocalPlayer:FindFirstChild("leaderstats")
+            local currentRebirths = (leaderstats and leaderstats:FindFirstChild("Rebirths")) and leaderstats.Rebirths.Value or 0
+            if useRebirthTarget and currentRebirths >= targetRebirths then
+                stopRebirth()
+                return
+            end
+            pcall(function() rebirthRemote:InvokeServer("rebirthRequest") end)
+            task.wait(0.5)
+        end)
+    end
+
+    -- 🛠️ FIXED ANTI-KNOCKBACK
+    local function setupAntiKnockback(char)
+        if not char then return end
+        local humanoid = char:WaitForChild("Humanoid", 5)
+        local root = char:WaitForChild("HumanoidRootPart", 5)
+        if not humanoid or not root then return end
+        lastHealth = humanoid.Health
+        if healthConn then healthConn:Disconnect() end
+        healthConn = humanoid.HealthChanged:Connect(function(newHealth)
+            if antiKnockbackEnabled and newHealth < lastHealth then
+                if not isKnockbackLocked then
+                    isKnockbackLocked = true
+                    root.Anchored = true
+                    task.delay(0.5, function()
+                        if root and root.Parent then root.Anchored = false end
+                        isKnockbackLocked = false
+                    end)
+                end
+            end
+            lastHealth = newHealth
+        end)
+    end
+
+    LocalPlayer.CharacterAdded:Connect(function(char)
+        setupAntiKnockback(char)
+    end)
+    if LocalPlayer.Character then setupAntiKnockback(LocalPlayer.Character) end
+
+    task.spawn(function()
+        while true do
+            if not isMonitoringRebirthTp and LocalPlayer.Character then
+                local root = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                if root then savedPosBeforeRebirth = root.CFrame end
+            end
+            task.wait(0.1)
+        end
+    end)
+
+    local function setupRebirthTracker(leaderstats)
+        if not leaderstats then return end
+        local rebirths = leaderstats:WaitForChild("Rebirths", 5)
+        if not rebirths then return end
+        local currentCount = rebirths.Value
+        rebirths.Changed:Connect(function(newVal)
+            if antiRebirthTpEnabled and newVal > currentCount then
+                local returnCFrame = savedPosBeforeRebirth
+                isMonitoringRebirthTp = true
+                local startTime = os.clock()
+                task.spawn(function()
+                    while os.clock() - startTime < 6 do
+                        local char = LocalPlayer.Character
+                        local root = char and char:FindFirstChild("HumanoidRootPart")
+                        if root and returnCFrame then
+                            if (root.Position - returnCFrame.Position).Magnitude > 10 then
+                                task.wait(0.1)
+                                root.CFrame = returnCFrame
+                            end
+                        end
+                        task.wait(0.05)
+                    end
+                    isMonitoringRebirthTp = false
+                end)
+            end
+            currentCount = newVal
+        end)
+    end
+
+    local leaderstatsObj = LocalPlayer:FindFirstChild("leaderstats")
+    if leaderstatsObj then setupRebirthTracker(leaderstatsObj) end
+    LocalPlayer.ChildAdded:Connect(function(child)
+        if child.Name == "leaderstats" then setupRebirthTracker(child) end
+    end)
+
+    -- ════════ AUTO-SELL ON CHILD ADDED ════════
+    for _, f in ipairs(PET_FOLDERS) do
+        if f then
+            f.ChildAdded:Connect(function(c)
+                if SELL_PETS_30[c.Name] and running30 and not EXCLUDE_PETS[c.Name] then
+                    task.wait(0.1) sellPetEvent:FireServer("sellPet", c)
+                end
+                if SELL_PETS_15[c.Name] and running15 and not EXCLUDE_PETS[c.Name] then
+                    task.wait(0.1) sellPetEvent:FireServer("sellPet", c)
+                end
+                if SELL_PETS_150[c.Name] and running150 and not EXCLUDE_PETS[c.Name] then
+                    task.wait(0.1) sellPetEvent:FireServer("sellPet", c)
+                end
+                if c.Name == TITAN_REACTOR.Name and running150 and not EXCLUDE_PETS[c.Name] then
+                    task.wait(0.1) sellPetEvent:FireServer("sellPet", c)
+                end
+                if SELL_PETS_60[c.Name] and running60 and not EXCLUDE_PETS[c.Name] then
+                    task.wait(0.1) sellPetEvent:FireServer("sellPet", c)
+                end
+                if c.Name == EVOLVE_30.Target then task.delay(0.3, function() tryEvolve(EVOLVE_30) end) end
+                if c.Name == EVOLVE_15.Target then task.delay(0.3, function() tryEvolve(EVOLVE_15) end) end
+                if c.Name == EVOLVE_150.Target then task.delay(0.3, function() tryEvolve(EVOLVE_150) end) end
+                if c.Name == EVOLVE_60.Target then task.delay(0.3, function() tryEvolve(EVOLVE_60) end) end
+            end)
+        end
+    end
+
+    for _, f in ipairs(AURA_FOLDERS) do
+        if f then
+            f.ChildAdded:Connect(function(c)
+                if SELL_AURAS_30[c.Name] and running30 and not EXCLUDE_AURAS[c.Name] then
+                    task.wait(0.1) sellPowerUpEvent:FireServer("sellPowerUp", c)
+                end
+                if SELL_AURAS_15[c.Name] and running15 and not EXCLUDE_AURAS[c.Name] then
+                    task.wait(0.1) sellPowerUpEvent:FireServer("sellPowerUp", c)
+                end
+                if SELL_AURAS_60[c.Name] and running60 and not EXCLUDE_AURAS[c.Name] then
+                    task.wait(0.1) sellPowerUpEvent:FireServer("sellPowerUp", c)
+                end
+            end)
+        end
+    end
+
+    -- ════════ POPULATING TAB 1: เมนูหลัก ════════
+    addSectionHeader(MainPage, "ข้อมูลบัญชีผู้ใช้")
+    local mapTitle = "ไม่พบข้อมูล"
+    pcall(function()
+        local info = MarketplaceService:GetProductInfo(game.PlaceId)
+        if info and info.Name then mapTitle = info.Name end
+    end)
+    local AccountInfoDisplay = Instance.new("TextLabel")
+    AccountInfoDisplay.Size = UDim2.new(1, -6, 0, 95)
+    AccountInfoDisplay.BackgroundColor3 = Color3.fromRGB(28, 6, 6)
+    AccountInfoDisplay.TextColor3 = Color3.fromRGB(240, 220, 220)
+    AccountInfoDisplay.TextSize = 12
+    AccountInfoDisplay.TextXAlignment = Enum.TextXAlignment.Left
+    AccountInfoDisplay.TextYAlignment = Enum.TextYAlignment.Top
+    AccountInfoDisplay.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+    AccountInfoDisplay.Parent = MainPage
+    Instance.new("UICorner", AccountInfoDisplay).CornerRadius = UDim.new(0, 6)
+    local accStroke = Instance.new("UIStroke", AccountInfoDisplay)
+    accStroke.Color = Color3.fromRGB(80, 15, 15)
+    AccountInfoDisplay.Text = string.format(
+        " 👤 ผู้ใช้งาน: %s (@%s)\n" ..
+        " 📅 อายุบัญชี: %d วัน\n" ..
+        " 🎮 แมพที่รัน: %s\n" ..
+        " 🌐 ไอดีเซิร์ฟเวอร์: %s",
+        LocalPlayer.DisplayName, LocalPlayer.Name, LocalPlayer.AccountAge, mapTitle, game.JobId ~= "" and game.JobId or "Single Player / Studio"
+    )
+    addSectionHeader(MainPage, "ตัวละคร")
+    addToggle(MainPage, "⚡ Speed Hack (100)", false, function(state)
+        local char = LocalPlayer.Character
+        if char and char:FindFirstChild("Humanoid") then
+            char.Humanoid.WalkSpeed = state and 100 or 16
+        end
+    end, "SpeedHack")
+    addTextbox(MainPage, "🏃 WalkSpeed Custom", "16", function(txt)
+        local val = tonumber(txt)
+        local char = LocalPlayer.Character
+        if val and char and char:FindFirstChild("Humanoid") then
+            char.Humanoid.WalkSpeed = val
+        end
+    end)
+    addTextbox(MainPage, "🦘 JumpPower Custom", "50", function(txt)
+        local val = tonumber(txt)
+        local char = LocalPlayer.Character
+        if val and char and char:FindFirstChild("Humanoid") then
+            char.Humanoid.JumpPower = val
+        end
+    end)
+
+    -- ════════ POPULATING TAB 2: ดูข้อมูล ════════
+    addSectionHeader(StatsPage, "แผงแสดงสถานะตัวละคร")
+    local StatsDisplay = Instance.new("TextLabel")
+    StatsDisplay.Size = UDim2.new(1, -6, 0, 150)
+    StatsDisplay.BackgroundColor3 = Color3.fromRGB(28, 6, 6)
+    StatsDisplay.TextColor3 = Color3.fromRGB(240, 220, 220)
+    StatsDisplay.TextSize = 11
+    StatsDisplay.TextXAlignment = Enum.TextXAlignment.Left
+    StatsDisplay.TextYAlignment = Enum.TextYAlignment.Top
+    StatsDisplay.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+    StatsDisplay.Text = " 📊 กรุณาเลือกผู้เล่น หรือกดดูข้อมูล..."
+    StatsDisplay.Parent = StatsPage
+    Instance.new("UICorner", StatsDisplay).CornerRadius = UDim.new(0, 6)
+    local statStroke = Instance.new("UIStroke", StatsDisplay)
+    statStroke.Color = Color3.fromRGB(80, 15, 15)
+    local function getPlayerStats(player)
+        local stats = {}
+        stats.Agility = player:FindFirstChild("Agility") and player.Agility.Value or 0
+        stats.Durability = player:FindFirstChild("Durability") and player.Durability.Value or 0
+        local leaderstats = player:FindFirstChild("leaderstats")
+        if leaderstats then
+            stats.Kills = leaderstats:FindFirstChild("Kills") and leaderstats.Kills.Value or 0
+            stats.Strength = leaderstats:FindFirstChild("Strength") and leaderstats.Strength.Value or 0
+            stats.Rebirths = leaderstats:FindFirstChild("Rebirths") and leaderstats.Rebirths.Value or 0
+            stats.Brawls = leaderstats:FindFirstChild("Brawls") and leaderstats.Brawls.Value or 0
+        else
+            stats.Kills, stats.Strength, stats.Rebirths, stats.Brawls = 0,0,0,0
+        end
+        stats.GoodKarma = player:FindFirstChild("goodKarma") and player.goodKarma.Value or 0
+        stats.BadKarma = player:FindFirstChild("badKarma") and player.badKarma.Value or 0
+        stats.MaxPetCapacity = player:FindFirstChild("maxPetCapacity") and player.maxPetCapacity.Value or 0
+        stats.Gems = player:FindFirstChild("Gems") and player.Gems.Value or 0
+        local consumablesFolder = player:FindFirstChild("consumablesFolder")
+        local boosts = {}
+        if consumablesFolder then
+            for _, item in ipairs(consumablesFolder:GetChildren()) do
+                table.insert(boosts, item.Name .. " x" .. (item:IsA("NumberValue") and item.Value or 1))
+            end
+        end
+        return stats, boosts
+    end
+    local function renderStatsOnGUI(player)
+        if not player then return end
+        local stats, boosts = getPlayerStats(player)
+        StatsDisplay.Text = string.format(
+            " 👤 ชื่อผู้เล่น: %s\n" ..
+            " ⚡ Agility: %s | 🛡️ Durability: %s\n" ..
+            " ⚔️ Kills: %s | 💪 Strength: %s\n" ..
+            " 🔄 Rebirths: %s | 🥊 Brawls: %s\n" ..
+            " 😇 กรรมดี: %s | 😈 กรรมชั่ว: %s\n" ..
+            " 🐾 ความจุสัตว์: %s | 💎 Gems: %s\n" ..
+            " 🧪 บูส: %s",
+            player.Name, formatNumber(stats.Agility), formatNumber(stats.Durability),
+            formatNumber(stats.Kills), formatNumber(stats.Strength),
+            formatNumber(stats.Rebirths), formatNumber(stats.Brawls),
+            formatNumber(stats.GoodKarma), formatNumber(stats.BadKarma),
+            formatNumber(stats.MaxPetCapacity), formatNumber(stats.Gems),
+            (#boosts > 0 and table.concat(boosts, ", ") or "ไม่มี")
+        )
+    end
+    local selectedTargetPlayer = LocalPlayer
+    addPlayerSelector(StatsPage, "👤 เลือกผู้เล่น", function(playerObj)
+        selectedTargetPlayer = playerObj
+    end)
+    addButton(StatsPage, "👤 ดูข้อมูลตัวเอง", function()
+        renderStatsOnGUI(LocalPlayer)
+    end)
+    addButton(StatsPage, "🔍 ดูข้อมูลผู้เล่นที่เลือก", function()
+        if selectedTargetPlayer then
+            renderStatsOnGUI(selectedTargetPlayer)
+        end
+    end)
+
+    -- ════════ POPULATING TAB 3: ฟาม ════════
+    addSectionHeader(FarmPage, "ระบบออโต้ฟาร์มพลัง")
+    local availableTools = {"Weight", "Situps", "Pushups", "Handstands"}
+    addToolSelector(FarmPage, "🏋️ เลือก Tool ฟาร์ม", availableTools, "Weight", function(selectedTool)
+        farmTool = selectedTool
+        if farmEnabled then stopFarming() startFarming() end
+    end)
+    addToggle(FarmPage, "▶ เปิดออโต้ออกกำลังกาย", false, function(state)
+        if state then startFarming() else stopFarming() end
+    end, "AutoFarm")
+    addToggle(FarmPage, "⚡ ยกน้ำหนักแบบไว (0.01s)", false, function(state)
+        fastMode = state
+        if farmEnabled then stopFarming() startFarming() end
+    end, "FastMode")
+
+    -- 🪨 เพิ่มส่วน ออโต้ต่อยหิน ในช่องฟาม
+    addSectionHeader(FarmPage, "🪨 ระบบออโต้ต่อยหิน (Auto Rock Punch)")
+    local rockOptions = {
+        "Tiny Rock",
+        "Frozen Rock",
+        "Inferno Rock",
+        "Rock Of Legends",
+        "Muscle King Mountain",
+        "Industrial Rock"
+    }
+    addToolSelector(FarmPage, "🪨 เลือกหินต่อย", rockOptions, "Tiny Rock", function(selected)
+        if autoRockEnabled then
+            stopAutoRock()
+            selectedRockName = selected
+            task.wait(0.1)
+            startAutoRock()
+        else
+            selectedRockName = selected
+        end
+    end)
+    addToggle(FarmPage, "▶ เปิดออโต้ต่อยหิน", false, function(state)
+        if state then
+            startAutoRock()
+        else
+            stopAutoRock()
+        end
+    end, "AutoRockPunch")
+
+    addSectionHeader(FarmPage, "ระบบออโต้ Rebirth")
+    addTextbox(FarmPage, "🎯 ตั้งเป้าหมาย Rebirth", "0", function(txt)
+        local num = tonumber(txt)
+        targetRebirths = num or 0
+    end)
+    addToggle(FarmPage, "☑️ จำกัด Rebirth ตามเป้าหมาย", false, function(state)
+        useRebirthTarget = state
+    end, "UseRebirthTarget")
+    addToggle(FarmPage, "▶ เปิดออโต้ Rebirth", false, function(state)
+        if state then startRebirth() else stopRebirth() end
+    end, "AutoRebirth")
+
+    -- ════════ POPULATING TAB 4: สุ่มสัตว์ (Premium) ════════
+    addSectionHeader(RollPage, "🎡 ระบบสุ่มวงล้อ (Fortune Wheel)")
+    addToggle(RollPage, "🎡 เปิดออโต้สุ่มวงล้อ (5 รอบทุก 30 นาที)", false, function(state)
+        autoFortuneWheel = state
+        if autoFortuneWheel then
+            task.spawn(function()
+                local Event = ReplicatedStorage:WaitForChild("rEvents", 5):WaitForChild("openFortuneWheelRemote", 5)
+                local wheelCatalog = ReplicatedStorage:WaitForChild("shared", 5):WaitForChild("catalogs", 5):WaitForChild("fortuneWheelChances", 5)["Fortune Wheel"]
+                while autoFortuneWheel do
+                    for round = 1, 5 do
+                        if not autoFortuneWheel then break end
+                        pcall(function() Event:InvokeServer("openFortuneWheel", wheelCatalog) end)
+                        for i = 1, 15 do
+                            if not autoFortuneWheel then break end
+                            task.wait(1)
+                        end
+                    end
+                    if autoFortuneWheel then
+                        for t = 1, 1800 do
+                            if not autoFortuneWheel then break end
+                            task.wait(1)
+                        end
+                    end
+                end
+            end)
+        end
+    end, "AutoFortuneWheel")
+
+    addSectionHeader(RollPage, "🎰 ระบบสุ่มตู้คริสตัล (Auto Roll Crystals)")
+    local function addCrystalCard(parent, title, toggleText, toggleStateFunc, modalFunc, saveKey)
+        local cardFrame = Instance.new("Frame")
+        cardFrame.Size = UDim2.new(1, -6, 0, 78)
+        cardFrame.BackgroundColor3 = Color3.fromRGB(24, 5, 5)
+        cardFrame.BorderSizePixel = 0
+        cardFrame.Parent = parent
+        Instance.new("UICorner", cardFrame).CornerRadius = UDim.new(0, 6)
+        local stroke = Instance.new("UIStroke", cardFrame)
+        stroke.Color = Color3.fromRGB(80, 15, 15)
+        local titleLbl = Instance.new("TextLabel", cardFrame)
+        titleLbl.Size = UDim2.new(1, -10, 0, 22)
+        titleLbl.Position = UDim2.new(0, 8, 0, 4)
+        titleLbl.BackgroundTransparency = 1
+        titleLbl.Text = title
+        titleLbl.TextColor3 = Color3.fromRGB(255, 120, 120)
+        titleLbl.TextXAlignment = Enum.TextXAlignment.Left
+        titleLbl.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        titleLbl.TextSize = 11
+        local btnContainer = Instance.new("Frame", cardFrame)
+        btnContainer.Size = UDim2.new(1, -12, 0, 42)
+        btnContainer.Position = UDim2.new(0, 6, 0, 28)
+        btnContainer.BackgroundTransparency = 1
+        local layout = Instance.new("UIListLayout", btnContainer)
+        layout.FillDirection = Enum.FillDirection.Horizontal
+        layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+        layout.Padding = UDim.new(0, 6)
+        local togBtn = Instance.new("TextButton", btnContainer)
+        togBtn.Size = UDim2.new(0.55, -3, 1, 0)
+        togBtn.BackgroundColor3 = Color3.fromRGB(150, 30, 30)
+        togBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        togBtn.Text = "▶ " .. toggleText
+        togBtn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        togBtn.TextSize = 10
+        Instance.new("UICorner", togBtn).CornerRadius = UDim.new(0, 5)
+        local isRunning = false
+        local function updateVisual()
+            togBtn.Text = isRunning and "⏹ หยุดสุ่ม" or "▶ " .. toggleText
+            togBtn.BackgroundColor3 = isRunning and Color3.fromRGB(40, 160, 80) or Color3.fromRGB(150, 30, 30)
+        end
+        local function setState(newState, skipCallback)
+            isRunning = newState
+            if saveKey then toggleStates[saveKey] = isRunning end
+            updateVisual()
+            if not skipCallback then toggleStateFunc(isRunning) end
+        end
+        togBtn.MouseButton1Click:Connect(function()
+            setState(not isRunning)
+        end)
+        if saveKey then
+            toggleStates[saveKey] = isRunning
+            toggleSetters[saveKey] = setState
+        end
+        local setBtn = Instance.new("TextButton", btnContainer)
+        setBtn.Size = UDim2.new(0.45, -3, 1, 0)
+        setBtn.BackgroundColor3 = Color3.fromRGB(50, 10, 10)
+        setBtn.TextColor3 = Color3.fromRGB(255, 200, 200)
+        setBtn.Text = "🛡️ ยกเว้นไม่ขาย"
+        setBtn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        setBtn.TextSize = 10
+        Instance.new("UICorner", setBtn).CornerRadius = UDim.new(0, 5)
+        local setStroke = Instance.new("UIStroke", setBtn)
+        setStroke.Color = Color3.fromRGB(120, 20, 20)
+        setStroke.Thickness = 1
+        setBtn.MouseButton1Click:Connect(modalFunc)
+        return cardFrame
+    end
+
+    addCrystalCard(RollPage, "💎 Inferno Crystal (รี 15)", "เปิดสุ่ม รี 15", function(state)
+        running15 = state
+        if running15 then
+            scan15() tryEvolve(EVOLVE_15)
+            task.spawn(function()
+                while running15 do roll15() task.wait(DELAY_15) end
+            end)
+            sellConn15 = RunService.Heartbeat:Connect(function()
+                if running15 and (os.clock() - lastScan15) > 0.3 then
+                    lastScan15 = os.clock() scan15() tryEvolve(EVOLVE_15)
+                end
+            end)
+        else
+            if sellConn15 then sellConn15:Disconnect() sellConn15 = nil end
+        end
+    end, function() openExceptionModal("ตู้รี 15 (Inferno)", SELL_PETS_15, SELL_AURAS_15) end, "Roll15")
+
+    addCrystalCard(RollPage, "🌌 Galaxy Oracle Crystal (รี 30)", "เปิดสุ่ม รี 30", function(state)
+        running30 = state
+        if running30 then
+            scan30() tryEvolve(EVOLVE_30)
+            task.spawn(function()
+                while running30 do roll30() task.wait(DELAY_30) end
+            end)
+            sellConn30 = RunService.Heartbeat:Connect(function()
+                if running30 and (os.clock() - lastScan30) > 0.3 then
+                    lastScan30 = os.clock() scan30() tryEvolve(EVOLVE_30)
+                end
+            end)
+        else
+            if sellConn30 then sellConn30:Disconnect() sellConn30 = nil end
+        end
+    end, function() openExceptionModal("ตู้รี 30 (Galaxy)", SELL_PETS_30, SELL_AURAS_30) end, "Roll30")
+
+    addCrystalCard(RollPage, "🌴 Jungle Crystal (รี 60)", "เปิดสุ่ม รี 60", function(state)
+        running60 = state
+        if running60 then
+            scan60() tryEvolve(EVOLVE_60)
+            task.spawn(function()
+                while running60 do roll60() task.wait(DELAY_60) end
+            end)
+            sellConn60 = RunService.Heartbeat:Connect(function()
+                if running60 and (os.clock() - lastScan60) > 0.3 then
+                    lastScan60 = os.clock() scan60() tryEvolve(EVOLVE_60)
+                end
+            end)
+        else
+            if sellConn60 then sellConn60:Disconnect() sellConn60 = nil end
+        end
+    end, function() openExceptionModal("ตู้รี 60 (Jungle)", SELL_PETS_60, SELL_AURAS_60) end, "Roll60")
+
+    addCrystalCard(RollPage, "⚡ Industrial Crystal (รี 150)", "เปิดสุ่ม รี 150", function(state)
+        running150 = state
+        if running150 then
+            scan150() tryEvolve(EVOLVE_150)
+            task.spawn(function()
+                while running150 do roll150() task.wait(DELAY_150) end
+            end)
+            sellConn150 = RunService.Heartbeat:Connect(function()
+                if running150 and (os.clock() - lastScan150) > 0.3 then
+                    lastScan150 = os.clock() scan150() tryEvolve(EVOLVE_150)
+                end
+            end)
+        else
+            if sellConn150 then sellConn150:Disconnect() sellConn150 = nil end
+        end
+    end, function() openExceptionModal("ตู้รี 150 (Industrial)", SELL_PETS_150, {}) end, "Roll150")
+
+    -- ════════ POPULATING TAB 5: พรี่เมี่ยม⭐ ════════
+    addSectionHeader(PremiumPage, "⭐ พรี่เมี่ยม ฟังก์ชั่นพิเศษ")
+    addToggle(PremiumPage, "🔄 Auto Evolve สัตว์ไว (ทุก 0.3 วินาที)", false, function(state)
+        EVOLVE_30.Enabled = state
+        EVOLVE_15.Enabled = state
+        EVOLVE_150.Enabled = state
+        EVOLVE_60.Enabled = state
+    end, "AutoEvolveFast")
+
+    -- 💪 ยกน้ำหนักแบบโครตไว (สำหรับคนมีสัตว์แพ็ค)
+    addSectionHeader(PremiumPage, "💪 ยกน้ำหนักแบบโครตไว (สำหรับคนมีสัตว์แพ็ค)")
+
+    local fastMuscleTool = "Weight"
+    local fastMuscleEnabled = false
+    local fastMuscleConn = nil
+
+    local function startFastMuscle()
+        if fastMuscleEnabled then return end
+        fastMuscleEnabled = true
+        fastMuscleConn = RunService.Heartbeat:Connect(function()
+            if not fastMuscleEnabled then return end
+            equipTool(fastMuscleTool)
+            for _ = 1, 500 do
+                fireMuscle()
+            end
+            task.wait(0.05)
+        end)
+    end
+
+    local function stopFastMuscle()
+        fastMuscleEnabled = false
+        if fastMuscleConn then
+            fastMuscleConn:Disconnect()
+            fastMuscleConn = nil
+        end
+    end
+
+    addToolSelector(PremiumPage, "🏋️ เลือก Tool ออกกำลังกาย", {"Weight", "Situps", "Pushups", "Handstands"}, "Weight", function(selected)
+        fastMuscleTool = selected
+        if fastMuscleEnabled then
+            stopFastMuscle()
+            startFastMuscle()
+        end
+    end)
+
+    addToggle(PremiumPage, "▶ เปิดใช้งานยกน้ำหนักโครตไว", false, function(state)
+        if state then
+            startFastMuscle()
+        else
+            stopFastMuscle()
+        end
+    end, "FastMuscleUltra")
+
+    -- ════════ POPULATING TAB 6: ตั้งค่า ════════
+    addSectionHeader(SettingsPage, "💾 ระบบบันทึกการตั้งค่า")
+    addButton(SettingsPage, "💾 บันทึกการตั้งค่าปัจจุบัน", function()
+        writeJsonFile(SAVE_FILE_NAME, toggleStates)
+        playSound("rbxassetid://6895079853", 0.5)
+    end)
+    addButton(SettingsPage, "🗑️ รีเซ็ตการตั้งค่ากลับค่าเริ่มต้น", function()
+        deleteJsonFile(SAVE_FILE_NAME)
+        for key, setter in pairs(toggleSetters) do
+            setter(false, false)
+        end
+        playSound("rbxassetid://6895079853", 0.5)
+    end)
+
+    -- โหลด Save Config อัตโนมัติ
+    local savedConfig = readJsonFile(SAVE_FILE_NAME)
+    if savedConfig and type(savedConfig) == "table" then
+        task.delay(0.5, function()
+            for key, val in pairs(savedConfig) do
+                if toggleSetters[key] then
+                    toggleSetters[key](val, false)
+                end
+            end
+        end)
+    end
+
+    -- ════════ POPULATING TAB 7: เพิ่มเติม ════════
+    addSectionHeader(ExtraPage, "🛡️ ป้องกันตัวละคร & ระบบเสริม")
+    addToggle(ExtraPage, "🛡️ Anti-AFK (กันหลุดออกเกม 20 นาที)", false, function(state)
+        antiAfkEnabled = state
+        if antiAfkEnabled then
+            antiAfkConn = LocalPlayer.Idled:Connect(function()
+                if antiAfkEnabled then
+                    VirtualUser:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+                    task.wait(1)
+                    VirtualUser:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+                end
+            end)
+        else
+            if antiAfkConn then
+                antiAfkConn:Disconnect()
+                antiAfkConn = nil
+            end
+        end
+    end, "AntiAFK")
+    addToggle(ExtraPage, "🥊 Anti-Knockback (กันลอยเมื่อโดนต่อย)", false, function(state)
+        antiKnockbackEnabled = state
+    end, "AntiKnockback")
+    addToggle(ExtraPage, "📍 Anti-Rebirth TP (กันวาร์ปกลับจุดเกิดหลัง Rebirth)", false, function(state)
+        antiRebirthTpEnabled = state
+    end, "AntiRebirthTp")
+    addToggle(ExtraPage, "🎁 Auto Claim Free Gifts (รับของขวัญฟรีอัตโนมัติ)", false, function(state)
+        autoGiftEnabled = state
+        if autoGiftEnabled then
+            task.spawn(function()
+                while autoGiftEnabled do
+                    pcall(function() freeGiftClaimRemote:InvokeServer("claimGift") end)
+                    task.wait(10)
+                end
+            end)
+        end
+    end, "AutoGift")
+
+    -- ════════ NEW: GACHA TAB (Everyone) ════════
+    addSectionHeader(GachaPage, "🎁 สุ่มตู้สัตว์ (ทุกคนใช้ได้)")
+
+    local function addGachaButtons(crystalName, displayName)
+        local frame = Instance.new("Frame")
+        frame.Size = UDim2.new(1, -6, 0, 120)
+        frame.BackgroundColor3 = Color3.fromRGB(26, 6, 6)
+        frame.BorderSizePixel = 0
+        frame.Parent = GachaPage
+        Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
+        local stroke = Instance.new("UIStroke", frame)
+        stroke.Color = Color3.fromRGB(80, 15, 15)
+        
+        local title = Instance.new("TextLabel", frame)
+        title.Size = UDim2.new(1, -10, 0, 24)
+        title.Position = UDim2.new(0, 8, 0, 4)
+        title.BackgroundTransparency = 1
+        title.Text = displayName
+        title.TextColor3 = Color3.fromRGB(255, 140, 140)
+        title.TextXAlignment = Enum.TextXAlignment.Left
+        title.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        title.TextSize = 11
+        
+        local btnContainer = Instance.new("Frame", frame)
+        btnContainer.Size = UDim2.new(1, -12, 0, 80)
+        btnContainer.Position = UDim2.new(0, 6, 0, 34)
+        btnContainer.BackgroundTransparency = 1
+        
+        local layout = Instance.new("UIListLayout", btnContainer)
+        layout.FillDirection = Enum.FillDirection.Horizontal
+        layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+        layout.Padding = UDim.new(0, 6)
+        
+        -- สุ่ม 1 ฟอง
+        local btn1 = Instance.new("TextButton", btnContainer)
+        btn1.Size = UDim2.new(0.3, -2, 1, 0)
+        btn1.BackgroundColor3 = Color3.fromRGB(120, 15, 15)
+        btn1.TextColor3 = Color3.fromRGB(255, 255, 255)
+        btn1.Text = "สุ่ม 1 ฟอง"
+        btn1.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        btn1.TextSize = 10
+        Instance.new("UICorner", btn1).CornerRadius = UDim.new(0, 5)
+        btn1.MouseButton1Click:Connect(function()
+            pcall(function()
+                openCrystalRemote:InvokeServer("openCrystal", crystalName)
+            end)
+        end)
+        
+        -- สุ่ม 3 ฟอง
+        local btn3 = Instance.new("TextButton", btnContainer)
+        btn3.Size = UDim2.new(0.3, -2, 1, 0)
+        btn3.BackgroundColor3 = Color3.fromRGB(120, 15, 15)
+        btn3.TextColor3 = Color3.fromRGB(255, 255, 255)
+        btn3.Text = "สุ่ม 3 ฟอง"
+        btn3.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        btn3.TextSize = 10
+        Instance.new("UICorner", btn3).CornerRadius = UDim.new(0, 5)
+        btn3.MouseButton1Click:Connect(function()
+            pcall(function()
+                openCrystalRemote:InvokeServer("openCrystalBulk", crystalName, 3)
+            end)
+        end)
+        
+        -- สุ่ม 10 ฟอง
+        local btn10 = Instance.new("TextButton", btnContainer)
+        btn10.Size = UDim2.new(0.3, -2, 1, 0)
+        btn10.BackgroundColor3 = Color3.fromRGB(120, 15, 15)
+        btn10.TextColor3 = Color3.fromRGB(255, 255, 255)
+        btn10.Text = "สุ่ม 10 ฟอง"
+        btn10.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        btn10.TextSize = 10
+        Instance.new("UICorner", btn10).CornerRadius = UDim.new(0, 5)
+        btn10.MouseButton1Click:Connect(function()
+            pcall(function()
+                openCrystalRemote:InvokeServer("openCrystalBulk", crystalName, 10)
+            end)
+        end)
+    end
+
+    -- เรียงตามที่ผู้ใช้ให้มา
+    addGachaButtons("Blue Crystal", "🔵 Blue Crystal (รี 0 - 1K)")
+    addGachaButtons("Green Crystal", "🟢 Green Crystal (รี 0 - 3K)")
+    addGachaButtons("Frost Crystal", "❄️ Frost Crystal (รี 1 - 5K)")
+    addGachaButtons("Mythical Crystal", "🟣 Mythical Crystal (รี 5 - 8K)")
+    addGachaButtons("Inferno Crystal", "🔥 Inferno Crystal (รี 15 - 15K)")
+    addGachaButtons("Legends Crystal", "🌟 Legends Crystal (รี 30 - 30K)")
+    addGachaButtons("Muscle Elite Crystal", "💪 Muscle Elite Crystal (รี 30 - 1M)")
+    addGachaButtons("Galaxy Oracle Crystal", "🌌 Galaxy Oracle Crystal (รี 30 - 1.5M)")
+    addGachaButtons("Jungle Crystal", "🌴 Jungle Crystal (รี 60 - 3M)")
+    addGachaButtons("Industrial Crystal", "⚡ Industrial Crystal (รี 150 - 7.5M)")
+
+    -- ⭐ Auto Gacha Section
+    addSectionHeader(GachaPage, "🎰 สุ่มตู้สัตว์ออโต้ (ทุกคนใช้ได้)")
+
+    local crystalOptions = {
+        "Blue Crystal",
+        "Green Crystal",
+        "Frost Crystal",
+        "Mythical Crystal",
+        "Inferno Crystal",
+        "Legends Crystal",
+        "Muscle Elite Crystal",
+        "Galaxy Oracle Crystal",
+        "Jungle Crystal",
+        "Industrial Crystal"
+    }
+
+    addToolSelector(GachaPage, "🔮 เลือกคริสตัล", crystalOptions, "Blue Crystal", function(selected)
+        autoGachaCrystal = selected
+    end)
+
+    local amountOptions = {"1", "3", "10"}
+    addToolSelector(GachaPage, "🥚 จำนวนไข่ต่อรอบ", amountOptions, "1", function(selected)
+        autoGachaAmount = selected
+    end)
+
+    local function startAutoGacha()
+        if not autoGachaCrystal or not autoGachaAmount then return end
+        autoGachaEnabled = true
+        task.spawn(function()
+            while autoGachaEnabled do
+                local amount = tonumber(autoGachaAmount) or 1
+                if amount == 1 then
+                    pcall(function() openCrystalRemote:InvokeServer("openCrystal", autoGachaCrystal) end)
+                else
+                    pcall(function() openCrystalRemote:InvokeServer("openCrystalBulk", autoGachaCrystal, amount) end)
+                end
+                task.wait(0.5)
+            end
+        end)
+    end
+
+    local function stopAutoGacha()
+        autoGachaEnabled = false
+    end
+
+    addToggle(GachaPage, "▶ เปิดออโต้สุ่มตู้สัตว์", false, function(state)
+        if state then
+            startAutoGacha()
+        else
+            stopAutoGacha()
+        end
+    end, "AutoGacha")
 
 end
 
