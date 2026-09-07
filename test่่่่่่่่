@@ -1,10 +1,13 @@
---[=[ TOU HUB | KEY SYSTEM - Redesigned v4 (Dark Crimson Theme & Organized UI) Extended with Auto-Save System, Feedback Webhooks (10m Cooldown), Fixed Dropdowns, and Enhanced Layering. + เพิ่มระบบป้องกันหลุด (Anti-AFK) เปิด/ปิด ได้ในแท็บ "เพิ่มเติม" + ระบบช่อง พรี่เมี่ยม⭐ & ล็อกสิทธิ์ Key User ]=]
+--[=[ TOU HUB | KEY SYSTEM - Redesigned v4 (Dark Crimson Theme & Organized UI) Extended with Auto-Save System, Feedback Webhooks (10m Cooldown), Fixed Dropdowns, and Enhanced Layering. + เพิ่มระบบป้องกันหลุด (Anti-AFK) เปิด/ปิด ได้ในแท็บ "เพิ่มเติม" + ระบบช่อง พรี่เมี่ยม⭐ & ล็อกสิทธิ์ Key User + ระบบออโต้บอส (Teleport & Lock) + Pause อื่น ๆ ]=]
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local TweenService = game:GetService("TweenService")
 local HttpService = game:GetService("HttpService")
 local SoundService = game:GetService("SoundService")
 local LocalPlayer = Players.LocalPlayer
+
+-- รองรับทั้ง loadstring และ load
+local loadstring = loadstring or load
 
 -- 🌐 ลิ้งค์ดึง รายชื่อ Whitelist / Premium Users (JSON)
 local RAW_WHITELIST_URL = "https://raw.githubusercontent.com/TOUx1/Roblox-script/refs/heads/main/ชื่่่่่่่่่่่่่่อn่าน"
@@ -215,7 +218,7 @@ local function executeScript(isPremiumUser)
         topBar.BackgroundColor3 = Color3.fromRGB(35, 10, 10)
         topBar.Text = "⭐ สำหรับสมาชิก พรี่เมี่ยม เท่านั้น ⭐"
         topBar.TextColor3 = Color3.fromRGB(255, 215, 0)
-        topBar.Font = Enum.Font.SourceSansBold
+        topBar.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
         topBar.TextSize = 14
         topBar.ZIndex = 20001
         Instance.new("UICorner", topBar).CornerRadius = UDim.new(0, 12)
@@ -225,7 +228,7 @@ local function executeScript(isPremiumUser)
         closeBtn.BackgroundColor3 = Color3.fromRGB(180, 30, 30)
         closeBtn.Text = "✕"
         closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        closeBtn.Font = Enum.Font.SourceSansBold
+        closeBtn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
         closeBtn.TextSize = 12
         closeBtn.ZIndex = 20002
         Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 6)
@@ -241,7 +244,7 @@ local function executeScript(isPremiumUser)
         msgLabel.BackgroundTransparency = 1
         msgLabel.Text = "🔒 ระบบนี้สงวนสิทธิ์เฉพาะผู้ใช้ พรี่เมี่ยม เท่านั้น!"
         msgLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
-        msgLabel.Font = Enum.Font.SourceSansBold
+        msgLabel.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
         msgLabel.TextSize = 12
         msgLabel.ZIndex = 20001
         local featureBox = Instance.new("Frame", content)
@@ -257,7 +260,7 @@ local function executeScript(isPremiumUser)
         descLabel.Position = UDim2.new(0, 8, 0, 5)
         descLabel.BackgroundTransparency = 1
         descLabel.TextColor3 = Color3.fromRGB(240, 220, 220)
-        descLabel.Font = Enum.Font.SourceSans
+        descLabel.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal)
         descLabel.TextSize = 11
         descLabel.TextXAlignment = Enum.TextXAlignment.Left
         descLabel.TextYAlignment = Enum.TextYAlignment.Top
@@ -274,7 +277,7 @@ local function executeScript(isPremiumUser)
         contactLabel.BackgroundTransparency = 1
         contactLabel.Text = "💬 ติดต่อซื้อพรี่เมี่ยมได้ที่:"
         contactLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
-        contactLabel.Font = Enum.Font.SourceSansBold
+        contactLabel.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
         contactLabel.TextSize = 12
         contactLabel.ZIndex = 20001
         local copyBtn = Instance.new("TextButton", content)
@@ -283,7 +286,7 @@ local function executeScript(isPremiumUser)
         copyBtn.BackgroundColor3 = Color3.fromRGB(150, 20, 20)
         copyBtn.Text = "📋 คัดลอกลิ้งค์ Discord (" .. DISCORD_LINK .. ")"
         copyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        copyBtn.Font = Enum.Font.SourceSansBold
+        copyBtn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
         copyBtn.TextSize = 11
         copyBtn.ZIndex = 20001
         Instance.new("UICorner", copyBtn).CornerRadius = UDim.new(0, 6)
@@ -317,7 +320,6 @@ local function executeScript(isPremiumUser)
     ToggleButton.Position = UDim2.new(0.02, 0, 0.4, 0)
     ToggleButton.Text = "🍣"
     ToggleButton.Active = true
-    ToggleButton.Font = Enum.Font.SourceSansBold
     Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(0, 12)
     local TogStroke = Instance.new("UIStroke", ToggleButton)
     TogStroke.Color = Color3.fromRGB(140, 0, 0)
@@ -380,7 +382,7 @@ local function executeScript(isPremiumUser)
     TitleLabel.BackgroundTransparency = 1
     TitleLabel.TextSize = 16
     TitleLabel.TextColor3 = Color3.fromRGB(255, 60, 60)
-    TitleLabel.Font = Enum.Font.SourceSansBold
+    TitleLabel.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
     TitleLabel.Text = "TOU HUB | ตำนานกล้ามเนื้อ " .. (isPremiumUser and "⭐ [PREMIUM]" or "🔑 [KEY USER]")
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 
@@ -412,7 +414,7 @@ local function executeScript(isPremiumUser)
         btn.TextSize = 12
         btn.TextColor3 = Color3.fromRGB(220, 180, 180)
         btn.BackgroundColor3 = Color3.fromRGB(38, 8, 8)
-        btn.Font = Enum.Font.SourceSansBold
+        btn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
         btn.Size = UDim2.new(0.92, 0, 0, 32)
         btn.Text = text
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
@@ -428,7 +430,7 @@ local function executeScript(isPremiumUser)
     local BtnStats = createTabBtn("Stats", "📊 ดูข้อมูล")
     local BtnFarm = createTabBtn("Farm", "🏋️ ฟาร์ม")
     local BtnGacha = createTabBtn("Gacha", "🎁 สุ่มตู้สัตว์")
-    local BtnBoss = createTabBtn("Boss", "👹 บอส")
+    local BtnBoss = createTabBtn("Boss", "👹 บอส") -- ⭐ New Boss Tab
     local BtnRoll = createTabBtn("Roll", "🎲 สุ่มสัตว์")
     local BtnPremium = createTabBtn("Premium", "พรี่เมี่ยม⭐")
     local BtnSettings = createTabBtn("Settings", "⚙️ ตั้งค่า")
@@ -507,7 +509,7 @@ local function executeScript(isPremiumUser)
     local StatsPage = createTabPage("StatsPage")
     local FarmPage = createTabPage("FarmPage")
     local GachaPage = createTabPage("GachaPage")
-    local BossPage = createTabPage("BossPage")
+    local BossPage = createTabPage("BossPage") -- ⭐ New Boss Page
     local RollPage = createTabPage("RollPage")
     local PremiumPage = createTabPage("PremiumPage")
     local SettingsPage = createTabPage("SettingsPage")
@@ -533,7 +535,7 @@ local function executeScript(isPremiumUser)
     BtnStats.MouseButton1Click:Connect(function() switchTab("Stats", StatsPage) end)
     BtnFarm.MouseButton1Click:Connect(function() switchTab("Farm", FarmPage) end)
     BtnGacha.MouseButton1Click:Connect(function() switchTab("Gacha", GachaPage) end)
-    BtnBoss.MouseButton1Click:Connect(function() switchTab("Boss", BossPage) end)
+    BtnBoss.MouseButton1Click:Connect(function() switchTab("Boss", BossPage) end) -- ⭐ Boss tab access
     BtnRoll.MouseButton1Click:Connect(function()
         if not isPremiumUser then
             openPremiumNoticeModal()
@@ -565,7 +567,7 @@ local function executeScript(isPremiumUser)
         lbl.TextXAlignment = Enum.TextXAlignment.Left
         lbl.Text = " " .. text
         lbl.TextSize = 13
-        lbl.Font = Enum.Font.SourceSansBold
+        lbl.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
         lbl.Parent = parent
         return lbl
     end
@@ -588,13 +590,13 @@ local function executeScript(isPremiumUser)
         lbl.TextXAlignment = Enum.TextXAlignment.Left
         lbl.Text = text
         lbl.TextSize = 12
-        lbl.Font = Enum.Font.SourceSans
+        lbl.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal)
         local btn = Instance.new("TextButton", frame)
         btn.Size = UDim2.new(0.26, 0, 0.7, 0)
         btn.Position = UDim2.new(0.71, 0, 0.15, 0)
         btn.BorderSizePixel = 0
         btn.TextSize = 11
-        btn.Font = Enum.Font.SourceSansBold
+        btn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
         local state = defaultState
         local function updateVisual()
@@ -626,7 +628,7 @@ local function executeScript(isPremiumUser)
         btn.TextColor3 = Color3.fromRGB(255, 230, 230)
         btn.Text = text
         btn.TextSize = 12
-        btn.Font = Enum.Font.SourceSansBold
+        btn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
         btn.BorderSizePixel = 0
         btn.Parent = parent
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
@@ -655,7 +657,7 @@ local function executeScript(isPremiumUser)
         lbl.TextXAlignment = Enum.TextXAlignment.Left
         lbl.Text = text
         lbl.TextSize = 12
-        lbl.Font = Enum.Font.SourceSans
+        lbl.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal)
         local box = Instance.new("TextBox", frame)
         box.Size = UDim2.new(0.38, 0, 0.7, 0)
         box.Position = UDim2.new(0.58, 0, 0.15, 0)
@@ -665,7 +667,7 @@ local function executeScript(isPremiumUser)
         box.TextSize = 12
         box.BorderSizePixel = 0
         box.ClearTextOnFocus = false
-        box.Font = Enum.Font.SourceSans
+        box.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
         Instance.new("UICorner", box).CornerRadius = UDim.new(0, 5)
         box.FocusLost:Connect(function() callback(box.Text) end)
         return box
@@ -689,7 +691,7 @@ local function executeScript(isPremiumUser)
         lbl.TextXAlignment = Enum.TextXAlignment.Left
         lbl.Text = labelText
         lbl.TextSize = 12
-        lbl.Font = Enum.Font.SourceSans
+        lbl.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal)
         local btn = Instance.new("TextButton", frame)
         btn.Size = UDim2.new(0.48, 0, 0.7, 0)
         btn.Position = UDim2.new(0.49, 0, 0.15, 0)
@@ -697,7 +699,7 @@ local function executeScript(isPremiumUser)
         btn.TextColor3 = Color3.fromRGB(255, 255, 255)
         btn.Text = defaultOption .. " 🔽"
         btn.TextSize = 11
-        btn.Font = Enum.Font.SourceSansBold
+        btn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
         btn.BorderSizePixel = 0
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
         local dropFrame = Instance.new("ScrollingFrame", ScreenGui)
@@ -733,7 +735,7 @@ local function executeScript(isPremiumUser)
                 oBtn.TextSize = 11
                 oBtn.ZIndex = 10000
                 oBtn.BorderSizePixel = 0
-                oBtn.Font = Enum.Font.SourceSans
+                oBtn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
                 oBtn.MouseButton1Click:Connect(function()
                     btn.Text = opt .. " 🔽"
                     dropFrame.Visible = false
@@ -771,7 +773,7 @@ local function executeScript(isPremiumUser)
         lbl.TextXAlignment = Enum.TextXAlignment.Left
         lbl.Text = labelText
         lbl.TextSize = 12
-        lbl.Font = Enum.Font.SourceSans
+        lbl.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal)
         local btn = Instance.new("TextButton", frame)
         btn.Size = UDim2.new(0.53, 0, 0.7, 0)
         btn.Position = UDim2.new(0.44, 0, 0.15, 0)
@@ -779,7 +781,7 @@ local function executeScript(isPremiumUser)
         btn.TextColor3 = Color3.fromRGB(255, 255, 255)
         btn.Text = LocalPlayer.Name .. " 🔽"
         btn.TextSize = 11
-        btn.Font = Enum.Font.SourceSansBold
+        btn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
         btn.BorderSizePixel = 0
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
         local dropFrame = Instance.new("ScrollingFrame", ScreenGui)
@@ -815,7 +817,7 @@ local function executeScript(isPremiumUser)
                 pBtn.TextSize = 11
                 pBtn.ZIndex = 10000
                 pBtn.BorderSizePixel = 0
-                pBtn.Font = Enum.Font.SourceSans
+                pBtn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
                 pBtn.MouseButton1Click:Connect(function()
                     btn.Text = p.Name .. " 🔽"
                     dropFrame.Visible = false
@@ -927,11 +929,11 @@ local function executeScript(isPremiumUser)
     local bossOriginalData = {}
     local bossAngle = 0
     local bossHandToggle = false
-    local currentBossModel = nil
-    local bossWasSpawned = false
-    local isBossLocked = false
-    local bossTeleportPos = Vector3.new(6.75, 134.88, -1244.49)
-    local previousAutoStates = {}
+    local currentBossModel = nil -- ใช้สำหรับแสดงข้อมูล
+    -- ⭐ NEW: Boss Mode (Teleport & Lock)
+    local bossModeActive = false -- true when autoBoss enabled and boss exists
+    local bossTeleportPosition = Vector3.new(6.75, 134.88, -1244.49)
+    local bossLocked = false
 
     -- ════════ HELPERS ════════
     local function findNil(name)
@@ -1035,21 +1037,25 @@ local function executeScript(isPremiumUser)
     end
 
     local function scan30()
+        if bossModeActive then return end -- ⭐ Pause when boss mode active
         for n,_ in pairs(SELL_PETS_30) do if not EXCLUDE_PETS[n] then sellPet(n) end end
         for n,_ in pairs(SELL_AURAS_30) do if not EXCLUDE_AURAS[n] then sellAura(n) end end
     end
 
     local function scan15()
+        if bossModeActive then return end
         for n,id in pairs(SELL_PETS_15) do if not EXCLUDE_PETS[n] then sellPetDbg(n,id) end end
         for n,id in pairs(SELL_AURAS_15) do if not EXCLUDE_AURAS[n] then sellAuraDbg(n,id) end end
     end
 
     local function scan150()
+        if bossModeActive then return end
         for n,id in pairs(SELL_PETS_150) do if not EXCLUDE_PETS[n] then sellPetDbg(n,id) end end
         if not EXCLUDE_PETS[TITAN_REACTOR.Name] then sellPetDbg(TITAN_REACTOR.Name, TITAN_REACTOR.DebugId) end
     end
 
     local function scan60()
+        if bossModeActive then return end
         for n,id in pairs(SELL_PETS_60) do if not EXCLUDE_PETS[n] then sellPetDbg(n,id) end end
         for n,id in pairs(SELL_AURAS_60) do if not EXCLUDE_AURAS[n] then sellAuraDbg(n,id) end end
     end
@@ -1067,7 +1073,7 @@ local function executeScript(isPremiumUser)
     end
 
     local function tryEvolve(cfg)
-        if evolving or not cfg.Enabled then return end
+        if evolving or not cfg.Enabled or bossModeActive then return end
         local count = countPet(cfg.Target)
         if count >= cfg.Need then
             evolving = true
@@ -1077,24 +1083,28 @@ local function executeScript(isPremiumUser)
     end
 
     local function roll30()
+        if bossModeActive then return false end
         local ok = pcall(function() openCrystalRemote:InvokeServer("openCrystal", CRYSTAL_30) end)
         if ok then task.delay(0.15, function() scan30() tryEvolve(EVOLVE_30) end) end
         return ok
     end
 
     local function roll15()
+        if bossModeActive then return false end
         local ok = pcall(function() openCrystalRemote:InvokeServer("openCrystal", CRYSTAL_15) end)
         if ok then task.delay(0.15, function() scan15() tryEvolve(EVOLVE_15) end) end
         return ok
     end
 
     local function roll150()
+        if bossModeActive then return false end
         local ok = pcall(function() openCrystalRemote:InvokeServer("openCrystalBulk", CRYSTAL_150, BULK_AMOUNT) end)
         if ok then task.delay(0.3, function() scan150() tryEvolve(EVOLVE_150) end) end
         return ok
     end
 
     local function roll60()
+        if bossModeActive then return false end
         local ok = pcall(function() openCrystalRemote:InvokeServer("openCrystalBulk", CRYSTAL_60, BULK_AMOUNT) end)
         if ok then task.delay(0.3, function() scan60() tryEvolve(EVOLVE_60) end) end
         return ok
@@ -1123,7 +1133,7 @@ local function executeScript(isPremiumUser)
         topBar.BackgroundColor3 = Color3.fromRGB(35, 6, 6)
         topBar.Text = "🛡️ ตั้งค่ายกเว้น: " .. boxTitle
         topBar.TextColor3 = Color3.fromRGB(255, 255, 255)
-        topBar.Font = Enum.Font.SourceSansBold
+        topBar.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
         topBar.TextSize = 13
         topBar.ZIndex = 501
         Instance.new("UICorner", topBar).CornerRadius = UDim.new(0, 10)
@@ -1133,7 +1143,7 @@ local function executeScript(isPremiumUser)
         closeBtn.BackgroundColor3 = Color3.fromRGB(150, 25, 25)
         closeBtn.Text = "✕"
         closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        closeBtn.Font = Enum.Font.SourceSansBold
+        closeBtn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
         closeBtn.TextSize = 12
         closeBtn.ZIndex = 502
         Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 5)
@@ -1158,7 +1168,7 @@ local function executeScript(isPremiumUser)
         petHeader.Text = " 🐾 สัตว์ (เปิด = ยกเว้น/ไม่ลบ)"
         petHeader.TextColor3 = Color3.fromRGB(255, 180, 180)
         petHeader.TextXAlignment = Enum.TextXAlignment.Left
-        petHeader.Font = Enum.Font.SourceSansBold
+        petHeader.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
         petHeader.TextSize = 11
         petHeader.ZIndex = 502
         Instance.new("UICorner", petHeader).CornerRadius = UDim.new(0, 5)
@@ -1176,14 +1186,14 @@ local function executeScript(isPremiumUser)
             lbl.Text = petName
             lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
             lbl.TextXAlignment = Enum.TextXAlignment.Left
-            lbl.Font = Enum.Font.SourceSans
+            lbl.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
             lbl.TextSize = 11
             lbl.ZIndex = 503
             local tog = Instance.new("TextButton", row)
             tog.Size = UDim2.new(0.28, 0, 0.75, 0)
             tog.Position = UDim2.new(0.69, 0, 0.12, 0)
             tog.ZIndex = 503
-            tog.Font = Enum.Font.SourceSansBold
+            tog.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
             tog.TextSize = 10
             Instance.new("UICorner", tog).CornerRadius = UDim.new(0, 4)
             local isExcluded = EXCLUDE_PETS[petName] or false
@@ -1210,7 +1220,7 @@ local function executeScript(isPremiumUser)
         auraHeader.Text = " 🌟 อ่อร่า (เปิด = ยกเว้น/ไม่ลบ)"
         auraHeader.TextColor3 = Color3.fromRGB(255, 180, 180)
         auraHeader.TextXAlignment = Enum.TextXAlignment.Left
-        auraHeader.Font = Enum.Font.SourceSansBold
+        auraHeader.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
         auraHeader.TextSize = 11
         auraHeader.ZIndex = 502
         Instance.new("UICorner", auraHeader).CornerRadius = UDim.new(0, 5)
@@ -1228,14 +1238,14 @@ local function executeScript(isPremiumUser)
             lbl.Text = auraName
             lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
             lbl.TextXAlignment = Enum.TextXAlignment.Left
-            lbl.Font = Enum.Font.SourceSans
+            lbl.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
             lbl.TextSize = 11
             lbl.ZIndex = 503
             local tog = Instance.new("TextButton", row)
             tog.Size = UDim2.new(0.28, 0, 0.75, 0)
             tog.Position = UDim2.new(0.69, 0, 0.12, 0)
             tog.ZIndex = 503
-            tog.Font = Enum.Font.SourceSansBold
+            tog.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
             tog.TextSize = 10
             Instance.new("UICorner", tog).CornerRadius = UDim.new(0, 4)
             local isExcluded = EXCLUDE_AURAS[auraName] or false
@@ -1276,6 +1286,7 @@ local function executeScript(isPremiumUser)
     end
 
     local function fireMuscle()
+        if bossModeActive then return end -- ⭐ Pause when boss mode active
         local event = getMuscleEvent()
         if event then
             pcall(function() event:FireServer("rep") end)
@@ -1287,6 +1298,7 @@ local function executeScript(isPremiumUser)
         farmEnabled = true
         farmConn = RunService.Heartbeat:Connect(function()
             if not farmEnabled then return end
+            if bossModeActive then return end -- ⭐ Skip action
             if not equipTool(farmTool) then
                 local char = LocalPlayer.Character
                 if char and char:FindFirstChildOfClass("Humanoid") then
@@ -1307,7 +1319,7 @@ local function executeScript(isPremiumUser)
         end
     end
 
-    -- 🪨 AUTO PUNCH ROCK FUNCTIONS
+    -- 🪨 AUTO PUNCH ROCK FUNCTIONS (ปรับแต่งย่อขนาด สลับมือซ้าย-ขวา คืนค่าเดิม)
     local function saveOriginalRockData(rockModel)
         if not rockModel then return end
         for _, part in ipairs(rockModel:GetDescendants()) do
@@ -1370,6 +1382,7 @@ local function executeScript(isPremiumUser)
                 part.Transparency = 1
                 part.Size = Vector3.new(0.001, 0.001, 0.001)
                 part.CFrame = targetCFrame
+                -- ป้องกันแรงเหวี่ยงจากฟิสิกส์ Roblox (Anti Velocity Lag/Launch)
                 part.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
                 part.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
             elseif part:IsA("Decal") or part:IsA("Texture") then
@@ -1382,11 +1395,14 @@ local function executeScript(isPremiumUser)
 
     local function startAutoRock()
         autoRockEnabled = true
+        -- ⭐ Equip "Punch" tool immediately
         equipTool("Punch")
         autoRockConn = RunService.Heartbeat:Connect(function()
             if not autoRockEnabled then return end
+            if bossModeActive then return end -- ⭐ Pause
             local char = LocalPlayer.Character
             if not char then return end
+            -- สลับมือซ้าย / ขวา ไปมาทุกเฟรม
             rockHandToggle = not rockHandToggle
             local rightHand = char:FindFirstChild("RightHand") or char:FindFirstChild("Right Arm") or char:FindFirstChild("HumanoidRootPart")
             local leftHand = char:FindFirstChild("LeftHand") or char:FindFirstChild("Left Arm") or char:FindFirstChild("HumanoidRootPart")
@@ -1418,18 +1434,15 @@ local function executeScript(isPremiumUser)
         restoreOriginalRockData()
     end
 
+    -- ⭐ Re-equip Punch on respawn if auto rock is active
     LocalPlayer.CharacterAdded:Connect(function(char)
         if autoRockEnabled then
             task.wait(0.5)
             equipTool("Punch")
         end
-        if autoBossEnabled then
-            task.wait(0.5)
-            equipTool("Punch")
-        end
     end)
 
-    -- 👹 AUTO PUNCH BOSS FUNCTIONS
+    -- 👹 AUTO PUNCH BOSS FUNCTIONS (คล้ายกับหิน แต่ใช้โมเดลบอส)
     local function findBossModel()
         local bossArena = workspace:FindFirstChild("Events"):FindFirstChild("BossArena")
         if not bossArena then return nil end
@@ -1516,73 +1529,58 @@ local function executeScript(isPremiumUser)
         currentBossModel = bossModel
     end
 
-    local function pauseAllOtherAuto()
-        previousAutoStates = {
-            farm = farmEnabled,
-            rock = autoRockEnabled,
-            gacha = autoGachaEnabled,
-            rebirth = rebirthEnabled,
-            fortuneWheel = autoFortuneWheel,
-            roll15 = running15,
-            roll30 = running30,
-            roll60 = running60,
-            roll150 = running150,
-            autoGift = autoGiftEnabled,
-        }
-        if farmEnabled then stopFarming() end
-        if autoRockEnabled then stopAutoRock() end
-        if autoGachaEnabled then stopAutoGacha() end
-        if rebirthEnabled then stopRebirth() end
-        autoFortuneWheel = false
-        if running15 then running15 = false if sellConn15 then sellConn15:Disconnect() sellConn15 = nil end end
-        if running30 then running30 = false if sellConn30 then sellConn30:Disconnect() sellConn30 = nil end end
-        if running60 then running60 = false if sellConn60 then sellConn60:Disconnect() sellConn60 = nil end end
-        if running150 then running150 = false if sellConn150 then sellConn150:Disconnect() sellConn150 = nil end end
-        if autoGiftEnabled then autoGiftEnabled = false end
+    -- ⭐ NEW: Teleport & Lock Functions
+    local function lockCharacter()
+        local char = LocalPlayer.Character
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+        if root and not bossLocked then
+            root.Anchored = true
+            bossLocked = true
+        end
     end
 
-    local function resumeAllOtherAuto()
-        if previousAutoStates.farm then startFarming() end
-        if previousAutoStates.rock then startAutoRock() end
-        if previousAutoStates.gacha then startAutoGacha() end
-        if previousAutoStates.rebirth then startRebirth() end
-        autoFortuneWheel = previousAutoStates.fortuneWheel
-        if previousAutoStates.roll15 then running15 = true task.spawn(function() while running15 do roll15() task.wait(DELAY_15) end end) sellConn15 = RunService.Heartbeat:Connect(function() if running15 and (os.clock() - lastScan15) > 0.3 then lastScan15 = os.clock() scan15() tryEvolve(EVOLVE_15) end end) end
-        if previousAutoStates.roll30 then running30 = true task.spawn(function() while running30 do roll30() task.wait(DELAY_30) end end) sellConn30 = RunService.Heartbeat:Connect(function() if running30 and (os.clock() - lastScan30) > 0.3 then lastScan30 = os.clock() scan30() tryEvolve(EVOLVE_30) end end) end
-        if previousAutoStates.roll60 then running60 = true task.spawn(function() while running60 do roll60() task.wait(DELAY_60) end end) sellConn60 = RunService.Heartbeat:Connect(function() if running60 and (os.clock() - lastScan60) > 0.3 then lastScan60 = os.clock() scan60() tryEvolve(EVOLVE_60) end end) end
-        if previousAutoStates.roll150 then running150 = true task.spawn(function() while running150 do roll150() task.wait(DELAY_150) end end) sellConn150 = RunService.Heartbeat:Connect(function() if running150 and (os.clock() - lastScan150) > 0.3 then lastScan150 = os.clock() scan150() tryEvolve(EVOLVE_150) end end) end
-        if previousAutoStates.autoGift then autoGiftEnabled = true task.spawn(function() while autoGiftEnabled do pcall(function() freeGiftClaimRemote:InvokeServer("claimGift") end) task.wait(10) end end) end
-        previousAutoStates = {}
+    local function unlockCharacter()
+        if bossLocked then
+            local char = LocalPlayer.Character
+            local root = char and char:FindFirstChild("HumanoidRootPart")
+            if root then
+                root.Anchored = false
+            end
+            bossLocked = false
+        end
+    end
+
+    local function teleportToBossPosition()
+        local char = LocalPlayer.Character
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+        if root then
+            root.CFrame = CFrame.new(bossTeleportPosition)
+        end
     end
 
     local function startAutoBoss()
-        if autoBossEnabled then return end
         autoBossEnabled = true
-        bossWasSpawned = false
-        isBossLocked = false
-        pauseAllOtherAuto()
         equipTool("Punch")
         autoBossConn = RunService.Heartbeat:Connect(function()
             if not autoBossEnabled then return end
             local char = LocalPlayer.Character
             if not char then return end
+            -- หาบอสตัวแรกที่พบ
             local boss = findBossModel()
             if boss then
-                if not bossWasSpawned then
-                    bossWasSpawned = true
-                    if char:FindFirstChild("HumanoidRootPart") then
-                        char.HumanoidRootPart.CFrame = CFrame.new(bossTeleportPos)
-                    end
+                -- ⭐ Teleport & Lock if not already
+                if not bossModeActive then
+                    bossModeActive = true
+                    teleportToBossPosition()
+                    lockCharacter()
                 end
-                if not isBossLocked and char:FindFirstChild("HumanoidRootPart") then
-                    isBossLocked = true
-                    char.HumanoidRootPart.Anchored = true
-                end
+                -- Perform boss shrinking and punching
                 bossHandToggle = not bossHandToggle
                 local rightHand = char:FindFirstChild("RightHand") or char:FindFirstChild("Right Arm") or char:FindFirstChild("HumanoidRootPart")
                 local leftHand = char:FindFirstChild("LeftHand") or char:FindFirstChild("Left Arm") or char:FindFirstChild("HumanoidRootPart")
                 local targetHand = bossHandToggle and leftHand or rightHand
                 modifyAndMoveBoss(boss, targetHand)
+                -- ยิงรีโมทต่อย
                 local event = getMuscleEvent()
                 if event then
                     pcall(function()
@@ -1591,8 +1589,15 @@ local function executeScript(isPremiumUser)
                     end)
                 end
             else
-                if bossWasSpawned then
-                    stopAutoBoss()
+                -- ถ้าไม่มีบอสให้คืนค่ากลับ (ถ้ามีข้อมูลค้าง)
+                if next(bossOriginalData) then
+                    restoreOriginalBossData()
+                end
+                currentBossModel = nil
+                -- ⭐ If we were in boss mode, reset lock and pause status
+                if bossModeActive then
+                    bossModeActive = false
+                    unlockCharacter()
                 end
             end
             task.wait(0.01)
@@ -1607,12 +1612,24 @@ local function executeScript(isPremiumUser)
         end
         restoreOriginalBossData()
         currentBossModel = nil
-        if isBossLocked and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            LocalPlayer.Character.HumanoidRootPart.Anchored = false
-            isBossLocked = false
-        end
-        resumeAllOtherAuto()
+        -- ⭐ Reset boss mode
+        bossModeActive = false
+        unlockCharacter()
     end
+
+    -- ⭐ Re-equip Punch on respawn if auto boss is active
+    LocalPlayer.CharacterAdded:Connect(function(char)
+        if autoBossEnabled then
+            task.wait(0.5)
+            equipTool("Punch")
+            -- ถ้ายังมีบอสอยู่ ให้ teleport & lock ใหม่
+            if findBossModel() then
+                bossModeActive = true
+                teleportToBossPosition()
+                lockCharacter()
+            end
+        end
+    end)
 
     local function stopRebirth()
         rebirthEnabled = false
@@ -1626,6 +1643,7 @@ local function executeScript(isPremiumUser)
         rebirthEnabled = true
         rebirthConn = RunService.Heartbeat:Connect(function()
             if not rebirthEnabled then return end
+            if bossModeActive then return end -- ⭐ Pause
             local leaderstats = LocalPlayer:FindFirstChild("leaderstats")
             local currentRebirths = (leaderstats and leaderstats:FindFirstChild("Rebirths")) and leaderstats.Rebirths.Value or 0
             if useRebirthTarget and currentRebirths >= targetRebirths then
@@ -1646,7 +1664,7 @@ local function executeScript(isPremiumUser)
         lastHealth = humanoid.Health
         if healthConn then healthConn:Disconnect() end
         healthConn = humanoid.HealthChanged:Connect(function(newHealth)
-            if antiKnockbackEnabled and newHealth < lastHealth then
+            if antiKnockbackEnabled and newHealth < lastHealth and not bossLocked then -- ⭐ Don't apply knockback lock if boss locked
                 if not isKnockbackLocked then
                     isKnockbackLocked = true
                     root.Anchored = true
@@ -1667,7 +1685,7 @@ local function executeScript(isPremiumUser)
 
     task.spawn(function()
         while true do
-            if not isMonitoringRebirthTp and LocalPlayer.Character then
+            if not isMonitoringRebirthTp and LocalPlayer.Character and not bossLocked then
                 local root = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
                 if root then savedPosBeforeRebirth = root.CFrame end
             end
@@ -1681,7 +1699,7 @@ local function executeScript(isPremiumUser)
         if not rebirths then return end
         local currentCount = rebirths.Value
         rebirths.Changed:Connect(function(newVal)
-            if antiRebirthTpEnabled and newVal > currentCount then
+            if antiRebirthTpEnabled and newVal > currentCount and not bossLocked then -- ⭐ Skip if boss locked
                 local returnCFrame = savedPosBeforeRebirth
                 isMonitoringRebirthTp = true
                 local startTime = os.clock()
@@ -1714,6 +1732,7 @@ local function executeScript(isPremiumUser)
     for _, f in ipairs(PET_FOLDERS) do
         if f then
             f.ChildAdded:Connect(function(c)
+                if bossModeActive then return end -- ⭐ Pause
                 if SELL_PETS_30[c.Name] and running30 and not EXCLUDE_PETS[c.Name] then
                     task.wait(0.1) sellPetEvent:FireServer("sellPet", c)
                 end
@@ -1740,6 +1759,7 @@ local function executeScript(isPremiumUser)
     for _, f in ipairs(AURA_FOLDERS) do
         if f then
             f.ChildAdded:Connect(function(c)
+                if bossModeActive then return end -- ⭐ Pause
                 if SELL_AURAS_30[c.Name] and running30 and not EXCLUDE_AURAS[c.Name] then
                     task.wait(0.1) sellPowerUpEvent:FireServer("sellPowerUp", c)
                 end
@@ -1767,7 +1787,7 @@ local function executeScript(isPremiumUser)
     AccountInfoDisplay.TextSize = 12
     AccountInfoDisplay.TextXAlignment = Enum.TextXAlignment.Left
     AccountInfoDisplay.TextYAlignment = Enum.TextYAlignment.Top
-    AccountInfoDisplay.Font = Enum.Font.SourceSans
+    AccountInfoDisplay.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
     AccountInfoDisplay.Parent = MainPage
     Instance.new("UICorner", AccountInfoDisplay).CornerRadius = UDim.new(0, 6)
     local accStroke = Instance.new("UIStroke", AccountInfoDisplay)
@@ -1810,7 +1830,7 @@ local function executeScript(isPremiumUser)
     StatsDisplay.TextSize = 11
     StatsDisplay.TextXAlignment = Enum.TextXAlignment.Left
     StatsDisplay.TextYAlignment = Enum.TextYAlignment.Top
-    StatsDisplay.Font = Enum.Font.SourceSans
+    StatsDisplay.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
     StatsDisplay.Text = " 📊 กรุณาเลือกผู้เล่น หรือกดดูข้อมูล..."
     StatsDisplay.Parent = StatsPage
     Instance.new("UICorner", StatsDisplay).CornerRadius = UDim.new(0, 6)
@@ -1938,18 +1958,20 @@ local function executeScript(isPremiumUser)
                 local Event = ReplicatedStorage:WaitForChild("rEvents", 5):WaitForChild("openFortuneWheelRemote", 5)
                 local wheelCatalog = ReplicatedStorage:WaitForChild("shared", 5):WaitForChild("catalogs", 5):WaitForChild("fortuneWheelChances", 5)["Fortune Wheel"]
                 while autoFortuneWheel do
-                    for round = 1, 5 do
-                        if not autoFortuneWheel then break end
-                        pcall(function() Event:InvokeServer("openFortuneWheel", wheelCatalog) end)
-                        for i = 1, 15 do
+                    if bossModeActive then task.wait(1) else -- ⭐ Pause
+                        for round = 1, 5 do
                             if not autoFortuneWheel then break end
-                            task.wait(1)
+                            pcall(function() Event:InvokeServer("openFortuneWheel", wheelCatalog) end)
+                            for i = 1, 15 do
+                                if not autoFortuneWheel then break end
+                                task.wait(1)
+                            end
                         end
-                    end
-                    if autoFortuneWheel then
-                        for t = 1, 1800 do
-                            if not autoFortuneWheel then break end
-                            task.wait(1)
+                        if autoFortuneWheel then
+                            for t = 1, 1800 do
+                                if not autoFortuneWheel then break end
+                                task.wait(1)
+                            end
                         end
                     end
                 end
@@ -1974,7 +1996,7 @@ local function executeScript(isPremiumUser)
         titleLbl.Text = title
         titleLbl.TextColor3 = Color3.fromRGB(255, 120, 120)
         titleLbl.TextXAlignment = Enum.TextXAlignment.Left
-        titleLbl.Font = Enum.Font.SourceSansBold
+        titleLbl.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
         titleLbl.TextSize = 11
         local btnContainer = Instance.new("Frame", cardFrame)
         btnContainer.Size = UDim2.new(1, -12, 0, 42)
@@ -1989,7 +2011,7 @@ local function executeScript(isPremiumUser)
         togBtn.BackgroundColor3 = Color3.fromRGB(150, 30, 30)
         togBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
         togBtn.Text = "▶ " .. toggleText
-        togBtn.Font = Enum.Font.SourceSansBold
+        togBtn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
         togBtn.TextSize = 10
         Instance.new("UICorner", togBtn).CornerRadius = UDim.new(0, 5)
         local isRunning = false
@@ -2015,7 +2037,7 @@ local function executeScript(isPremiumUser)
         setBtn.BackgroundColor3 = Color3.fromRGB(50, 10, 10)
         setBtn.TextColor3 = Color3.fromRGB(255, 200, 200)
         setBtn.Text = "🛡️ ยกเว้นไม่ขาย"
-        setBtn.Font = Enum.Font.SourceSansBold
+        setBtn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
         setBtn.TextSize = 10
         Instance.new("UICorner", setBtn).CornerRadius = UDim.new(0, 5)
         local setStroke = Instance.new("UIStroke", setBtn)
@@ -2030,10 +2052,15 @@ local function executeScript(isPremiumUser)
         if running15 then
             scan15() tryEvolve(EVOLVE_15)
             task.spawn(function()
-                while running15 do roll15() task.wait(DELAY_15) end
+                while running15 do
+                    if not bossModeActive then
+                        roll15()
+                    end
+                    task.wait(DELAY_15)
+                end
             end)
             sellConn15 = RunService.Heartbeat:Connect(function()
-                if running15 and (os.clock() - lastScan15) > 0.3 then
+                if running15 and (os.clock() - lastScan15) > 0.3 and not bossModeActive then
                     lastScan15 = os.clock() scan15() tryEvolve(EVOLVE_15)
                 end
             end)
@@ -2047,10 +2074,15 @@ local function executeScript(isPremiumUser)
         if running30 then
             scan30() tryEvolve(EVOLVE_30)
             task.spawn(function()
-                while running30 do roll30() task.wait(DELAY_30) end
+                while running30 do
+                    if not bossModeActive then
+                        roll30()
+                    end
+                    task.wait(DELAY_30)
+                end
             end)
             sellConn30 = RunService.Heartbeat:Connect(function()
-                if running30 and (os.clock() - lastScan30) > 0.3 then
+                if running30 and (os.clock() - lastScan30) > 0.3 and not bossModeActive then
                     lastScan30 = os.clock() scan30() tryEvolve(EVOLVE_30)
                 end
             end)
@@ -2064,10 +2096,15 @@ local function executeScript(isPremiumUser)
         if running60 then
             scan60() tryEvolve(EVOLVE_60)
             task.spawn(function()
-                while running60 do roll60() task.wait(DELAY_60) end
+                while running60 do
+                    if not bossModeActive then
+                        roll60()
+                    end
+                    task.wait(DELAY_60)
+                end
             end)
             sellConn60 = RunService.Heartbeat:Connect(function()
-                if running60 and (os.clock() - lastScan60) > 0.3 then
+                if running60 and (os.clock() - lastScan60) > 0.3 and not bossModeActive then
                     lastScan60 = os.clock() scan60() tryEvolve(EVOLVE_60)
                 end
             end)
@@ -2081,10 +2118,15 @@ local function executeScript(isPremiumUser)
         if running150 then
             scan150() tryEvolve(EVOLVE_150)
             task.spawn(function()
-                while running150 do roll150() task.wait(DELAY_150) end
+                while running150 do
+                    if not bossModeActive then
+                        roll150()
+                    end
+                    task.wait(DELAY_150)
+                end
             end)
             sellConn150 = RunService.Heartbeat:Connect(function()
-                if running150 and (os.clock() - lastScan150) > 0.3 then
+                if running150 and (os.clock() - lastScan150) > 0.3 and not bossModeActive then
                     lastScan150 = os.clock() scan150() tryEvolve(EVOLVE_150)
                 end
             end)
@@ -2114,6 +2156,7 @@ local function executeScript(isPremiumUser)
         fastMuscleEnabled = true
         fastMuscleConn = RunService.Heartbeat:Connect(function()
             if not fastMuscleEnabled then return end
+            if bossModeActive then return end -- ⭐ Pause
             equipTool(fastMuscleTool)
             for _ = 1, 500 do
                 fireMuscle()
@@ -2202,7 +2245,9 @@ local function executeScript(isPremiumUser)
         if autoGiftEnabled then
             task.spawn(function()
                 while autoGiftEnabled do
-                    pcall(function() freeGiftClaimRemote:InvokeServer("claimGift") end)
+                    if not bossModeActive then -- ⭐ Pause
+                        pcall(function() freeGiftClaimRemote:InvokeServer("claimGift") end)
+                    end
                     task.wait(10)
                 end
             end)
@@ -2229,7 +2274,7 @@ local function executeScript(isPremiumUser)
         title.Text = displayName
         title.TextColor3 = Color3.fromRGB(255, 140, 140)
         title.TextXAlignment = Enum.TextXAlignment.Left
-        title.Font = Enum.Font.SourceSansBold
+        title.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
         title.TextSize = 11
         
         local btnContainer = Instance.new("Frame", frame)
@@ -2242,12 +2287,13 @@ local function executeScript(isPremiumUser)
         layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
         layout.Padding = UDim.new(0, 6)
         
+        -- สุ่ม 1 ฟอง
         local btn1 = Instance.new("TextButton", btnContainer)
         btn1.Size = UDim2.new(0.3, -2, 1, 0)
         btn1.BackgroundColor3 = Color3.fromRGB(120, 15, 15)
         btn1.TextColor3 = Color3.fromRGB(255, 255, 255)
         btn1.Text = "สุ่ม 1 ฟอง"
-        btn1.Font = Enum.Font.SourceSansBold
+        btn1.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
         btn1.TextSize = 10
         Instance.new("UICorner", btn1).CornerRadius = UDim.new(0, 5)
         btn1.MouseButton1Click:Connect(function()
@@ -2256,12 +2302,13 @@ local function executeScript(isPremiumUser)
             end)
         end)
         
+        -- สุ่ม 3 ฟอง
         local btn3 = Instance.new("TextButton", btnContainer)
         btn3.Size = UDim2.new(0.3, -2, 1, 0)
         btn3.BackgroundColor3 = Color3.fromRGB(120, 15, 15)
         btn3.TextColor3 = Color3.fromRGB(255, 255, 255)
         btn3.Text = "สุ่ม 3 ฟอง"
-        btn3.Font = Enum.Font.SourceSansBold
+        btn3.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
         btn3.TextSize = 10
         Instance.new("UICorner", btn3).CornerRadius = UDim.new(0, 5)
         btn3.MouseButton1Click:Connect(function()
@@ -2270,12 +2317,13 @@ local function executeScript(isPremiumUser)
             end)
         end)
         
+        -- สุ่ม 10 ฟอง
         local btn10 = Instance.new("TextButton", btnContainer)
         btn10.Size = UDim2.new(0.3, -2, 1, 0)
         btn10.BackgroundColor3 = Color3.fromRGB(120, 15, 15)
         btn10.TextColor3 = Color3.fromRGB(255, 255, 255)
         btn10.Text = "สุ่ม 10 ฟอง"
-        btn10.Font = Enum.Font.SourceSansBold
+        btn10.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
         btn10.TextSize = 10
         Instance.new("UICorner", btn10).CornerRadius = UDim.new(0, 5)
         btn10.MouseButton1Click:Connect(function()
@@ -2285,6 +2333,7 @@ local function executeScript(isPremiumUser)
         end)
     end
 
+    -- เรียงตามที่ผู้ใช้ให้มา
     addGachaButtons("Blue Crystal", "🔵 Blue Crystal (รี 0 - 1K)")
     addGachaButtons("Green Crystal", "🟢 Green Crystal (รี 0 - 3K)")
     addGachaButtons("Frost Crystal", "❄️ Frost Crystal (รี 1 - 5K)")
@@ -2326,11 +2375,13 @@ local function executeScript(isPremiumUser)
         autoGachaEnabled = true
         task.spawn(function()
             while autoGachaEnabled do
-                local amount = tonumber(autoGachaAmount) or 1
-                if amount == 1 then
-                    pcall(function() openCrystalRemote:InvokeServer("openCrystal", autoGachaCrystal) end)
-                else
-                    pcall(function() openCrystalRemote:InvokeServer("openCrystalBulk", autoGachaCrystal, amount) end)
+                if not bossModeActive then -- ⭐ Pause
+                    local amount = tonumber(autoGachaAmount) or 1
+                    if amount == 1 then
+                        pcall(function() openCrystalRemote:InvokeServer("openCrystal", autoGachaCrystal) end)
+                    else
+                        pcall(function() openCrystalRemote:InvokeServer("openCrystalBulk", autoGachaCrystal, amount) end)
+                    end
                 end
                 task.wait(0.5)
             end
@@ -2359,19 +2410,37 @@ local function executeScript(isPremiumUser)
         end
     end, "AutoBoss")
 
+    -- แสดงข้อมูลบอส (HP, Damage)
     local bossInfoLabel = Instance.new("TextLabel")
-    bossInfoLabel.Size = UDim2.new(1, -6, 0, 140)
+    bossInfoLabel.Size = UDim2.new(1, -6, 0, 80)
     bossInfoLabel.BackgroundColor3 = Color3.fromRGB(28, 6, 6)
     bossInfoLabel.TextColor3 = Color3.fromRGB(240, 220, 220)
-    bossInfoLabel.TextSize = 11
+    bossInfoLabel.TextSize = 12
     bossInfoLabel.TextXAlignment = Enum.TextXAlignment.Left
     bossInfoLabel.TextYAlignment = Enum.TextYAlignment.Top
-    bossInfoLabel.Font = Enum.Font.SourceSans
+    bossInfoLabel.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
     bossInfoLabel.Text = " ไม่พบบอสในขณะนี้"
     bossInfoLabel.Parent = BossPage
     Instance.new("UICorner", bossInfoLabel).CornerRadius = UDim.new(0, 6)
     local bossInfoStroke = Instance.new("UIStroke", bossInfoLabel)
     bossInfoStroke.Color = Color3.fromRGB(80, 15, 15)
+
+    -- ⭐ NEW: Damage List Display
+    addSectionHeader(BossPage, "📊 คนทำดาเมจกับบอส")
+    local damageListFrame = Instance.new("ScrollingFrame")
+    damageListFrame.Size = UDim2.new(1, -6, 0, 120)
+    damageListFrame.BackgroundColor3 = Color3.fromRGB(28, 6, 6)
+    damageListFrame.BorderSizePixel = 0
+    damageListFrame.Parent = BossPage
+    damageListFrame.ScrollBarThickness = 4
+    damageListFrame.ScrollBarImageColor3 = Color3.fromRGB(160, 20, 20)
+    Instance.new("UICorner", damageListFrame).CornerRadius = UDim.new(0, 6)
+    local damageListLayout = Instance.new("UIListLayout", damageListFrame)
+    damageListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    damageListLayout.Padding = UDim.new(0, 4)
+    damageListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        damageListFrame.CanvasSize = UDim2.new(0, 0, 0, damageListLayout.AbsoluteContentSize.Y + 8)
+    end)
 
     task.spawn(function()
         while true do
@@ -2383,25 +2452,72 @@ local function executeScript(isPremiumUser)
                 local dmgText = "N/A"
                 if stats then
                     local hp = stats:FindFirstChild("Health") or stats:FindFirstChild("HP") or stats:FindFirstChild("MaxHealth")
-                    if hp and (hp:IsA("NumberValue") or hp:IsA("IntValue")) then
+                    if hp and hp:IsA("NumberValue") then
+                        hpText = formatNumber(hp.Value)
+                    elseif hp and hp:IsA("IntValue") then
                         hpText = formatNumber(hp.Value)
                     end
                 end
-                local dmgList = {}
                 if damageValues then
-                    for _, child in ipairs(damageValues:GetChildren()) do
-                        if child:IsA("NumberValue") or child:IsA("IntValue") then
-                            table.insert(dmgList, string.format("%s: %s", child.Name, formatNumber(child.Value)))
-                        end
+                    local dmg = damageValues:FindFirstChild("Damage") or damageValues:FindFirstChild("TotalDamage")
+                    if dmg and dmg:IsA("NumberValue") then
+                        dmgText = formatNumber(dmg.Value)
+                    elseif dmg and dmg:IsA("IntValue") then
+                        dmgText = formatNumber(dmg.Value)
                     end
                 end
                 bossInfoLabel.Text = string.format(
-                    " 👹 บอส: %s\n ❤️ เลือด: %s\n ⚔️ ผู้ทำดาเมจ:\n%s",
-                    boss.Name, hpText,
-                    (#dmgList > 0 and table.concat(dmgList, "\n") or "   ไม่มีข้อมูล")
+                    " 👹 บอส: %s\n ❤️ เลือด: %s\n ⚔️ ดาเมจที่ได้รับ: %s",
+                    boss.Name, hpText, dmgText
                 )
+                
+                -- ⭐ อัปเดตรายชื่อผู้ทำดาเมจ
+                for _, child in ipairs(damageListFrame:GetChildren()) do
+                    if child:IsA("TextLabel") or child:IsA("Frame") then child:Destroy() end
+                end
+                if damageValues then
+                    for _, child in ipairs(damageValues:GetChildren()) do
+                        if child:IsA("NumberValue") or child:IsA("IntValue") then
+                            local row = Instance.new("Frame", damageListFrame)
+                            row.Size = UDim2.new(1, -4, 0, 26)
+                            row.BackgroundColor3 = Color3.fromRGB(35, 7, 7)
+                            row.BorderSizePixel = 0
+                            Instance.new("UICorner", row).CornerRadius = UDim.new(0, 4)
+                            local nameLabel = Instance.new("TextLabel", row)
+                            nameLabel.Size = UDim2.new(0.6, 0, 1, 0)
+                            nameLabel.Position = UDim2.new(0.03, 0, 0, 0)
+                            nameLabel.BackgroundTransparency = 1
+                            nameLabel.Text = child.Name
+                            nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+                            nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+                            nameLabel.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal)
+                            nameLabel.TextSize = 11
+                            local dmgLabel = Instance.new("TextLabel", row)
+                            dmgLabel.Size = UDim2.new(0.4, -8, 1, 0)
+                            dmgLabel.Position = UDim2.new(0.6, 0, 0, 0)
+                            dmgLabel.BackgroundTransparency = 1
+                            dmgLabel.Text = formatNumber(child.Value)
+                            dmgLabel.TextColor3 = Color3.fromRGB(255, 150, 150)
+                            dmgLabel.TextXAlignment = Enum.TextXAlignment.Right
+                            dmgLabel.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+                            dmgLabel.TextSize = 11
+                        end
+                    end
+                else
+                    local noData = Instance.new("TextLabel", damageListFrame)
+                    noData.Size = UDim2.new(1, -4, 0, 30)
+                    noData.BackgroundColor3 = Color3.fromRGB(35, 7, 7)
+                    noData.Text = "ไม่มีข้อมูลดาเมจ"
+                    noData.TextColor3 = Color3.fromRGB(255, 255, 255)
+                    noData.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+                    noData.TextSize = 11
+                end
             else
                 bossInfoLabel.Text = " ไม่พบบอสในขณะนี้"
+                -- clear damage list
+                for _, child in ipairs(damageListFrame:GetChildren()) do
+                    if child:IsA("TextLabel") or child:IsA("Frame") then child:Destroy() end
+                end
             end
             task.wait(0.5)
         end
@@ -2434,7 +2550,7 @@ local function checkKey(isPremium)
     title.BackgroundTransparency = 1
     title.Text = "กรุณากรอกคีย์เพื่อใช้งาน"
     title.TextColor3 = Color3.fromRGB(255, 60, 60)
-    title.Font = Enum.Font.SourceSansBold
+    title.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
     title.TextSize = 14
     title.Parent = frame
 
@@ -2447,7 +2563,6 @@ local function checkKey(isPremium)
     input.PlaceholderColor3 = Color3.fromRGB(180, 180, 180)
     input.TextSize = 14
     input.BorderSizePixel = 0
-    input.Font = Enum.Font.SourceSans
     input.Parent = frame
     Instance.new("UICorner", input).CornerRadius = UDim.new(0, 6)
 
@@ -2457,7 +2572,7 @@ local function checkKey(isPremium)
     button.BackgroundColor3 = Color3.fromRGB(140, 15, 15)
     button.TextColor3 = Color3.fromRGB(255, 255, 255)
     button.Text = "ยืนยัน"
-    button.Font = Enum.Font.SourceSansBold
+    button.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
     button.TextSize = 14
     button.Parent = frame
     Instance.new("UICorner", button).CornerRadius = UDim.new(0, 6)
