@@ -6,9 +6,6 @@ local HttpService = game:GetService("HttpService")
 local SoundService = game:GetService("SoundService")
 local LocalPlayer = Players.LocalPlayer
 
--- รองรับทั้ง loadstring และ load
-local loadstring = loadstring or load
-
 -- 🌐 ลิ้งค์ดึง รายชื่อ Whitelist / Premium Users (JSON)
 local RAW_WHITELIST_URL = "https://raw.githubusercontent.com/TOUx1/Roblox-script/refs/heads/main/ชื่่่่่่่่่่่่่่อn่าน"
 
@@ -218,7 +215,7 @@ local function executeScript(isPremiumUser)
         topBar.BackgroundColor3 = Color3.fromRGB(35, 10, 10)
         topBar.Text = "⭐ สำหรับสมาชิก พรี่เมี่ยม เท่านั้น ⭐"
         topBar.TextColor3 = Color3.fromRGB(255, 215, 0)
-        topBar.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        topBar.Font = Enum.Font.SourceSansBold
         topBar.TextSize = 14
         topBar.ZIndex = 20001
         Instance.new("UICorner", topBar).CornerRadius = UDim.new(0, 12)
@@ -228,7 +225,7 @@ local function executeScript(isPremiumUser)
         closeBtn.BackgroundColor3 = Color3.fromRGB(180, 30, 30)
         closeBtn.Text = "✕"
         closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        closeBtn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        closeBtn.Font = Enum.Font.SourceSansBold
         closeBtn.TextSize = 12
         closeBtn.ZIndex = 20002
         Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 6)
@@ -244,7 +241,7 @@ local function executeScript(isPremiumUser)
         msgLabel.BackgroundTransparency = 1
         msgLabel.Text = "🔒 ระบบนี้สงวนสิทธิ์เฉพาะผู้ใช้ พรี่เมี่ยม เท่านั้น!"
         msgLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
-        msgLabel.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        msgLabel.Font = Enum.Font.SourceSansBold
         msgLabel.TextSize = 12
         msgLabel.ZIndex = 20001
         local featureBox = Instance.new("Frame", content)
@@ -260,7 +257,7 @@ local function executeScript(isPremiumUser)
         descLabel.Position = UDim2.new(0, 8, 0, 5)
         descLabel.BackgroundTransparency = 1
         descLabel.TextColor3 = Color3.fromRGB(240, 220, 220)
-        descLabel.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal)
+        descLabel.Font = Enum.Font.SourceSans
         descLabel.TextSize = 11
         descLabel.TextXAlignment = Enum.TextXAlignment.Left
         descLabel.TextYAlignment = Enum.TextYAlignment.Top
@@ -277,7 +274,7 @@ local function executeScript(isPremiumUser)
         contactLabel.BackgroundTransparency = 1
         contactLabel.Text = "💬 ติดต่อซื้อพรี่เมี่ยมได้ที่:"
         contactLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
-        contactLabel.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        contactLabel.Font = Enum.Font.SourceSansBold
         contactLabel.TextSize = 12
         contactLabel.ZIndex = 20001
         local copyBtn = Instance.new("TextButton", content)
@@ -286,7 +283,7 @@ local function executeScript(isPremiumUser)
         copyBtn.BackgroundColor3 = Color3.fromRGB(150, 20, 20)
         copyBtn.Text = "📋 คัดลอกลิ้งค์ Discord (" .. DISCORD_LINK .. ")"
         copyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        copyBtn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        copyBtn.Font = Enum.Font.SourceSansBold
         copyBtn.TextSize = 11
         copyBtn.ZIndex = 20001
         Instance.new("UICorner", copyBtn).CornerRadius = UDim.new(0, 6)
@@ -320,6 +317,7 @@ local function executeScript(isPremiumUser)
     ToggleButton.Position = UDim2.new(0.02, 0, 0.4, 0)
     ToggleButton.Text = "🍣"
     ToggleButton.Active = true
+    ToggleButton.Font = Enum.Font.SourceSansBold
     Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(0, 12)
     local TogStroke = Instance.new("UIStroke", ToggleButton)
     TogStroke.Color = Color3.fromRGB(140, 0, 0)
@@ -382,7 +380,7 @@ local function executeScript(isPremiumUser)
     TitleLabel.BackgroundTransparency = 1
     TitleLabel.TextSize = 16
     TitleLabel.TextColor3 = Color3.fromRGB(255, 60, 60)
-    TitleLabel.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+    TitleLabel.Font = Enum.Font.SourceSansBold
     TitleLabel.Text = "TOU HUB | ตำนานกล้ามเนื้อ " .. (isPremiumUser and "⭐ [PREMIUM]" or "🔑 [KEY USER]")
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 
@@ -414,7 +412,7 @@ local function executeScript(isPremiumUser)
         btn.TextSize = 12
         btn.TextColor3 = Color3.fromRGB(220, 180, 180)
         btn.BackgroundColor3 = Color3.fromRGB(38, 8, 8)
-        btn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        btn.Font = Enum.Font.SourceSansBold
         btn.Size = UDim2.new(0.92, 0, 0, 32)
         btn.Text = text
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
@@ -430,7 +428,7 @@ local function executeScript(isPremiumUser)
     local BtnStats = createTabBtn("Stats", "📊 ดูข้อมูล")
     local BtnFarm = createTabBtn("Farm", "🏋️ ฟาร์ม")
     local BtnGacha = createTabBtn("Gacha", "🎁 สุ่มตู้สัตว์")
-    local BtnBoss = createTabBtn("Boss", "👹 บอส") -- ⭐ New Boss Tab
+    local BtnBoss = createTabBtn("Boss", "👹 บอส")
     local BtnRoll = createTabBtn("Roll", "🎲 สุ่มสัตว์")
     local BtnPremium = createTabBtn("Premium", "พรี่เมี่ยม⭐")
     local BtnSettings = createTabBtn("Settings", "⚙️ ตั้งค่า")
@@ -509,7 +507,7 @@ local function executeScript(isPremiumUser)
     local StatsPage = createTabPage("StatsPage")
     local FarmPage = createTabPage("FarmPage")
     local GachaPage = createTabPage("GachaPage")
-    local BossPage = createTabPage("BossPage") -- ⭐ New Boss Page
+    local BossPage = createTabPage("BossPage")
     local RollPage = createTabPage("RollPage")
     local PremiumPage = createTabPage("PremiumPage")
     local SettingsPage = createTabPage("SettingsPage")
@@ -535,7 +533,7 @@ local function executeScript(isPremiumUser)
     BtnStats.MouseButton1Click:Connect(function() switchTab("Stats", StatsPage) end)
     BtnFarm.MouseButton1Click:Connect(function() switchTab("Farm", FarmPage) end)
     BtnGacha.MouseButton1Click:Connect(function() switchTab("Gacha", GachaPage) end)
-    BtnBoss.MouseButton1Click:Connect(function() switchTab("Boss", BossPage) end) -- ⭐ Boss tab access
+    BtnBoss.MouseButton1Click:Connect(function() switchTab("Boss", BossPage) end)
     BtnRoll.MouseButton1Click:Connect(function()
         if not isPremiumUser then
             openPremiumNoticeModal()
@@ -567,7 +565,7 @@ local function executeScript(isPremiumUser)
         lbl.TextXAlignment = Enum.TextXAlignment.Left
         lbl.Text = " " .. text
         lbl.TextSize = 13
-        lbl.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        lbl.Font = Enum.Font.SourceSansBold
         lbl.Parent = parent
         return lbl
     end
@@ -590,13 +588,13 @@ local function executeScript(isPremiumUser)
         lbl.TextXAlignment = Enum.TextXAlignment.Left
         lbl.Text = text
         lbl.TextSize = 12
-        lbl.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal)
+        lbl.Font = Enum.Font.SourceSans
         local btn = Instance.new("TextButton", frame)
         btn.Size = UDim2.new(0.26, 0, 0.7, 0)
         btn.Position = UDim2.new(0.71, 0, 0.15, 0)
         btn.BorderSizePixel = 0
         btn.TextSize = 11
-        btn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        btn.Font = Enum.Font.SourceSansBold
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
         local state = defaultState
         local function updateVisual()
@@ -628,7 +626,7 @@ local function executeScript(isPremiumUser)
         btn.TextColor3 = Color3.fromRGB(255, 230, 230)
         btn.Text = text
         btn.TextSize = 12
-        btn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        btn.Font = Enum.Font.SourceSansBold
         btn.BorderSizePixel = 0
         btn.Parent = parent
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
@@ -657,7 +655,7 @@ local function executeScript(isPremiumUser)
         lbl.TextXAlignment = Enum.TextXAlignment.Left
         lbl.Text = text
         lbl.TextSize = 12
-        lbl.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal)
+        lbl.Font = Enum.Font.SourceSans
         local box = Instance.new("TextBox", frame)
         box.Size = UDim2.new(0.38, 0, 0.7, 0)
         box.Position = UDim2.new(0.58, 0, 0.15, 0)
@@ -667,7 +665,7 @@ local function executeScript(isPremiumUser)
         box.TextSize = 12
         box.BorderSizePixel = 0
         box.ClearTextOnFocus = false
-        box.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+        box.Font = Enum.Font.SourceSans
         Instance.new("UICorner", box).CornerRadius = UDim.new(0, 5)
         box.FocusLost:Connect(function() callback(box.Text) end)
         return box
@@ -691,7 +689,7 @@ local function executeScript(isPremiumUser)
         lbl.TextXAlignment = Enum.TextXAlignment.Left
         lbl.Text = labelText
         lbl.TextSize = 12
-        lbl.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal)
+        lbl.Font = Enum.Font.SourceSans
         local btn = Instance.new("TextButton", frame)
         btn.Size = UDim2.new(0.48, 0, 0.7, 0)
         btn.Position = UDim2.new(0.49, 0, 0.15, 0)
@@ -699,7 +697,7 @@ local function executeScript(isPremiumUser)
         btn.TextColor3 = Color3.fromRGB(255, 255, 255)
         btn.Text = defaultOption .. " 🔽"
         btn.TextSize = 11
-        btn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        btn.Font = Enum.Font.SourceSansBold
         btn.BorderSizePixel = 0
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
         local dropFrame = Instance.new("ScrollingFrame", ScreenGui)
@@ -735,7 +733,7 @@ local function executeScript(isPremiumUser)
                 oBtn.TextSize = 11
                 oBtn.ZIndex = 10000
                 oBtn.BorderSizePixel = 0
-                oBtn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+                oBtn.Font = Enum.Font.SourceSans
                 oBtn.MouseButton1Click:Connect(function()
                     btn.Text = opt .. " 🔽"
                     dropFrame.Visible = false
@@ -773,7 +771,7 @@ local function executeScript(isPremiumUser)
         lbl.TextXAlignment = Enum.TextXAlignment.Left
         lbl.Text = labelText
         lbl.TextSize = 12
-        lbl.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal)
+        lbl.Font = Enum.Font.SourceSans
         local btn = Instance.new("TextButton", frame)
         btn.Size = UDim2.new(0.53, 0, 0.7, 0)
         btn.Position = UDim2.new(0.44, 0, 0.15, 0)
@@ -781,7 +779,7 @@ local function executeScript(isPremiumUser)
         btn.TextColor3 = Color3.fromRGB(255, 255, 255)
         btn.Text = LocalPlayer.Name .. " 🔽"
         btn.TextSize = 11
-        btn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        btn.Font = Enum.Font.SourceSansBold
         btn.BorderSizePixel = 0
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
         local dropFrame = Instance.new("ScrollingFrame", ScreenGui)
@@ -817,7 +815,7 @@ local function executeScript(isPremiumUser)
                 pBtn.TextSize = 11
                 pBtn.ZIndex = 10000
                 pBtn.BorderSizePixel = 0
-                pBtn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+                pBtn.Font = Enum.Font.SourceSans
                 pBtn.MouseButton1Click:Connect(function()
                     btn.Text = p.Name .. " 🔽"
                     dropFrame.Visible = false
@@ -929,11 +927,11 @@ local function executeScript(isPremiumUser)
     local bossOriginalData = {}
     local bossAngle = 0
     local bossHandToggle = false
-    local currentBossModel = nil -- ใช้สำหรับแสดงข้อมูล
-    local bossWasSpawned = false -- ตรวจสอบว่า boss เคยมี
-    local isBossLocked = false -- ล็อคตัวละคร
+    local currentBossModel = nil
+    local bossWasSpawned = false
+    local isBossLocked = false
     local bossTeleportPos = Vector3.new(6.75, 134.88, -1244.49)
-    local previousAutoStates = {} -- เก็บสถานะระบบอื่น
+    local previousAutoStates = {}
 
     -- ════════ HELPERS ════════
     local function findNil(name)
@@ -1125,7 +1123,7 @@ local function executeScript(isPremiumUser)
         topBar.BackgroundColor3 = Color3.fromRGB(35, 6, 6)
         topBar.Text = "🛡️ ตั้งค่ายกเว้น: " .. boxTitle
         topBar.TextColor3 = Color3.fromRGB(255, 255, 255)
-        topBar.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        topBar.Font = Enum.Font.SourceSansBold
         topBar.TextSize = 13
         topBar.ZIndex = 501
         Instance.new("UICorner", topBar).CornerRadius = UDim.new(0, 10)
@@ -1135,7 +1133,7 @@ local function executeScript(isPremiumUser)
         closeBtn.BackgroundColor3 = Color3.fromRGB(150, 25, 25)
         closeBtn.Text = "✕"
         closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        closeBtn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        closeBtn.Font = Enum.Font.SourceSansBold
         closeBtn.TextSize = 12
         closeBtn.ZIndex = 502
         Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 5)
@@ -1160,7 +1158,7 @@ local function executeScript(isPremiumUser)
         petHeader.Text = " 🐾 สัตว์ (เปิด = ยกเว้น/ไม่ลบ)"
         petHeader.TextColor3 = Color3.fromRGB(255, 180, 180)
         petHeader.TextXAlignment = Enum.TextXAlignment.Left
-        petHeader.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        petHeader.Font = Enum.Font.SourceSansBold
         petHeader.TextSize = 11
         petHeader.ZIndex = 502
         Instance.new("UICorner", petHeader).CornerRadius = UDim.new(0, 5)
@@ -1178,14 +1176,14 @@ local function executeScript(isPremiumUser)
             lbl.Text = petName
             lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
             lbl.TextXAlignment = Enum.TextXAlignment.Left
-            lbl.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+            lbl.Font = Enum.Font.SourceSans
             lbl.TextSize = 11
             lbl.ZIndex = 503
             local tog = Instance.new("TextButton", row)
             tog.Size = UDim2.new(0.28, 0, 0.75, 0)
             tog.Position = UDim2.new(0.69, 0, 0.12, 0)
             tog.ZIndex = 503
-            tog.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+            tog.Font = Enum.Font.SourceSansBold
             tog.TextSize = 10
             Instance.new("UICorner", tog).CornerRadius = UDim.new(0, 4)
             local isExcluded = EXCLUDE_PETS[petName] or false
@@ -1212,7 +1210,7 @@ local function executeScript(isPremiumUser)
         auraHeader.Text = " 🌟 อ่อร่า (เปิด = ยกเว้น/ไม่ลบ)"
         auraHeader.TextColor3 = Color3.fromRGB(255, 180, 180)
         auraHeader.TextXAlignment = Enum.TextXAlignment.Left
-        auraHeader.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        auraHeader.Font = Enum.Font.SourceSansBold
         auraHeader.TextSize = 11
         auraHeader.ZIndex = 502
         Instance.new("UICorner", auraHeader).CornerRadius = UDim.new(0, 5)
@@ -1230,14 +1228,14 @@ local function executeScript(isPremiumUser)
             lbl.Text = auraName
             lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
             lbl.TextXAlignment = Enum.TextXAlignment.Left
-            lbl.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+            lbl.Font = Enum.Font.SourceSans
             lbl.TextSize = 11
             lbl.ZIndex = 503
             local tog = Instance.new("TextButton", row)
             tog.Size = UDim2.new(0.28, 0, 0.75, 0)
             tog.Position = UDim2.new(0.69, 0, 0.12, 0)
             tog.ZIndex = 503
-            tog.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+            tog.Font = Enum.Font.SourceSansBold
             tog.TextSize = 10
             Instance.new("UICorner", tog).CornerRadius = UDim.new(0, 4)
             local isExcluded = EXCLUDE_AURAS[auraName] or false
@@ -1309,7 +1307,7 @@ local function executeScript(isPremiumUser)
         end
     end
 
-    -- 🪨 AUTO PUNCH ROCK FUNCTIONS (ปรับแต่งย่อขนาด สลับมือซ้าย-ขวา คืนค่าเดิม)
+    -- 🪨 AUTO PUNCH ROCK FUNCTIONS
     local function saveOriginalRockData(rockModel)
         if not rockModel then return end
         for _, part in ipairs(rockModel:GetDescendants()) do
@@ -1431,7 +1429,7 @@ local function executeScript(isPremiumUser)
         end
     end)
 
-    -- 👹 AUTO PUNCH BOSS FUNCTIONS (ปรับปรุงใหม่ตามความต้องการ)
+    -- 👹 AUTO PUNCH BOSS FUNCTIONS
     local function findBossModel()
         local bossArena = workspace:FindFirstChild("Events"):FindFirstChild("BossArena")
         if not bossArena then return nil end
@@ -1518,7 +1516,6 @@ local function executeScript(isPremiumUser)
         currentBossModel = bossModel
     end
 
-    -- ฟังก์ชันหยุดระบบอื่นทั้งหมดชั่วคราว
     local function pauseAllOtherAuto()
         previousAutoStates = {
             farm = farmEnabled,
@@ -1532,7 +1529,6 @@ local function executeScript(isPremiumUser)
             roll150 = running150,
             autoGift = autoGiftEnabled,
         }
-        -- หยุดทั้งหมด
         if farmEnabled then stopFarming() end
         if autoRockEnabled then stopAutoRock() end
         if autoGachaEnabled then stopAutoGacha() end
@@ -1545,7 +1541,6 @@ local function executeScript(isPremiumUser)
         if autoGiftEnabled then autoGiftEnabled = false end
     end
 
-    -- ฟังก์ชันคืนค่าสถานะระบบอื่น
     local function resumeAllOtherAuto()
         if previousAutoStates.farm then startFarming() end
         if previousAutoStates.rock then startAutoRock() end
@@ -1565,7 +1560,6 @@ local function executeScript(isPremiumUser)
         autoBossEnabled = true
         bossWasSpawned = false
         isBossLocked = false
-        -- หยุดระบบอื่น
         pauseAllOtherAuto()
         equipTool("Punch")
         autoBossConn = RunService.Heartbeat:Connect(function()
@@ -1576,7 +1570,6 @@ local function executeScript(isPremiumUser)
             if boss then
                 if not bossWasSpawned then
                     bossWasSpawned = true
-                    -- วาร์ป
                     if char:FindFirstChild("HumanoidRootPart") then
                         char.HumanoidRootPart.CFrame = CFrame.new(bossTeleportPos)
                     end
@@ -1599,8 +1592,7 @@ local function executeScript(isPremiumUser)
                 end
             else
                 if bossWasSpawned then
-                    -- boss ตายแล้ว
-                    stopAutoBoss() -- จะคืนค่าและหยุดทุกอย่าง
+                    stopAutoBoss()
                 end
             end
             task.wait(0.01)
@@ -1619,11 +1611,8 @@ local function executeScript(isPremiumUser)
             LocalPlayer.Character.HumanoidRootPart.Anchored = false
             isBossLocked = false
         end
-        -- คืนค่าสถานะอื่น
         resumeAllOtherAuto()
     end
-
-    -- ⭐ Re-equip Punch on respawn if auto boss active (already in CharacterAdded)
 
     local function stopRebirth()
         rebirthEnabled = false
@@ -1778,7 +1767,7 @@ local function executeScript(isPremiumUser)
     AccountInfoDisplay.TextSize = 12
     AccountInfoDisplay.TextXAlignment = Enum.TextXAlignment.Left
     AccountInfoDisplay.TextYAlignment = Enum.TextYAlignment.Top
-    AccountInfoDisplay.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+    AccountInfoDisplay.Font = Enum.Font.SourceSans
     AccountInfoDisplay.Parent = MainPage
     Instance.new("UICorner", AccountInfoDisplay).CornerRadius = UDim.new(0, 6)
     local accStroke = Instance.new("UIStroke", AccountInfoDisplay)
@@ -1821,7 +1810,7 @@ local function executeScript(isPremiumUser)
     StatsDisplay.TextSize = 11
     StatsDisplay.TextXAlignment = Enum.TextXAlignment.Left
     StatsDisplay.TextYAlignment = Enum.TextYAlignment.Top
-    StatsDisplay.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+    StatsDisplay.Font = Enum.Font.SourceSans
     StatsDisplay.Text = " 📊 กรุณาเลือกผู้เล่น หรือกดดูข้อมูล..."
     StatsDisplay.Parent = StatsPage
     Instance.new("UICorner", StatsDisplay).CornerRadius = UDim.new(0, 6)
@@ -1985,7 +1974,7 @@ local function executeScript(isPremiumUser)
         titleLbl.Text = title
         titleLbl.TextColor3 = Color3.fromRGB(255, 120, 120)
         titleLbl.TextXAlignment = Enum.TextXAlignment.Left
-        titleLbl.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        titleLbl.Font = Enum.Font.SourceSansBold
         titleLbl.TextSize = 11
         local btnContainer = Instance.new("Frame", cardFrame)
         btnContainer.Size = UDim2.new(1, -12, 0, 42)
@@ -2000,7 +1989,7 @@ local function executeScript(isPremiumUser)
         togBtn.BackgroundColor3 = Color3.fromRGB(150, 30, 30)
         togBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
         togBtn.Text = "▶ " .. toggleText
-        togBtn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        togBtn.Font = Enum.Font.SourceSansBold
         togBtn.TextSize = 10
         Instance.new("UICorner", togBtn).CornerRadius = UDim.new(0, 5)
         local isRunning = false
@@ -2026,7 +2015,7 @@ local function executeScript(isPremiumUser)
         setBtn.BackgroundColor3 = Color3.fromRGB(50, 10, 10)
         setBtn.TextColor3 = Color3.fromRGB(255, 200, 200)
         setBtn.Text = "🛡️ ยกเว้นไม่ขาย"
-        setBtn.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        setBtn.Font = Enum.Font.SourceSansBold
         setBtn.TextSize = 10
         Instance.new("UICorner", setBtn).CornerRadius = UDim.new(0, 5)
         local setStroke = Instance.new("UIStroke", setBtn)
@@ -2240,7 +2229,7 @@ local function executeScript(isPremiumUser)
         title.Text = displayName
         title.TextColor3 = Color3.fromRGB(255, 140, 140)
         title.TextXAlignment = Enum.TextXAlignment.Left
-        title.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        title.Font = Enum.Font.SourceSansBold
         title.TextSize = 11
         
         local btnContainer = Instance.new("Frame", frame)
@@ -2253,13 +2242,12 @@ local function executeScript(isPremiumUser)
         layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
         layout.Padding = UDim.new(0, 6)
         
-        -- สุ่ม 1 ฟอง
         local btn1 = Instance.new("TextButton", btnContainer)
         btn1.Size = UDim2.new(0.3, -2, 1, 0)
         btn1.BackgroundColor3 = Color3.fromRGB(120, 15, 15)
         btn1.TextColor3 = Color3.fromRGB(255, 255, 255)
         btn1.Text = "สุ่ม 1 ฟอง"
-        btn1.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        btn1.Font = Enum.Font.SourceSansBold
         btn1.TextSize = 10
         Instance.new("UICorner", btn1).CornerRadius = UDim.new(0, 5)
         btn1.MouseButton1Click:Connect(function()
@@ -2268,13 +2256,12 @@ local function executeScript(isPremiumUser)
             end)
         end)
         
-        -- สุ่ม 3 ฟอง
         local btn3 = Instance.new("TextButton", btnContainer)
         btn3.Size = UDim2.new(0.3, -2, 1, 0)
         btn3.BackgroundColor3 = Color3.fromRGB(120, 15, 15)
         btn3.TextColor3 = Color3.fromRGB(255, 255, 255)
         btn3.Text = "สุ่ม 3 ฟอง"
-        btn3.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        btn3.Font = Enum.Font.SourceSansBold
         btn3.TextSize = 10
         Instance.new("UICorner", btn3).CornerRadius = UDim.new(0, 5)
         btn3.MouseButton1Click:Connect(function()
@@ -2283,13 +2270,12 @@ local function executeScript(isPremiumUser)
             end)
         end)
         
-        -- สุ่ม 10 ฟอง
         local btn10 = Instance.new("TextButton", btnContainer)
         btn10.Size = UDim2.new(0.3, -2, 1, 0)
         btn10.BackgroundColor3 = Color3.fromRGB(120, 15, 15)
         btn10.TextColor3 = Color3.fromRGB(255, 255, 255)
         btn10.Text = "สุ่ม 10 ฟอง"
-        btn10.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+        btn10.Font = Enum.Font.SourceSansBold
         btn10.TextSize = 10
         Instance.new("UICorner", btn10).CornerRadius = UDim.new(0, 5)
         btn10.MouseButton1Click:Connect(function()
@@ -2299,7 +2285,6 @@ local function executeScript(isPremiumUser)
         end)
     end
 
-    -- เรียงตามที่ผู้ใช้ให้มา
     addGachaButtons("Blue Crystal", "🔵 Blue Crystal (รี 0 - 1K)")
     addGachaButtons("Green Crystal", "🟢 Green Crystal (รี 0 - 3K)")
     addGachaButtons("Frost Crystal", "❄️ Frost Crystal (รี 1 - 5K)")
@@ -2374,7 +2359,6 @@ local function executeScript(isPremiumUser)
         end
     end, "AutoBoss")
 
-    -- แสดงข้อมูลบอส (HP, Damage และ damageValues)
     local bossInfoLabel = Instance.new("TextLabel")
     bossInfoLabel.Size = UDim2.new(1, -6, 0, 140)
     bossInfoLabel.BackgroundColor3 = Color3.fromRGB(28, 6, 6)
@@ -2382,7 +2366,7 @@ local function executeScript(isPremiumUser)
     bossInfoLabel.TextSize = 11
     bossInfoLabel.TextXAlignment = Enum.TextXAlignment.Left
     bossInfoLabel.TextYAlignment = Enum.TextYAlignment.Top
-    bossInfoLabel.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+    bossInfoLabel.Font = Enum.Font.SourceSans
     bossInfoLabel.Text = " ไม่พบบอสในขณะนี้"
     bossInfoLabel.Parent = BossPage
     Instance.new("UICorner", bossInfoLabel).CornerRadius = UDim.new(0, 6)
@@ -2408,11 +2392,6 @@ local function executeScript(isPremiumUser)
                     for _, child in ipairs(damageValues:GetChildren()) do
                         if child:IsA("NumberValue") or child:IsA("IntValue") then
                             table.insert(dmgList, string.format("%s: %s", child.Name, formatNumber(child.Value)))
-                        elseif child:IsA("ObjectValue") and child.Value then
-                            local val = child.Value
-                            if val:IsA("Player") then
-                                -- find corresponding damage number maybe in another value
-                            end
                         end
                     end
                 end
@@ -2455,7 +2434,7 @@ local function checkKey(isPremium)
     title.BackgroundTransparency = 1
     title.Text = "กรุณากรอกคีย์เพื่อใช้งาน"
     title.TextColor3 = Color3.fromRGB(255, 60, 60)
-    title.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+    title.Font = Enum.Font.SourceSansBold
     title.TextSize = 14
     title.Parent = frame
 
@@ -2468,6 +2447,7 @@ local function checkKey(isPremium)
     input.PlaceholderColor3 = Color3.fromRGB(180, 180, 180)
     input.TextSize = 14
     input.BorderSizePixel = 0
+    input.Font = Enum.Font.SourceSans
     input.Parent = frame
     Instance.new("UICorner", input).CornerRadius = UDim.new(0, 6)
 
@@ -2477,7 +2457,7 @@ local function checkKey(isPremium)
     button.BackgroundColor3 = Color3.fromRGB(140, 15, 15)
     button.TextColor3 = Color3.fromRGB(255, 255, 255)
     button.Text = "ยืนยัน"
-    button.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+    button.Font = Enum.Font.SourceSansBold
     button.TextSize = 14
     button.Parent = frame
     Instance.new("UICorner", button).CornerRadius = UDim.new(0, 6)
