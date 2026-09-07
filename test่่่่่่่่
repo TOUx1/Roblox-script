@@ -930,6 +930,10 @@ local function executeScript(isPremiumUser)
     local bossAngle = 0
     local bossHandToggle = false
     local currentBossModel = nil -- ใช้สำหรับแสดงข้อมูล
+    local bossWasSpawned = false -- ตรวจสอบว่า boss เคยมี
+    local isBossLocked = false -- ล็อคตัวละคร
+    local bossTeleportPos = Vector3.new(6.75, 134.88, -1244.49)
+    local previousAutoStates = {} -- เก็บสถานะระบบอื่น
 
     -- ════════ HELPERS ════════
     local function findNil(name)
@@ -1368,7 +1372,6 @@ local function executeScript(isPremiumUser)
                 part.Transparency = 1
                 part.Size = Vector3.new(0.001, 0.001, 0.001)
                 part.CFrame = targetCFrame
-                -- ป้องกันแรงเหวี่ยงจากฟิสิกส์ Roblox (Anti Velocity Lag/Launch)
                 part.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
                 part.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
             elseif part:IsA("Decal") or part:IsA("Texture") then
@@ -1381,13 +1384,11 @@ local function executeScript(isPremiumUser)
 
     local function startAutoRock()
         autoRockEnabled = true
-        -- ⭐ Equip "Punch" tool immediately
         equipTool("Punch")
         autoRockConn = RunService.Heartbeat:Connect(function()
             if not autoRockEnabled then return end
             local char = LocalPlayer.Character
             if not char then return end
-            -- สลับมือซ้าย / ขวา ไปมาทุกเฟรม
             rockHandToggle = not rockHandToggle
             local rightHand = char:FindFirstChild("RightHand") or char:FindFirstChild("Right Arm") or char:FindFirstChild("HumanoidRootPart")
             local leftHand = char:FindFirstChild("LeftHand") or char:FindFirstChild("Left Arm") or char:FindFirstChild("HumanoidRootPart")
@@ -1419,15 +1420,18 @@ local function executeScript(isPremiumUser)
         restoreOriginalRockData()
     end
 
-    -- ⭐ Re-equip Punch on respawn if auto rock is active
     LocalPlayer.CharacterAdded:Connect(function(char)
         if autoRockEnabled then
             task.wait(0.5)
             equipTool("Punch")
         end
+        if autoBossEnabled then
+            task.wait(0.5)
+            equipTool("Punch")
+        end
     end)
 
-    -- 👹 AUTO PUNCH BOSS FUNCTIONS (คล้ายกับหิน แต่ใช้โมเดลบอส)
+    -- 👹 AUTO PUNCH BOSS FUNCTIONS (ปรับปรุงใหม่ตามความต้องการ)
     local function findBossModel()
         local bossArena = workspace:FindFirstChild("Events"):FindFirstChild("BossArena")
         if not bossArena then return nil end
@@ -1514,22 +1518,78 @@ local function executeScript(isPremiumUser)
         currentBossModel = bossModel
     end
 
+    -- ฟังก์ชันหยุดระบบอื่นทั้งหมดชั่วคราว
+    local function pauseAllOtherAuto()
+        previousAutoStates = {
+            farm = farmEnabled,
+            rock = autoRockEnabled,
+            gacha = autoGachaEnabled,
+            rebirth = rebirthEnabled,
+            fortuneWheel = autoFortuneWheel,
+            roll15 = running15,
+            roll30 = running30,
+            roll60 = running60,
+            roll150 = running150,
+            autoGift = autoGiftEnabled,
+        }
+        -- หยุดทั้งหมด
+        if farmEnabled then stopFarming() end
+        if autoRockEnabled then stopAutoRock() end
+        if autoGachaEnabled then stopAutoGacha() end
+        if rebirthEnabled then stopRebirth() end
+        autoFortuneWheel = false
+        if running15 then running15 = false if sellConn15 then sellConn15:Disconnect() sellConn15 = nil end end
+        if running30 then running30 = false if sellConn30 then sellConn30:Disconnect() sellConn30 = nil end end
+        if running60 then running60 = false if sellConn60 then sellConn60:Disconnect() sellConn60 = nil end end
+        if running150 then running150 = false if sellConn150 then sellConn150:Disconnect() sellConn150 = nil end end
+        if autoGiftEnabled then autoGiftEnabled = false end
+    end
+
+    -- ฟังก์ชันคืนค่าสถานะระบบอื่น
+    local function resumeAllOtherAuto()
+        if previousAutoStates.farm then startFarming() end
+        if previousAutoStates.rock then startAutoRock() end
+        if previousAutoStates.gacha then startAutoGacha() end
+        if previousAutoStates.rebirth then startRebirth() end
+        autoFortuneWheel = previousAutoStates.fortuneWheel
+        if previousAutoStates.roll15 then running15 = true task.spawn(function() while running15 do roll15() task.wait(DELAY_15) end end) sellConn15 = RunService.Heartbeat:Connect(function() if running15 and (os.clock() - lastScan15) > 0.3 then lastScan15 = os.clock() scan15() tryEvolve(EVOLVE_15) end end) end
+        if previousAutoStates.roll30 then running30 = true task.spawn(function() while running30 do roll30() task.wait(DELAY_30) end end) sellConn30 = RunService.Heartbeat:Connect(function() if running30 and (os.clock() - lastScan30) > 0.3 then lastScan30 = os.clock() scan30() tryEvolve(EVOLVE_30) end end) end
+        if previousAutoStates.roll60 then running60 = true task.spawn(function() while running60 do roll60() task.wait(DELAY_60) end end) sellConn60 = RunService.Heartbeat:Connect(function() if running60 and (os.clock() - lastScan60) > 0.3 then lastScan60 = os.clock() scan60() tryEvolve(EVOLVE_60) end end) end
+        if previousAutoStates.roll150 then running150 = true task.spawn(function() while running150 do roll150() task.wait(DELAY_150) end end) sellConn150 = RunService.Heartbeat:Connect(function() if running150 and (os.clock() - lastScan150) > 0.3 then lastScan150 = os.clock() scan150() tryEvolve(EVOLVE_150) end end) end
+        if previousAutoStates.autoGift then autoGiftEnabled = true task.spawn(function() while autoGiftEnabled do pcall(function() freeGiftClaimRemote:InvokeServer("claimGift") end) task.wait(10) end end) end
+        previousAutoStates = {}
+    end
+
     local function startAutoBoss()
+        if autoBossEnabled then return end
         autoBossEnabled = true
+        bossWasSpawned = false
+        isBossLocked = false
+        -- หยุดระบบอื่น
+        pauseAllOtherAuto()
         equipTool("Punch")
         autoBossConn = RunService.Heartbeat:Connect(function()
             if not autoBossEnabled then return end
             local char = LocalPlayer.Character
             if not char then return end
-            -- หาบอสตัวแรกที่พบ
             local boss = findBossModel()
             if boss then
+                if not bossWasSpawned then
+                    bossWasSpawned = true
+                    -- วาร์ป
+                    if char:FindFirstChild("HumanoidRootPart") then
+                        char.HumanoidRootPart.CFrame = CFrame.new(bossTeleportPos)
+                    end
+                end
+                if not isBossLocked and char:FindFirstChild("HumanoidRootPart") then
+                    isBossLocked = true
+                    char.HumanoidRootPart.Anchored = true
+                end
                 bossHandToggle = not bossHandToggle
                 local rightHand = char:FindFirstChild("RightHand") or char:FindFirstChild("Right Arm") or char:FindFirstChild("HumanoidRootPart")
                 local leftHand = char:FindFirstChild("LeftHand") or char:FindFirstChild("Left Arm") or char:FindFirstChild("HumanoidRootPart")
                 local targetHand = bossHandToggle and leftHand or rightHand
                 modifyAndMoveBoss(boss, targetHand)
-                -- ยิงรีโมทต่อย
                 local event = getMuscleEvent()
                 if event then
                     pcall(function()
@@ -1538,11 +1598,10 @@ local function executeScript(isPremiumUser)
                     end)
                 end
             else
-                -- ถ้าไม่มีบอสให้คืนค่ากลับ (ถ้ามีข้อมูลค้าง)
-                if next(bossOriginalData) then
-                    restoreOriginalBossData()
+                if bossWasSpawned then
+                    -- boss ตายแล้ว
+                    stopAutoBoss() -- จะคืนค่าและหยุดทุกอย่าง
                 end
-                currentBossModel = nil
             end
             task.wait(0.01)
         end)
@@ -1556,15 +1615,15 @@ local function executeScript(isPremiumUser)
         end
         restoreOriginalBossData()
         currentBossModel = nil
+        if isBossLocked and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            LocalPlayer.Character.HumanoidRootPart.Anchored = false
+            isBossLocked = false
+        end
+        -- คืนค่าสถานะอื่น
+        resumeAllOtherAuto()
     end
 
-    -- ⭐ Re-equip Punch on respawn if auto boss is active
-    LocalPlayer.CharacterAdded:Connect(function(char)
-        if autoBossEnabled then
-            task.wait(0.5)
-            equipTool("Punch")
-        end
-    end)
+    -- ⭐ Re-equip Punch on respawn if auto boss active (already in CharacterAdded)
 
     local function stopRebirth()
         rebirthEnabled = false
@@ -2315,12 +2374,12 @@ local function executeScript(isPremiumUser)
         end
     end, "AutoBoss")
 
-    -- แสดงข้อมูลบอส (HP, Damage)
+    -- แสดงข้อมูลบอส (HP, Damage และ damageValues)
     local bossInfoLabel = Instance.new("TextLabel")
-    bossInfoLabel.Size = UDim2.new(1, -6, 0, 80)
+    bossInfoLabel.Size = UDim2.new(1, -6, 0, 140)
     bossInfoLabel.BackgroundColor3 = Color3.fromRGB(28, 6, 6)
     bossInfoLabel.TextColor3 = Color3.fromRGB(240, 220, 220)
-    bossInfoLabel.TextSize = 12
+    bossInfoLabel.TextSize = 11
     bossInfoLabel.TextXAlignment = Enum.TextXAlignment.Left
     bossInfoLabel.TextYAlignment = Enum.TextYAlignment.Top
     bossInfoLabel.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
@@ -2340,23 +2399,27 @@ local function executeScript(isPremiumUser)
                 local dmgText = "N/A"
                 if stats then
                     local hp = stats:FindFirstChild("Health") or stats:FindFirstChild("HP") or stats:FindFirstChild("MaxHealth")
-                    if hp and hp:IsA("NumberValue") then
-                        hpText = formatNumber(hp.Value)
-                    elseif hp and hp:IsA("IntValue") then
+                    if hp and (hp:IsA("NumberValue") or hp:IsA("IntValue")) then
                         hpText = formatNumber(hp.Value)
                     end
                 end
+                local dmgList = {}
                 if damageValues then
-                    local dmg = damageValues:FindFirstChild("Damage") or damageValues:FindFirstChild("TotalDamage")
-                    if dmg and dmg:IsA("NumberValue") then
-                        dmgText = formatNumber(dmg.Value)
-                    elseif dmg and dmg:IsA("IntValue") then
-                        dmgText = formatNumber(dmg.Value)
+                    for _, child in ipairs(damageValues:GetChildren()) do
+                        if child:IsA("NumberValue") or child:IsA("IntValue") then
+                            table.insert(dmgList, string.format("%s: %s", child.Name, formatNumber(child.Value)))
+                        elseif child:IsA("ObjectValue") and child.Value then
+                            local val = child.Value
+                            if val:IsA("Player") then
+                                -- find corresponding damage number maybe in another value
+                            end
+                        end
                     end
                 end
                 bossInfoLabel.Text = string.format(
-                    " 👹 บอส: %s\n ❤️ เลือด: %s\n ⚔️ ดาเมจที่ได้รับ: %s",
-                    boss.Name, hpText, dmgText
+                    " 👹 บอส: %s\n ❤️ เลือด: %s\n ⚔️ ผู้ทำดาเมจ:\n%s",
+                    boss.Name, hpText,
+                    (#dmgList > 0 and table.concat(dmgList, "\n") or "   ไม่มีข้อมูล")
                 )
             else
                 bossInfoLabel.Text = " ไม่พบบอสในขณะนี้"
