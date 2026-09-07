@@ -1,13 +1,10 @@
---[=[ TOU HUB | KEY SYSTEM - Redesigned v4 (Dark Crimson Theme & Organized UI) Extended with Auto-Save System, Feedback Webhooks (10m Cooldown), Fixed Dropdowns, and Enhanced Layering. + เพิ่มระบบป้องกันหลุด (Anti-AFK) เปิด/ปิด ได้ในแท็บ "เพิ่มเติม" + ระบบช่อง พรี่เมี่ยม⭐ & ล็อกสิทธิ์ Key User + ระบบออโต้บอส (Teleport & Lock) + Pause อื่น ๆ ]=]
+--[=[ TOU HUB | KEY SYSTEM - Redesigned v4 (Dark Crimson Theme & Organized UI) Extended with Auto-Save System, Feedback Webhooks (10m Cooldown), Fixed Dropdowns, and Enhanced Layering. + เพิ่มระบบป้องกันหลุด (Anti-AFK) เปิด/ปิด ได้ในแท็บ "เพิ่มเติม" + ระบบช่อง พรี่เมี่ยม⭐ & ล็อกสิทธิ์ Key User + ระบบออโต้บอส (Teleport & Lock) + Pause อื่น ๆ + แก้ไข Error & เพิ่มความเสถียร ]=]
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local TweenService = game:GetService("TweenService")
 local HttpService = game:GetService("HttpService")
 local SoundService = game:GetService("SoundService")
 local LocalPlayer = Players.LocalPlayer
-
--- รองรับทั้ง loadstring และ load
-local loadstring = loadstring or load
 
 -- 🌐 ลิ้งค์ดึง รายชื่อ Whitelist / Premium Users (JSON)
 local RAW_WHITELIST_URL = "https://raw.githubusercontent.com/TOUx1/Roblox-script/refs/heads/main/ชื่่่่่่่่่่่่่่อn่าน"
@@ -1444,7 +1441,9 @@ local function executeScript(isPremiumUser)
 
     -- 👹 AUTO PUNCH BOSS FUNCTIONS (คล้ายกับหิน แต่ใช้โมเดลบอส)
     local function findBossModel()
-        local bossArena = workspace:FindFirstChild("Events"):FindFirstChild("BossArena")
+        local eventsFolder = workspace:FindFirstChild("Events")
+        if not eventsFolder then return nil end
+        local bossArena = eventsFolder:FindFirstChild("BossArena")
         if not bossArena then return nil end
         local bossNames = {"Boss1", "Boss2", "Boss3", "Boss4", "Boss5", "Boss6"}
         for _, name in ipairs(bossNames) do
