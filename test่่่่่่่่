@@ -430,6 +430,7 @@ local function executeScript(isPremiumUser)
     local BtnStats = createTabBtn("Stats", "📊 ดูข้อมูล")
     local BtnFarm = createTabBtn("Farm", "🏋️ ฟาร์ม")
     local BtnGacha = createTabBtn("Gacha", "🎁 สุ่มตู้สัตว์")
+    local BtnBoss = createTabBtn("Boss", "👹 บอส") -- ⭐ New Boss Tab
     local BtnRoll = createTabBtn("Roll", "🎲 สุ่มสัตว์")
     local BtnPremium = createTabBtn("Premium", "พรี่เมี่ยม⭐")
     local BtnSettings = createTabBtn("Settings", "⚙️ ตั้งค่า")
@@ -508,6 +509,7 @@ local function executeScript(isPremiumUser)
     local StatsPage = createTabPage("StatsPage")
     local FarmPage = createTabPage("FarmPage")
     local GachaPage = createTabPage("GachaPage")
+    local BossPage = createTabPage("BossPage") -- ⭐ New Boss Page
     local RollPage = createTabPage("RollPage")
     local PremiumPage = createTabPage("PremiumPage")
     local SettingsPage = createTabPage("SettingsPage")
@@ -533,6 +535,7 @@ local function executeScript(isPremiumUser)
     BtnStats.MouseButton1Click:Connect(function() switchTab("Stats", StatsPage) end)
     BtnFarm.MouseButton1Click:Connect(function() switchTab("Farm", FarmPage) end)
     BtnGacha.MouseButton1Click:Connect(function() switchTab("Gacha", GachaPage) end)
+    BtnBoss.MouseButton1Click:Connect(function() switchTab("Boss", BossPage) end) -- ⭐ Boss tab access
     BtnRoll.MouseButton1Click:Connect(function()
         if not isPremiumUser then
             openPremiumNoticeModal()
@@ -919,6 +922,14 @@ local function executeScript(isPremiumUser)
     local autoGachaEnabled = false
     local autoGachaCrystal = "Blue Crystal"
     local autoGachaAmount = "1"
+
+    -- 👹 Boss Auto Punch State
+    local autoBossEnabled = false
+    local autoBossConn = nil
+    local bossOriginalData = {}
+    local bossAngle = 0
+    local bossHandToggle = false
+    local currentBossModel = nil -- ใช้สำหรับแสดงข้อมูล
 
     -- ════════ HELPERS ════════
     local function findNil(name)
@@ -1411,6 +1422,145 @@ local function executeScript(isPremiumUser)
     -- ⭐ Re-equip Punch on respawn if auto rock is active
     LocalPlayer.CharacterAdded:Connect(function(char)
         if autoRockEnabled then
+            task.wait(0.5)
+            equipTool("Punch")
+        end
+    end)
+
+    -- 👹 AUTO PUNCH BOSS FUNCTIONS (คล้ายกับหิน แต่ใช้โมเดลบอส)
+    local function findBossModel()
+        local bossArena = workspace:FindFirstChild("Events"):FindFirstChild("BossArena")
+        if not bossArena then return nil end
+        local bossNames = {"Boss1", "Boss2", "Boss3", "Boss4", "Boss5", "Boss6"}
+        for _, name in ipairs(bossNames) do
+            local boss = bossArena:FindFirstChild(name)
+            if boss and boss:IsA("Model") then
+                return boss
+            end
+        end
+        return nil
+    end
+
+    local function saveOriginalBossData(bossModel)
+        if not bossModel then return end
+        for _, part in ipairs(bossModel:GetDescendants()) do
+            if part:IsA("BasePart") and not bossOriginalData[part] then
+                local data = {
+                    CFrame = part.CFrame,
+                    Size = part.Size,
+                    Transparency = part.Transparency,
+                    CanCollide = part.CanCollide,
+                    MeshScale = nil,
+                    MeshOffset = nil,
+                    MeshId = nil,
+                }
+                local mesh = part:FindFirstChildOfClass("DataModelMesh")
+                if mesh then
+                    data.MeshScale = mesh.Scale
+                    data.MeshOffset = mesh.Offset
+                    data.MeshId = mesh.MeshId
+                end
+                bossOriginalData[part] = data
+            end
+        end
+    end
+
+    local function restoreOriginalBossData()
+        for part, data in pairs(bossOriginalData) do
+            if part and part.Parent then
+                pcall(function()
+                    part.CanCollide = data.CanCollide
+                    part.Transparency = data.Transparency
+                    part.Size = data.Size
+                    part.CFrame = data.CFrame
+                    if part:IsA("BasePart") then
+                        part.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                        part.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+                    end
+                    local mesh = part:FindFirstChildOfClass("DataModelMesh")
+                    if mesh and data.MeshScale then
+                        mesh.Scale = data.MeshScale
+                        mesh.Offset = data.MeshOffset
+                        if data.MeshId then
+                            mesh.MeshId = data.MeshId
+                        end
+                    end
+                end)
+            end
+        end
+        table.clear(bossOriginalData)
+    end
+
+    local function modifyAndMoveBoss(bossModel, targetHand)
+        if not bossModel or not targetHand then return end
+        saveOriginalBossData(bossModel)
+        
+        bossAngle = (bossAngle + 15) % 360
+        local targetCFrame = targetHand.CFrame * CFrame.Angles(0, math.rad(bossAngle), math.rad(bossAngle))
+        for _, part in ipairs(bossModel:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+                part.Transparency = 1
+                part.Size = Vector3.new(0.001, 0.001, 0.001)
+                part.CFrame = targetCFrame
+                part.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                part.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+            elseif part:IsA("Decal") or part:IsA("Texture") then
+                part.Transparency = 1
+            elseif part:IsA("SpecialMesh") or part:IsA("BlockMesh") then
+                part.Scale = Vector3.new(0.001, 0.001, 0.001)
+            end
+        end
+        currentBossModel = bossModel
+    end
+
+    local function startAutoBoss()
+        autoBossEnabled = true
+        equipTool("Punch")
+        autoBossConn = RunService.Heartbeat:Connect(function()
+            if not autoBossEnabled then return end
+            local char = LocalPlayer.Character
+            if not char then return end
+            -- หาบอสตัวแรกที่พบ
+            local boss = findBossModel()
+            if boss then
+                bossHandToggle = not bossHandToggle
+                local rightHand = char:FindFirstChild("RightHand") or char:FindFirstChild("Right Arm") or char:FindFirstChild("HumanoidRootPart")
+                local leftHand = char:FindFirstChild("LeftHand") or char:FindFirstChild("Left Arm") or char:FindFirstChild("HumanoidRootPart")
+                local targetHand = bossHandToggle and leftHand or rightHand
+                modifyAndMoveBoss(boss, targetHand)
+                -- ยิงรีโมทต่อย
+                local event = getMuscleEvent()
+                if event then
+                    pcall(function()
+                        event:FireServer("punch", "rightHand")
+                        event:FireServer("punch", "leftHand")
+                    end)
+                end
+            else
+                -- ถ้าไม่มีบอสให้คืนค่ากลับ (ถ้ามีข้อมูลค้าง)
+                if next(bossOriginalData) then
+                    restoreOriginalBossData()
+                end
+                currentBossModel = nil
+            end
+            task.wait(0.01)
+        end)
+    end
+
+    local function stopAutoBoss()
+        autoBossEnabled = false
+        if autoBossConn then
+            autoBossConn:Disconnect()
+            autoBossConn = nil
+        end
+        restoreOriginalBossData()
+        currentBossModel = nil
+    end
+
+    -- ⭐ Re-equip Punch on respawn if auto boss is active
+    LocalPlayer.CharacterAdded:Connect(function(char)
+        if autoBossEnabled then
             task.wait(0.5)
             equipTool("Punch")
         end
@@ -2154,6 +2304,66 @@ local function executeScript(isPremiumUser)
             stopAutoGacha()
         end
     end, "AutoGacha")
+
+    -- ════════ NEW: BOSS TAB (Everyone) ════════
+    addSectionHeader(BossPage, "👹 ระบบออโต้ต่อยบอส")
+    addToggle(BossPage, "▶ เปิดออโต้ต่อยบอส", false, function(state)
+        if state then
+            startAutoBoss()
+        else
+            stopAutoBoss()
+        end
+    end, "AutoBoss")
+
+    -- แสดงข้อมูลบอส (HP, Damage)
+    local bossInfoLabel = Instance.new("TextLabel")
+    bossInfoLabel.Size = UDim2.new(1, -6, 0, 80)
+    bossInfoLabel.BackgroundColor3 = Color3.fromRGB(28, 6, 6)
+    bossInfoLabel.TextColor3 = Color3.fromRGB(240, 220, 220)
+    bossInfoLabel.TextSize = 12
+    bossInfoLabel.TextXAlignment = Enum.TextXAlignment.Left
+    bossInfoLabel.TextYAlignment = Enum.TextYAlignment.Top
+    bossInfoLabel.FontFace = Font.new("rbxasset://fonts/families/Gotham.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+    bossInfoLabel.Text = " ไม่พบบอสในขณะนี้"
+    bossInfoLabel.Parent = BossPage
+    Instance.new("UICorner", bossInfoLabel).CornerRadius = UDim.new(0, 6)
+    local bossInfoStroke = Instance.new("UIStroke", bossInfoLabel)
+    bossInfoStroke.Color = Color3.fromRGB(80, 15, 15)
+
+    task.spawn(function()
+        while true do
+            local boss = findBossModel()
+            if boss then
+                local stats = boss:FindFirstChild("stats")
+                local damageValues = boss:FindFirstChild("damageValues")
+                local hpText = "N/A"
+                local dmgText = "N/A"
+                if stats then
+                    local hp = stats:FindFirstChild("Health") or stats:FindFirstChild("HP") or stats:FindFirstChild("MaxHealth")
+                    if hp and hp:IsA("NumberValue") then
+                        hpText = formatNumber(hp.Value)
+                    elseif hp and hp:IsA("IntValue") then
+                        hpText = formatNumber(hp.Value)
+                    end
+                end
+                if damageValues then
+                    local dmg = damageValues:FindFirstChild("Damage") or damageValues:FindFirstChild("TotalDamage")
+                    if dmg and dmg:IsA("NumberValue") then
+                        dmgText = formatNumber(dmg.Value)
+                    elseif dmg and dmg:IsA("IntValue") then
+                        dmgText = formatNumber(dmg.Value)
+                    end
+                end
+                bossInfoLabel.Text = string.format(
+                    " 👹 บอส: %s\n ❤️ เลือด: %s\n ⚔️ ดาเมจที่ได้รับ: %s",
+                    boss.Name, hpText, dmgText
+                )
+            else
+                bossInfoLabel.Text = " ไม่พบบอสในขณะนี้"
+            end
+            task.wait(0.5)
+        end
+    end)
 
 end
 
